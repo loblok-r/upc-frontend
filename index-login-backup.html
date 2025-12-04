@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Universal Picture Composer</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 两种字体都引入 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+      /* 默认字体 - 使用 Noto Sans SC（中文优化） */
+      body {
+        font-family: 'Noto Sans SC', 'Inter', sans-serif;
+        background-color: #020617;
+        color: white;
+      }
+      
+      /* 登录表单区域可以用 Inter 字体 */
+      .login-font {
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* 两种动画都保留 */
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+      }
+
+      @keyframes pulse-glow {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 0.8; }
+      }
+
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+
+      /* 动画类 */
+      .animate-float { animation: float 6s ease-in-out infinite; }
+      .animate-pulse-slow { animation: pulse-glow 4s ease-in-out infinite; }
+      
+      /* 打字光标 */
+      .typing-cursor::after {
+        content: '|';
+        animation: blink 1s step-start infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
