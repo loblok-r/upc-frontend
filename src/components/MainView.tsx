@@ -78,6 +78,15 @@ const MainView: React.FC = () => {
     }
   };
 
+  const features = [
+    { icon: 'fa-solid fa-pen-nib', label: 'AI 写作助手' },
+    { icon: 'fa-solid fa-chart-pie', label: '智能演示' },
+    { icon: 'fa-solid fa-magnifying-glass', label: '深度搜索' },
+    { icon: 'fa-solid fa-image', label: 'AI 绘图', active: true },
+    { icon: 'fa-solid fa-microphone-lines', label: '播客生成' },
+    { icon: 'fa-solid fa-grip', label: '更多工具' },
+  ];
+
   return (
     <div className="flex-1 h-screen overflow-y-auto relative bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
       
@@ -186,7 +195,25 @@ const MainView: React.FC = () => {
           </div>
         </div>
 
-        {/* Error */}
+        {/* Feature Icons */}
+        <div className="flex flex-wrap justify-center gap-6 mb-16">
+            {features.map((feature, index) => (
+                <div key={index} className="flex flex-col items-center gap-2 group cursor-pointer">
+                    <div className={`
+                        w-14 h-14 rounded-2xl flex items-center justify-center text-xl transition-all duration-300 border
+                        ${feature.active 
+                            ? 'bg-white text-slate-900 border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
+                            : 'bg-white/5 border-white/10 text-gray-400 group-hover:bg-white/10 group-hover:scale-105 group-hover:text-white'}
+                    `}>
+                        <i className={feature.icon}></i>
+                    </div>
+                    <span className={`text-xs font-medium transition-colors ${feature.active ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>
+                        {feature.label}
+                    </span>
+                </div>
+            ))}
+        </div>
+        {/* Result Display Area */}
         {error && (
           <div className="w-full max-w-3xl mb-12 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-center">
             {error}

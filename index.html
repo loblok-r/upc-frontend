@@ -15,24 +15,85 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
-      // 添加新版的颜色配置
+      // 合并所有Tailwind配置
       tailwind.config = {
         theme: {
           extend: {
+            // 字体配置
             fontFamily: {
               sans: ['Inter', 'Noto Sans SC', 'sans-serif'],
             },
+            // 颜色配置 - 合并所有颜色系统
             colors: {
+              // 旧版UPC颜色
               upc: {
                 dark: '#0f0c29',
                 purple: '#302b63',
                 blue: '#24243e',
-                accent: '#7b2ff7', // 电子紫色
-                glow: '#00d4ff',   // 青色发光
+                accent: '#7b2ff7',
+                glow: '#00d4ff',
+              },
+              // 新版brand颜色
+              brand: {
+                dark: '#0B0C15',
+                card: '#161821',
+                accent: '#6366f1',
+                glow: '#8b5cf6',
+              },
+              // 新版增强brand颜色
+              'brand-new': {
+                50: '#f0f9ff',
+                100: '#e0f2fe',
+                500: '#6366f1',
+                600: '#4f46e5',
+                700: '#4338ca',
+                900: '#312e81',
+              },
+              // accent橙色系统
+              accent: {
+                DEFAULT: '#f97316',
+                glow: '#fb923c',
+              },
+              // 新增AI颜色系统（来自新HTML）
+              ai: {
+                dark: '#0f0c29',
+                mid: '#302b63',
+                light: '#24243e',
+                accent: '#6366f1',
+                orange: '#f97316'
               }
             },
+            // 动画配置 - 合并所有
             animation: {
               'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'pulse-slower': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 6s ease-in-out infinite',
+              'marquee': 'marquee 25s linear infinite',
+              'marquee-slow': 'marquee 40s linear infinite',
+              'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
+              'shine': 'shine 2s linear infinite',
+            },
+            // 关键帧 - 合并
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              marquee: {
+                '0%': { transform: 'translateX(0%)' },
+                '100%': { transform: 'translateX(-100%)' },
+              },
+              'pulse-glow': {
+                '0%, 100%': { opacity: 0.5 },
+                '50%': { opacity: 0.8 },
+              },
+              blink: {
+                '50%': { opacity: 0 },
+              },
+              shine: {
+                '0%': { transform: 'translateX(-100%)' },
+                '100%': { transform: 'translateX(100%)' },
+              }
             }
           }
         }
@@ -40,37 +101,77 @@
     </script>
     
     <style>
-      /* 默认字体 - 使用 Noto Sans SC（中文优化） */
+      /* 基础字体配置 */
       body {
         font-family: 'Noto Sans SC', 'Inter', sans-serif;
-        background-color: #0f0c29; /* 使用新版的深色背景 */
-        color: white;
+        background-color: #020617; /* 使用 slate-950 背景色 */
+        color: #ffffff;
       }
       
       /* 登录表单区域可以用 Inter 字体 */
       .login-font {
         font-family: 'Inter', sans-serif;
       }
-
-      /* 动画效果 - 合并两个版本 */
-      @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-        100% { transform: translateY(0px); }
+      
+      /* ========== 网格背景图案 ========== */
+      
+      /* 微网格1 - 带遮罩效果 */
+      .bg-grid {
+        background-size: 40px 40px;
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
       }
-
-      @keyframes pulse-glow {
-        0%, 100% { opacity: 0.5; }
-        50% { opacity: 0.8; }
+      
+      /* 微网格2 - 简单网格 */
+      .micro-grid {
+        background-image: 
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 30px 30px;
       }
-
-      @keyframes blink {
-        50% { opacity: 0; }
+      
+      /* 微网格3 - 更明显的网格（来自新HTML） */
+      .bg-grid-pattern {
+        background-size: 40px 40px;
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
       }
-
-      /* 动画类 */
-      .animate-float { animation: float 6s ease-in-out infinite; }
-      .animate-pulse-slow { animation: pulse-glow 4s ease-in-out infinite; }
+      
+      /* 动画暂停工具类 */
+      .pause {
+        animation-play-state: paused;
+      }
+      
+      /* ========== 自定义滚动条 ========== */
+      
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f172a; /* 深蓝色背景 */
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155; /* 灰色滑块 */
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569; /* 浅灰色滑块 */
+      }
+      
+      /* 兼容选项：旧版滚动条样式 */
+      .scrollbar-legacy ::-webkit-scrollbar-track {
+        background: #0B0C15;
+      }
+      .scrollbar-legacy ::-webkit-scrollbar-thumb {
+        background: #334155;
+      }
+      
+      /* ========== 动画效果 ========== */
       
       /* 打字光标 */
       .typing-cursor::after {
@@ -78,20 +179,55 @@
         animation: blink 1s step-start infinite;
       }
       
-      /* 新版的自定义滚动条 */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+      /* 动画类 - 确保所有动画都可用 */
+      .animate-float { animation: float 6s ease-in-out infinite; }
+      .animate-pulse-slow { animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+      .animate-pulse-slower { animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+      .animate-pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
+      .animate-marquee { animation: marquee 25s linear infinite; }
+      .animate-marquee-slow { animation: marquee-slow 40s linear infinite; }
+      .animate-shine { animation: shine 2s linear infinite; }
+      
+      /* ========== 特殊效果类 ========== */
+      
+      .text-gradient {
+        background: linear-gradient(90deg, #6366f1, #8b5cf6, #f97316);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
       }
-      ::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05);
+      
+      .text-gradient-blue {
+        background: linear-gradient(90deg, #00d4ff, #6366f1, #7b2ff7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
       }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 4px;
+      
+      .text-gradient-orange {
+        background: linear-gradient(90deg, #f97316, #fb923c, #fbbf24);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
+      
+      .glow-effect {
+        box-shadow: 0 0 20px rgba(251, 146, 60, 0.3);
+      }
+      
+      .glow-effect-blue {
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+      }
+      
+      .glow-effect-purple {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+      }
+      
+      /* 渐变边框效果 */
+      .gradient-border {
+        border: 2px solid transparent;
+        background: linear-gradient(#020617, #020617) padding-box,
+                    linear-gradient(135deg, #6366f1, #f97316) border-box;
       }
     </style>
   </head>

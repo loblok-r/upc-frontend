@@ -70,3 +70,85 @@ export interface PricingTier {
   type: 'Free' | 'Pro';
   features: PricingFeature[];
 }
+
+export interface ProductCard {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string; // Name of lucide icon or image url
+  color: string; // Tailwind color class for glow/icon
+  badge?: string;
+}
+
+export interface Winner {
+  username: string;
+  prize: string;
+  time: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: Date;
+}
+
+export const LayoutSection = {
+  HERO: 'hero',
+  INFO: 'info',
+} as const;
+export type LayoutSection = typeof LayoutSection[keyof typeof LayoutSection];
+
+
+export interface PricingPlan {
+  id: string;
+  name: string;
+  price: string;
+  originalPrice?: string;
+  billingText: string;
+  badge?: string;
+  isPopular?: boolean;
+}
+
+export interface Benefit {
+  title: string;
+  description: string;
+}
+
+export interface PaymentMethod {
+  id: string;
+  label: string;
+  icon?: string;
+}
+
+export interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  notes: string;
+  paymentMethod: string;
+}
+
+export interface OrderDetails extends SelectedPlan {
+}
+
+export interface SelectedPlan {
+  planName: string;
+  price: number;
+  originalPrice?: number;
+  currency: string;
+  billingText: string;
+  period: string;
+  badge?: string;
+  isPopular?: boolean;
+  id: string;
+}
+
+// 支付相关类型
+export interface PaymentData {
+  orderId: string;
+  qrCodeUrl: string;
+  paymentUrl?: string;
+  expiresAt: string;
+  amount: number;
+}

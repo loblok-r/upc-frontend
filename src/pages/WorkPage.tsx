@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import MainView from '../components/MainView';
+import { Modal } from '../components/Modal';
 
 const WorkPage: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);  
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -14,8 +16,10 @@ const WorkPage: React.FC = () => {
       <Sidebar 
         isCollapsed={isSidebarCollapsed} 
         toggleSidebar={toggleSidebar} 
+        openUpgradeModal={() => setIsModalOpen(true)}
       />
       <MainView />
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

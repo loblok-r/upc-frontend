@@ -1,6 +1,10 @@
 import React from 'react';
 
-const UpgradeCard: React.FC = () => {
+interface UpgradeCardProps {
+  openUpgradeModal: () => void;
+}
+
+const UpgradeCard: React.FC<UpgradeCardProps> = ({ openUpgradeModal }) => {
   return (
     /* 
       Wrapper Div: 
@@ -62,7 +66,9 @@ const UpgradeCard: React.FC = () => {
           </div>
         </div>
         
-        <button className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-orange-500/20 flex items-center justify-center gap-2">
+        <button 
+        onClick={openUpgradeModal} 
+        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-orange-500/20 flex items-center justify-center gap-2">
           <i className="fa-solid fa-gem"></i>
           立即升级 Pro
         </button>

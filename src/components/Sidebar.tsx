@@ -5,6 +5,7 @@ import UpgradeCard from './UpgradeCard';
 interface SidebarProps {
   isCollapsed: boolean;
   toggleSidebar: () => void;
+  openUpgradeModal: () => void; 
 }
 
 const navItems: NavItem[] = [
@@ -13,7 +14,7 @@ const navItems: NavItem[] = [
   { id: 'documents', label: '我的文档', icon: 'fa-folder-open' },
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgradeModal }) => {
   return (
     <div 
       className={`
@@ -97,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar }) => {
         </div>
 
         {/* Upgrade Popover Card - Shows on hover of the container */}
-        <UpgradeCard />
+        <UpgradeCard openUpgradeModal={openUpgradeModal} />
       </div>
     </div>
   );
