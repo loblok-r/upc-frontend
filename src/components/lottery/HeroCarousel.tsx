@@ -1,5 +1,5 @@
 import React from 'react';
-import { PRODUCTS } from '../data/constants';
+import { PRODUCTS } from '../../data/constants';
 import { useNavigate } from 'react-router-dom'; 
 import * as Icons from 'lucide-react';
 

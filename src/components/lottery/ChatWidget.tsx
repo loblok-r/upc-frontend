@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Chat } from "@google/genai";
 import { MessageSquare, X, Send, User, Bot, Minus, Smile, Paperclip } from 'lucide-react';
-import type { ChatMessage } from '../types';
-import { AI_SYSTEM_INSTRUCTION } from '../data/constants';
+import type { ChatMessage } from '../../types';
+import { AI_SYSTEM_INSTRUCTION } from '../../data/constants';
 
 const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

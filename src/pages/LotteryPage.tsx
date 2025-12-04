@@ -1,9 +1,9 @@
 import React from 'react';
 // import { Navbar } from '../components/Navbar';
-import TopTicker from '../components/TopTicker';
-import HeroCarousel from '../components/HeroCarousel';
-import InfoSection from '../components/InfoSection';
-import ChatWidget from '../components/ChatWidget';
+import TopTicker from '../components/lottery/TopTicker';
+import HeroCarousel from '../components/lottery/HeroCarousel';
+import InfoSection from '../components/lottery/InfoSection';
+import ChatWidget from '../components/lottery/ChatWidget';
 
 const LotteryPage: React.FC = () => {
   return (

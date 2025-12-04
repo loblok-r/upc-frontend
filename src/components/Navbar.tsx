@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { NavItem } from '../types';
-import { Logo } from './Logo';
+import { Logo } from './home/Logo';
+import { useNavigate } from 'react-router-dom'; 
 
 const navItems: NavItem[] = [
   { label: '首页', href: '/' },
@@ -12,6 +13,12 @@ const navItems: NavItem[] = [
 ];
 
 export const Navbar: React.FC = () => {
+  const navigate = useNavigate(); // 创建导航实例
+
+  const handleCreateClick = () => {
+    navigate('/work'); // 导航到工作页面
+  };
+
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -53,6 +60,7 @@ export const Navbar: React.FC = () => {
             中文
           </button>
           <button 
+            onClick={handleCreateClick}
             className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-500/30 hover:shadow-blue-400/50 transition-all duration-300 transform hover:-translate-y-0.5">
             免费体验
           </button>

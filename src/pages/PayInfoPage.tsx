@@ -9,9 +9,9 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { Input, TextArea } from '../components/Input';
-import { InvoiceView } from '../components/InvoiceView';
-import { PaymentSelector } from '../components/PaymentSelector';
+import { Input, TextArea } from '../components/pay/Input';
+import { InvoiceView } from '../components/pay/InvoiceView';
+import { PaymentSelector } from '../components/pay/PaymentSelector';
 import { generateInvoiceSummary } from '../services/deepseekService';
 import type { FormData, OrderDetails } from '../types';
 

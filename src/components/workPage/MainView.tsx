@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
-import { generateImageFromText } from '../services/localImageService';
+import { generateImageFromText } from '../../services/localImageService';
 import Gallery from './Gallery';
 
 const MainView: React.FC = () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PaymentMethod } from '../types';
+import type { PaymentMethod } from '../../types';
 import { CreditCard, Wallet, QrCode, Banknote } from 'lucide-react';
 
 interface PaymentSelectorProps {

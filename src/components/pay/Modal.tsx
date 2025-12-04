@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Check, Zap, Sparkles, LayoutTemplate, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; 
 import { CountdownTimer } from './CountdownTimer';
-import type { PricingPlan } from '../types';
+import type { PricingPlan } from '../../types';
 
 interface ModalProps {
   isOpen: boolean;

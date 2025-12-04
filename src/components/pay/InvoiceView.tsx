@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import type { FormData, OrderDetails } from '../types';
+import type { FormData, OrderDetails } from '../../types';
 import {
   Printer,
   Download,
@@ -16,7 +16,7 @@ import {
   QrCode
 } from 'lucide-react';
 
-import { generateWechatQRCode, checkPaymentStatus } from '../services/deepseekService';
+import { generateWechatQRCode, checkPaymentStatus } from '../../services/deepseekService';
 
 interface InvoiceViewProps {
   formData: FormData;

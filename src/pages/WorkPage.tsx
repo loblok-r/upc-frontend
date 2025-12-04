@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import MainView from '../components/MainView';
-import { Modal } from '../components/Modal';
+import Sidebar from '../components/workPage/Sidebar';
+import MainView from '../components/workPage/MainView';
+import { Modal } from '../components/pay/Modal';
 
 const WorkPage: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);

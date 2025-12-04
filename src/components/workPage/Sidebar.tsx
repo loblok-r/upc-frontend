@@ -1,5 +1,5 @@
 import React from 'react';
-import type { NavItem } from '../types';
+import type { NavItem } from '../../types';
 import UpgradeCard from './UpgradeCard';
 
 interface SidebarProps {

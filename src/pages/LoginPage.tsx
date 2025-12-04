@@ -1,8 +1,8 @@
 // src/pages/LoginPage.tsx
 import React, { useState } from 'react';
-import { TechBackground } from '../components/TechBackground';
-import { LoginForm } from '../components/LoginForm';
-import { RegisterForm } from '../components/RegisterForm';
+import { TechBackground } from '../components/login/TechBackground';
+import { LoginForm } from '../components/login/LoginForm';
+import { RegisterForm } from '../components/login/RegisterForm';
 import { Link } from 'react-router-dom';
 
 function LoginPage() {

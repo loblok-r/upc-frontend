@@ -1,5 +1,5 @@
 import React from 'react';
-import { WINNERS } from '../data/constants';
+import { WINNERS } from '../../data/constants';
 import { Bell } from 'lucide-react';
 
 const TopTicker: React.FC = () => {
