@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; 
-import { 
-  ArrowLeft, 
-  Lock, 
-  User, 
+import { useNavigate } from 'react-router-dom';
+import {
+  ArrowLeft,
+  Lock,
+  User,
   Mail,
   RefreshCw,
   ShieldCheck
@@ -19,7 +19,7 @@ const PayInfoPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedPlan } = location.state || {};
-  
+
   const [formData, setFormData] = useState<FormData>({
     firstName: '特曼',
     lastName: '奥',
@@ -55,6 +55,13 @@ const PayInfoPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+
+    // 校验支付方式 - 只允许微信支付
+    if (formData.paymentMethod !== 'wechat') {
+      alert('目前只支持微信支付，请选择微信支付方式');
+      return;
+    }
+
     setIsLoading(true);
     try {
       // 调用AI生成账单摘要
@@ -83,7 +90,7 @@ const PayInfoPage: React.FC = () => {
   // 如果显示账单页面 - 这是主要的渲染分支
   if (showInvoice) {
     return (
-      <InvoiceView 
+      <InvoiceView
         formData={formData}
         orderDetails={orderDetails}
         invoiceSummary={invoiceSummary}
@@ -95,7 +102,7 @@ const PayInfoPage: React.FC = () => {
   // 正常支付信息页面渲染（不再有 invoiceResult 的条件渲染）
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-slate-50 font-sans">
-      
+
       {/* Left Column: Order Summary (Dark Theme) */}
       <div className="w-full lg:w-[45%] bg-ai-dark text-white relative overflow-hidden flex flex-col p-6 lg:p-12">
         {/* Background Visuals */}
@@ -106,7 +113,7 @@ const PayInfoPage: React.FC = () => {
 
         <div className="relative z-10 flex flex-col h-full">
           {/* Header */}
-          <div 
+          <div
             onClick={handleBackClick}
             className="flex items-center gap-4 mb-10 text-slate-400 hover:text-white cursor-pointer transition-colors w-fit"
           >
@@ -120,14 +127,14 @@ const PayInfoPage: React.FC = () => {
                 <RefreshCw size={16} className="text-white animate-spin-slow" />
               </div>
               <span className="font-semibold text-lg tracking-tight">订阅 {orderDetails.planName}</span>
-              
+
               {/* 显示折扣标签 */}
               {orderDetails.badge && (
                 <span className="bg-orange-500/20 text-orange-400 text-xs font-bold px-2 py-0.5 rounded border border-orange-500/20 ml-2">
                   {orderDetails.badge}
                 </span>
               )}
-              
+
               {/* 显示热门标签 */}
               {orderDetails.isPopular && (
                 <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full ml-2">
@@ -135,13 +142,13 @@ const PayInfoPage: React.FC = () => {
                 </span>
               )}
             </div>
-            
+
             <div className="mt-2 mb-12">
               <h1 className="text-5xl font-bold text-white tracking-tight flex items-baseline gap-2">
                 {orderDetails.currency}{orderDetails.price.toFixed(2)}
                 <span className="text-lg text-slate-400 font-normal">/ {orderDetails.period}</span>
               </h1>
-              
+
               {/* 显示原价（如果有） */}
               {orderDetails.originalPrice && (
                 <div className="flex items-center gap-2 mt-2">
@@ -155,7 +162,7 @@ const PayInfoPage: React.FC = () => {
                   )}
                 </div>
               )}
-              
+
               {/* 显示计费说明 */}
               <p className="text-sm text-slate-400 mt-3">
                 {orderDetails.billingText}
@@ -184,9 +191,9 @@ const PayInfoPage: React.FC = () => {
 
             {/* Promo Code */}
             <div className="mt-4 flex gap-3">
-              <input 
-                type="text" 
-                placeholder="添加促销码" 
+              <input
+                type="text"
+                placeholder="添加促销码"
                 className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 flex-1 focus:outline-none focus:border-indigo-400 transition-colors"
               />
               <button className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition-colors">
@@ -200,7 +207,7 @@ const PayInfoPage: React.FC = () => {
               <span className="text-2xl font-bold text-white">{orderDetails.currency}{orderDetails.price.toFixed(2)}</span>
             </div>
           </div>
-          
+
           <div className="mt-12 text-xs text-slate-500">
             © 2025 Loblok Saas UPC. All rights reserved.
           </div>
@@ -209,19 +216,36 @@ const PayInfoPage: React.FC = () => {
 
       {/* Right Column: Payment Form (Light/Glass Tech Theme) */}
       <div className="w-full lg:w-[55%] p-6 lg:p-16 overflow-y-auto bg-slate-50 flex flex-col">
-        
+
         <div className="max-w-xl mx-auto w-full space-y-10">
-          
+
           {/* Section: Payment Info */}
           <section>
             <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
               <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
-              支付详细信息（当前只支持微信支付）
+              支付详细信息
             </h2>
-            <PaymentSelector 
-              selected={formData.paymentMethod} 
-              onSelect={handlePaymentSelect} 
+            <PaymentSelector
+              selected={formData.paymentMethod}
+              onSelect={handlePaymentSelect}
             />
+
+            {/* 添加支付方式提示 */}
+            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start gap-2 text-amber-700 text-sm">
+                <div className="bg-amber-100 p-1 rounded">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-medium">重要提示</p>
+                  <p className="text-amber-600 text-xs mt-0.5">
+                    目前测试阶段仅支持微信支付。选择其他支付方式将无法完成支付。
+                  </p>
+                </div>
+              </div>
+            </div>
           </section>
 
           {/* Section: Personal Info */}
@@ -231,28 +255,28 @@ const PayInfoPage: React.FC = () => {
               个人信息
             </h2>
             <div className="grid grid-cols-2 gap-4">
-              <Input 
-                label="名字" 
-                name="firstName" 
-                value={formData.firstName} 
-                onChange={handleInputChange} 
+              <Input
+                label="名字"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
                 placeholder="San"
                 icon={User}
               />
-              <Input 
-                label="姓氏" 
-                name="lastName" 
-                value={formData.lastName} 
-                onChange={handleInputChange} 
+              <Input
+                label="姓氏"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
                 placeholder="Zhang"
               />
             </div>
-            <Input 
-              label="电子邮件地址" 
-              name="email" 
-              type="email" 
-              value={formData.email} 
-              onChange={handleInputChange} 
+            <Input
+              label="电子邮件地址"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
               placeholder="example@email.com"
               icon={Mail}
             />
@@ -264,7 +288,7 @@ const PayInfoPage: React.FC = () => {
               <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
               附加备注
             </h2>
-            <TextArea 
+            <TextArea
               placeholder="您可以在此输入任何您希望提供与此订单相关的备注资讯..."
               name="notes"
               value={formData.notes}

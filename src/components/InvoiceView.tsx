@@ -342,7 +342,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
                 </div>
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">买受人</h3>
+                <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">付款人</h3>
                 <div className="space-y-1 text-slate-200">
                   <p className="font-bold text-lg text-white">{formData.lastName} {formData.firstName}</p>
                   <p>{formData.email}</p>
