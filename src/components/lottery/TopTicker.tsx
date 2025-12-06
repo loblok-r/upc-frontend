@@ -8,7 +8,7 @@ const TopTicker: React.FC = () => {
       <div className="container mx-auto px-4 flex items-center h-full">
         <div className="flex items-center text-xs text-slate-400 font-medium mr-6 shrink-0 z-10 bg-slate-900/80 pr-4">
           <Bell className="w-3.5 h-3.5 mr-2 text-brand-accent" />
-          <span>更多付费权益</span>
+          <span>中奖用户播报</span>
         </div>
         
         {/* Infinite Scrolling Area */}

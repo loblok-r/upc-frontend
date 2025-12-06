@@ -9,6 +9,7 @@ const MainView: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeFeature, setActiveFeature] = useState<string | null>(null); // 当前激活的功能
 
   // 新增：参考图（本地上传）
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
@@ -79,13 +80,39 @@ const MainView: React.FC = () => {
   };
 
   const features = [
-    { icon: 'fa-solid fa-pen-nib', label: 'AI 写作助手' },
-    { icon: 'fa-solid fa-chart-pie', label: '智能演示' },
-    { icon: 'fa-solid fa-magnifying-glass', label: '深度搜索' },
-    { icon: 'fa-solid fa-image', label: 'AI 绘图', active: true },
-    { icon: 'fa-solid fa-microphone-lines', label: '播客生成' },
-    { icon: 'fa-solid fa-grip', label: '更多工具' },
+    { id: 'ai-writing', icon: 'fa-solid fa-pen-nib', label: 'AI 写作助手', placeholder: '描述你想写的内容，我会帮你创作文章、文案、故事...', subtitle: '笔尖化思想，让创意成为文字。' },
+    { id: 'smart-presentation', icon: 'fa-solid fa-chart-pie', label: '智能演示', placeholder: '告诉我演示的主题，我会为你生成专业的演示文稿...', subtitle: '数据有声音，让演示更生动有力。' },
+    { id: 'deep-search', icon: 'fa-solid fa-magnifying-glass', label: '深度搜索', placeholder: '输入你想搜索的问题，我会为你深度挖掘答案...', subtitle: '深度探索信息，找到你真正需要的答案。' },
+    { id: 'ai-drawing', icon: 'fa-solid fa-image', label: 'AI 绘图', placeholder: '描述你想要生成的画面...', subtitle: '创作直观视觉呈现，让创意跃然眼前。' },
+    { id: 'podcast', icon: 'fa-solid fa-microphone-lines', label: '播客生成', placeholder: '告诉我播客的主题和风格，我会帮你生成音频内容...', subtitle: '声音承载故事，让你的想法被听见。' },
+    { id: 'more-tools', icon: 'fa-solid fa-grip', label: '更多工具', placeholder: '正在开发更多 AI 功能...', subtitle: '无限可能，尽在你的掌握之中。' },
   ];
+
+  // 获取当前 placeholder
+  const getCurrentPlaceholder = () => {
+    if (!activeFeature) {
+      return '有什么想问的，或者想聊什么话题，都可以提。';
+    }
+    const feature = features.find(f => f.id === activeFeature);
+    return feature?.placeholder || '有什么想问的，或者想聊什么话题，都可以提。';
+  };
+
+  // 获取当前副标题
+  const getCurrentSubtitle = () => {
+    if (!activeFeature) {
+      return '全能 AI 创意工作空间，让每个创意瞬间变现。';
+    }
+    const feature = features.find(f => f.id === activeFeature);
+    return feature?.subtitle || '全能 AI 创意工作空间，让每个创意瞬间变现。';
+  };
+
+  // 点击功能图标
+  const handleFeatureClick = (featureId: string) => {
+    setActiveFeature(featureId);
+    setPrompt(''); // 清空输入
+    setGeneratedImage(null); // 清空已生成的内容
+    setError(null); // 清空错误
+  };
 
   return (
     <div className="flex-1 h-screen overflow-y-auto relative bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
@@ -114,13 +141,29 @@ const MainView: React.FC = () => {
           <h1 className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-blue-200">
             Hi, I am <span className="text-orange-500">UPC</span><span className="text-purple-400 text-2xl align-top">+</span>
           </h1>
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            全能 AI 创意工作空间，让每个创意瞬间变现。
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto transition-all duration-300">
+            {getCurrentSubtitle()}
           </p>
         </div>
 
-        {/* Input Area */}
+        {/* Input Area with Return Button */}
         <div className="w-full max-w-3xl relative mb-12 group">
+          
+          {/* Return Button - appears when a feature is selected */}
+          {activeFeature && (
+            <button
+              onClick={() => {
+                setActiveFeature(null);
+                setPrompt('');
+                setGeneratedImage(null);
+                setError(null);
+              }}
+              className="absolute -left-24 top-0 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all duration-300 flex items-center gap-2 group/return"
+            >
+              <i className="fa-solid fa-arrow-left text-xs group-hover/return:translate-x-[-2px] transition-transform"></i>
+              返回
+            </button>
+          )}
 
           <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
           
@@ -130,8 +173,11 @@ const MainView: React.FC = () => {
               ref={textareaRef}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="描述你想要生成的画面..."
-              className="w-full bg-transparent border-none outline-none text-white text-lg placeholder-gray-500 resize-none min-h-[80px] max-h-[300px]"
+              placeholder={getCurrentPlaceholder()}
+              disabled={activeFeature === 'more-tools'}
+              className={`w-full bg-transparent border-none outline-none text-white text-lg placeholder-gray-500 resize-none min-h-[80px] max-h-[300px] ${
+                activeFeature === 'more-tools' ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
               rows={1}
             />
 
@@ -166,7 +212,12 @@ const MainView: React.FC = () => {
               <div className="flex gap-2 text-gray-400">
                 <button 
                   onClick={handleUploadClick}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors tooltip"
+                  disabled={activeFeature === 'more-tools'}
+                  className={`p-2 rounded-full transition-colors tooltip ${
+                    activeFeature === 'more-tools' 
+                      ? 'opacity-50 cursor-not-allowed' 
+                      : 'hover:bg-white/10'
+                  }`}
                   title="上传参考图"
                 >
                   <i className="fa-solid fa-paperclip"></i>
@@ -177,10 +228,12 @@ const MainView: React.FC = () => {
                 <span className="text-xs text-gray-600">{prompt.length} / 5000</span>
                 <button 
                   onClick={handleGenerate}
-                  disabled={isGenerating || !prompt.trim()}
+                  disabled={isGenerating || !prompt.trim() || activeFeature === 'more-tools'}
                   className={`
                     w-10 h-10 rounded-full flex items-center justify-center transition-all
-                    ${prompt.trim() ? 'bg-orange-500 text-white hover:bg-orange-400' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}
+                    ${activeFeature === 'more-tools' 
+                      ? 'bg-gray-800 text-gray-600 cursor-not-allowed' 
+                      : prompt.trim() ? 'bg-orange-500 text-white hover:bg-orange-400' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}
                     ${isGenerating ? 'animate-spin' : ''}
                   `}
                 >
@@ -197,17 +250,21 @@ const MainView: React.FC = () => {
 
         {/* Feature Icons */}
         <div className="flex flex-wrap justify-center gap-6 mb-16">
-            {features.map((feature, index) => (
-                <div key={index} className="flex flex-col items-center gap-2 group cursor-pointer">
+            {features.map((feature) => (
+                <div 
+                  key={feature.id} 
+                  className="flex flex-col items-center gap-2 group cursor-pointer"
+                  onClick={() => handleFeatureClick(feature.id)}
+                >
                     <div className={`
                         w-14 h-14 rounded-2xl flex items-center justify-center text-xl transition-all duration-300 border
-                        ${feature.active 
+                        ${activeFeature === feature.id
                             ? 'bg-white text-slate-900 border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
                             : 'bg-white/5 border-white/10 text-gray-400 group-hover:bg-white/10 group-hover:scale-105 group-hover:text-white'}
                     `}>
                         <i className={feature.icon}></i>
                     </div>
-                    <span className={`text-xs font-medium transition-colors ${feature.active ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>
+                    <span className={`text-xs font-medium transition-colors ${activeFeature === feature.id ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>
                         {feature.label}
                     </span>
                 </div>
