@@ -170,6 +170,11 @@
       .scrollbar-legacy ::-webkit-scrollbar-thumb {
         background: #334155;
       }
+
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
       
       /* ========== 动画效果 ========== */
       
@@ -209,6 +214,12 @@
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
+      }
+
+      .text-gradient-primary {
+        background: linear-gradient(to right, #FF512F, #DD2476);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
       
       .glow-effect {

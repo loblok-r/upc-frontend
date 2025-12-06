@@ -152,3 +152,37 @@ export interface PaymentData {
   expiresAt: string;
   amount: number;
 }
+
+export const AppMode = {
+  TEXT_CHAT: 'text_chat',
+  AI_IMAGE: 'ai_image',
+  WRITING_ASSISTANT: 'writing_assistant',
+  SMART_PRESENTATION: 'smart_presentation',
+  DEEP_SEARCH: 'deep_search',
+  PODCAST_GEN: 'podcast_gen'
+} as const;
+export type AppMode = typeof AppMode[keyof typeof AppMode];
+export const Sender = {
+  USER: 'User',
+  AI: 'AI'
+} as const;
+export type Sender = typeof Sender[keyof typeof Sender];
+
+export interface Message {
+  id: string;
+  sender: Sender;
+  content: string;
+  timestamp: number;
+  type: 'text' | 'image' | 'loading';
+  imageUrl?: string;
+  meta?: {
+    model?: string;
+    latency?: number;
+  };
+}
+
+export interface ServiceResponse {
+  success: boolean;
+  data: any;
+  message?: string;
+}

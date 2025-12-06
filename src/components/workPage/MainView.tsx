@@ -158,7 +158,7 @@ const MainView: React.FC = () => {
                 setGeneratedImage(null);
                 setError(null);
               }}
-              className="absolute -left-24 top-0 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all duration-300 flex items-center gap-2 group/return"
+              className="fixed top-24 left-80 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all duration-300 flex items-center gap-2 group/return z-30"
             >
               <i className="fa-solid fa-arrow-left text-xs group-hover/return:translate-x-[-2px] transition-transform"></i>
               返回
