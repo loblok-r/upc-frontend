@@ -216,3 +216,26 @@ export interface DocumentItem {
   updatedAt: string;
   thumbnailColor: string; // Tailwind class for the placeholder gradient
 }
+
+export interface MallProduct {
+  id: string;
+  name: string;
+  points: number;
+  originalPoints?: number;
+  cash?: number;
+  image: string;
+  tag?: string;
+  category: string;
+  soldOut?: boolean;
+}
+
+export interface FlashSaleItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  originalPrice: number;
+  time: string;
+  status: 'active' | 'ended' | 'upcoming';
+  image: string;
+}

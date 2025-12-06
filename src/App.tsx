@@ -5,6 +5,9 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import WorkPage from './pages/WorkPage';
 import LotteryPage from './pages/LotteryPage';
+import MallPage from './pages/Mall';
+
+
 
 import DefaultLayout from './layouts/DefaultLayout';
 import NoNavbarLayout from './layouts/NoNavbarLayout';
@@ -36,6 +39,14 @@ function App() {
           element={
             <DefaultLayout>
               <HomePage />
+            </DefaultLayout>
+          }
+        />
+        <Route
+          path="/mall"
+          element={
+            <DefaultLayout>
+              <MallPage />
             </DefaultLayout>
           }
         />
