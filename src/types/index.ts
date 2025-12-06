@@ -54,10 +54,11 @@ export const SidebarState = {
 } as const;
 export type SidebarState = typeof SidebarState[keyof typeof SidebarState];
 
-export interface NavItem {
+export interface NavItemII {
   id: string;
   label: string;
   icon: string;
+  view: string;
 }
 
 export interface PricingFeature {
@@ -186,4 +187,32 @@ export interface ServiceResponse {
   success: boolean;
   data: any;
   message?: string;
+}
+export interface Document {
+  id: string;
+  title: string;
+  date: string;
+  type: 'slides' | 'doc' | 'sheet' | 'video' | 'image';
+  thumbnailColor?: string;
+  isPlaceholder?: boolean;
+  coverImage?: string; // For dashboard cards
+  badge?: string;      // e.g. "AI Video"
+}
+
+export interface HistoryItem {
+  id: string;
+  title: string;
+  // prompt: string;
+  type: 'IMAGE' | 'TEXT' | 'VIDEO';
+  timestamp: string;
+  thumbnail?: string; 
+  messages: Message[]; // 保存完整的对话记录以便后续恢复
+}
+
+export interface DocumentItem {
+  id: string;
+  title: string;
+  type: 'SLIDES' | 'SHEET' | 'DOC';
+  updatedAt: string;
+  thumbnailColor: string; // Tailwind class for the placeholder gradient
 }

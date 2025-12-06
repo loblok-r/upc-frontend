@@ -1,5 +1,5 @@
 import React from 'react';
-import type { NavItem } from '../../types';
+import type { NavItemII } from '../../types';
 import UpgradeCard from './UpgradeCard';
 
 interface SidebarProps {
@@ -10,15 +10,21 @@ interface SidebarProps {
   onNavigate: (viewId: string) => void;
 }
 
-const navItems: NavItem[] = [
-  { id: 'new', label: '新建项目', icon: 'fa-plus' },
-  { id: 'dashboard', label: '工作台', icon: 'fa-table-columns' },
-  { id: 'history', label: '历史记录', icon: 'fa-clock-rotate-left' },
-  { id: 'documents', label: '我的文档', icon: 'fa-folder-open' },
+const  navItems:  NavItemII[] = [
+  { id: 'new', label: '新建项目', icon: 'fa-plus', view: 'new' },
+  { id: 'dashboard', label: '工作台', icon: 'fa-table-columns', view: 'landing' },
+  { id: 'history', label: '历史记录', icon: 'fa-clock-rotate-left', view: 'history' },
+  { id: 'documents', label: '我的文档', icon: 'fa-folder-open', view: 'document' },
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgradeModal,currentView, onNavigate
 }) => {
+
+
+  
+  const handleNavClick = (view: string) => {
+  onNavigate(view);
+};
   return (
     <div 
       className={`
@@ -66,20 +72,31 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
         </button>
       </div>
 
-      {/* Nav Items */}
+     {/* Nav Items */}
       <nav className="flex-1 px-3 py-2 space-y-1">
         {navItems.slice(1).map((item) => (
-          <a
+          <button
             key={item.id}
-            href="#"
+            onClick={() => handleNavClick(item.view)}
             className={`
-              flex items-center gap-3 px-3 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all group
+              flex items-center gap-3 px-3 py-3 rounded-xl w-full text-left transition-all group
               ${isCollapsed ? 'justify-center' : ''}
+              ${currentView === (item.id === 'dashboard' ? 'landing' : 
+                                item.id === 'history' ? 'history' : 
+                                item.id === 'documents' ? 'document' : '') 
+                ? 'bg-white/10 text-white' 
+                : 'text-gray-400 hover:text-white hover:bg-white/5'}
             `}
           >
-            <i className={`fa-solid ${item.icon} text-lg group-hover:text-purple-400 transition-colors`}></i>
+            <i className={`fa-solid ${item.icon} text-lg group-hover:text-purple-400 transition-colors ${
+              currentView === (item.id === 'dashboard' ? 'landing' : 
+                item.id === 'history' ? 'history' : 
+                item.id === 'documents' ? 'document' : '')  
+                ? 'text-purple-400' 
+                : ''
+            }`}></i>
             {!isCollapsed && <span className="font-medium text-sm">{item.label}</span>}
-          </a>
+          </button>
         ))}
       </nav>
 

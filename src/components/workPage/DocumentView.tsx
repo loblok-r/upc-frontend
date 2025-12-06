@@ -2,7 +2,7 @@ import React from 'react';
 import { Upload, Plus, Search, Filter } from "lucide-react";
 import { MOCK_DOCUMENTS } from "../../data/constants";
 import { DocumentCard } from "./DocumentCard";
-import { Button } from "../../ui/Button";
+import { Button } from "../ui/Button";
 
 export const DocumentView: React.FC = () => {
   return (
@@ -43,7 +43,7 @@ export const DocumentView: React.FC = () => {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 p-4">
         {MOCK_DOCUMENTS.map((doc) => (
           <DocumentCard key={doc.id} doc={doc} />
         ))}

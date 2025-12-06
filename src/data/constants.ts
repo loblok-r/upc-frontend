@@ -1,4 +1,4 @@
-import type { ProductCard, Winner } from '../types';
+import type { ProductCard,Document, Winner } from '../types';
 
 export const WINNERS: Winner[] = [
   { username: "p***x", prize: "专业版次数+10", time: "1分钟前" },
@@ -83,3 +83,34 @@ Key Platform Info:
 If asked about technical issues, suggest checking the "Help Docs" (帮助文档) first.
 If asked about the lottery, explain the $5 recharge rule.
 `;
+
+export const MOCK_DOCUMENTS: Document[] = [
+  {
+    id: 'new',
+    title: '新建文档',
+    date: '您可以手动创建文件',
+    type: 'doc',
+    isPlaceholder: true
+  },
+  {
+    id: '1',
+    title: 'AI 与大数据分析',
+    date: '2025-12-06 13:33 创建',
+    type: 'slides',
+    thumbnailColor: 'bg-orange-500/20' 
+  },
+  {
+    id: '2',
+    title: 'Q3 季度财务报告',
+    date: '2025-11-20 09:15 创建',
+    type: 'sheet',
+    thumbnailColor: 'bg-green-500/20'
+  },
+  {
+    id: '3',
+    title: '产品发布会演讲稿',
+    date: '2025-11-15 16:40 创建',
+    type: 'doc',
+    thumbnailColor: 'bg-blue-500/20'
+  }
+];

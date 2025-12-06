@@ -9,19 +9,24 @@ import type { Message } from '../types';
 import { Sender, AppMode } from '../types';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import HistoryView from '../components/workPage/HistoryView';
 import { DocumentView } from '../components/workPage/DocumentView';
+import type { HistoryItem } from '../types'; 
 
 const WorkPage: React.FC = () => {
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   // 视图状态管理
-  const [viewState, setViewState] = useState<'landing' | 'chat' | 'document'>('landing');
+  const [viewState, setViewState] = useState<'landing' | 'chat' | 'document' | 'history'>('landing');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>(AppMode.TEXT_CHAT);
 
+   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
   // 自动滚动引用
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +45,29 @@ const WorkPage: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isGenerating]);
+
+//  新增：保存当前会话到历史记录的函数
+  const saveCurrentChatToHistory = () => {
+    // 如果没有消息，不保存
+    if (messages.length === 0) return;
+
+    // 自动生成标题（取第一条用户消息的前20个字，或者默认标题）
+    const firstUserMsg = messages.find(m => m.sender === Sender.USER);
+    const title = firstUserMsg 
+      ? (firstUserMsg.content.slice(0, 20) + (firstUserMsg.content.length > 20 ? '...' : ''))
+      : '新的对话';
+
+    const newHistoryItem: HistoryItem = {
+      id: Date.now().toString(),
+      title :title,
+      // prompt: title,
+      type: currentMode === AppMode.AI_DRAWING ? 'IMAGE' : 'TEXT',
+      timestamp: Date.now().toString(),
+      messages: [...messages] // 关键：克隆当前的消息数组
+    };
+
+    setHistoryList(prev => [newHistoryItem, ...prev]); // 添加到列表头部
+  };
 
   // 处理发送消息 - 核心交互逻辑
   const handleSendMessage = async (prompt: string, base64?: string) => {
@@ -119,15 +147,12 @@ const WorkPage: React.FC = () => {
   };
 
   // 返回工作台/启动页
-  const handleBackToLanding = () => {
-    setMessages([]);
+   const handleBackToLanding = () => {
+    saveCurrentChatToHistory(); // 离开前保存
+    setMessages([]); // 清空当前画布
     setViewState('landing');
   };
 // 切换到文档视图
-  const handleSwitchToDocument = () => {
-    setMessages([]);
-    setViewState('document');
-  };
 
   // 处理MainView中的模式选择
   const handleModeChange = (mode: AppMode) => {
@@ -142,12 +167,52 @@ const WorkPage: React.FC = () => {
     handleSendMessage(prompt, base64);
   };
 
+  // 处理侧边栏导航
+  const handleNavigate = (viewId: string) => {
+    // 如果当前正在聊天视图，且要切换到其他视图，先保存
+    if (viewState === 'chat' && messages.length > 0) {
+      saveCurrentChatToHistory();
+    }
+
+    if (viewId === 'landing') {
+      setMessages([]); 
+      setViewState('landing');
+    } else if (viewId === 'document') {
+      setViewState('document');
+    } else if (viewId === 'history') {
+      setViewState('history');
+    } else if (viewId === 'chat') {
+       // 如果直接点击侧边栏的 chat，通常意味着新对话或保持当前
+       setViewState('chat');
+    }
+  };
+
+  // 处理删除历史记录
+  const handleDeleteHistory = (id: string) => {
+    setHistoryList(prev => prev.filter(item => item.id !== id));
+    
+    // 可选：如果删除的是当前正在进行的会话，重置当前视图
+    if (currentSessionId === id) {
+      setCurrentSessionId(null);
+      setMessages([]);
+    }
+  };
+
+    // 从历史记录恢复对话
+  // 这个函数需要传递给 HistoryView，当用户点击某条历史记录时调用
+  const handleRestoreHistory = (item: HistoryItem) => {
+    setMessages(item.messages); // 恢复消息
+    // setViewState('chat'); // 切换回聊天视图
+  };
+
   return (
     <div className="flex h-screen w-full bg-[#0f0c29] text-white font-sans overflow-hidden">
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         toggleSidebar={toggleSidebar}
         openUpgradeModal={() => setIsModalOpen(true)}
+        currentView={viewState}  // 传递当前视图状态
+        onNavigate={handleNavigate}  // 传递导航处理函数
       />
 
       <main className="flex-1 flex flex-col min-w-0 relative">
@@ -166,7 +231,10 @@ const WorkPage: React.FC = () => {
             <>
               {/* 左侧：标题 */}
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-semibold text-white">AI 创作工作台</h1>
+               <div className="text-sm text-gray-400">
+                  <span className="text-orange-400 font-semibold">Loblok UPC Pro</span> 现已上线 UINO，
+                  <a href="#" className="underline decoration-orange-400 underline-offset-4 hover:text-white transition-colors">免费试用</a>
+                </div>
                 {/* <span className="text-xs px-2 py-1 bg-white/10 rounded-full text-slate-300">
                   {Object.keys(AppMode).find(key => AppMode[key as keyof typeof AppMode] === currentMode)?.replace('_', ' ') || 'AI 绘图'}
                 </span> */}
@@ -174,10 +242,6 @@ const WorkPage: React.FC = () => {
 
               {/* 右侧：工具栏 */}
               <div className="flex items-center gap-8 pr-8"> {/* 添加 pr-8 */}
-                <div className="text-sm text-gray-400">
-                  <span className="text-orange-400 font-semibold">Loblok UPC Pro</span> 现已上线 UINO，
-                  <a href="#" className="underline decoration-orange-400 underline-offset-4 hover:text-white transition-colors">免费试用</a>
-                </div>
                 <div className="flex items-center gap-4 text-gray-400 text-sm">
                   <button className="hover:text-white"><i className="fa-solid fa-globe"></i> 中文</button>
                   <button
@@ -208,6 +272,15 @@ const WorkPage: React.FC = () => {
            {viewState === 'document' && (
             <div className="h-full overflow-y-auto">
               <DocumentView/>
+            </div>
+          )}
+         {viewState === 'history' && (
+            <div className="h-full overflow-y-auto">
+              <HistoryView 
+                historyItems={historyList} 
+                onSelectHistory={handleRestoreHistory} // 假设 HistoryView 支持点击恢复
+                onDeleteHistory={handleDeleteHistory}
+              />
             </div>
           )}
 
