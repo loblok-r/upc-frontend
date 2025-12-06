@@ -155,11 +155,12 @@ export interface PaymentData {
 
 export const AppMode = {
   TEXT_CHAT: 'text_chat',
-  AI_IMAGE: 'ai_image',
-  WRITING_ASSISTANT: 'writing_assistant',
+  AI_WRITING:'ai_writing',
   SMART_PRESENTATION: 'smart_presentation',
   DEEP_SEARCH: 'deep_search',
-  PODCAST_GEN: 'podcast_gen'
+  AI_DRAWING: 'ai_drawing',
+  PODCAST: 'podcast',
+  MORE_TOOLS: 'more_tools',
 } as const;
 export type AppMode = typeof AppMode[keyof typeof AppMode];
 export const Sender = {

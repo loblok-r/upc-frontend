@@ -10,6 +10,7 @@ interface SidebarProps {
 
 const navItems: NavItem[] = [
   { id: 'new', label: '新建项目', icon: 'fa-plus' },
+  { id: 'dashboard', label: '工作台', icon: 'fa-table-columns' },
   { id: 'history', label: '历史记录', icon: 'fa-clock-rotate-left' },
   { id: 'documents', label: '我的文档', icon: 'fa-folder-open' },
 ];

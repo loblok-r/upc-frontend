@@ -1,9 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
-import { generateImageFromText } from '../../services/localImageService';
 import Gallery from './Gallery';
+import { AppMode } from '../../types';
 
-const MainView: React.FC = () => {
+interface MainViewProps {
+  onSendMessage: (prompt: string, base64?: string, mode?: AppMode) => void;
+  onModeChange: (mode: AppMode) => void;
+  currentMode: AppMode;
+}
+
+const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, currentMode }) => {
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -25,10 +31,6 @@ const MainView: React.FC = () => {
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
     }
   }, [prompt]);
-
-  const handleLoginClick = () => {
-    navigate('/login');
-  };
 
   // 点击上传按钮
   const handleUploadClick = () => {
@@ -66,12 +68,9 @@ const MainView: React.FC = () => {
             reader.readAsDataURL(referenceImage);
           })
         : null;
-      const result = await generateImageFromText(prompt, base64);
-      if (result) {
-        setGeneratedImage(result);
-      } else {
-        setError("未能生成图片，请重试。");
-      }
+      
+      onSendMessage(prompt, base64 ?? undefined, currentMode);
+      //const result = await generateImageFromText(prompt, base64);
     } catch (err) {
       setError("生成过程中发生错误，请稍后重试。");
     } finally {
@@ -80,13 +79,35 @@ const MainView: React.FC = () => {
   };
 
   const features = [
-    { id: 'ai-writing', icon: 'fa-solid fa-pen-nib', label: 'AI 写作助手', placeholder: '描述你想写的内容，我会帮你创作文章、文案、故事...', subtitle: '笔尖化思想，让创意成为文字。' },
-    { id: 'smart-presentation', icon: 'fa-solid fa-chart-pie', label: '智能演示', placeholder: '告诉我演示的主题，我会为你生成专业的演示文稿...', subtitle: '数据有声音，让演示更生动有力。' },
-    { id: 'deep-search', icon: 'fa-solid fa-magnifying-glass', label: '深度搜索', placeholder: '输入你想搜索的问题，我会为你深度挖掘答案...', subtitle: '深度探索信息，找到你真正需要的答案。' },
-    { id: 'ai-drawing', icon: 'fa-solid fa-image', label: 'AI 绘图', placeholder: '描述你想要生成的画面...', subtitle: '创作直观视觉呈现，让创意跃然眼前。' },
-    { id: 'podcast', icon: 'fa-solid fa-microphone-lines', label: '播客生成', placeholder: '告诉我播客的主题和风格，我会帮你生成音频内容...', subtitle: '声音承载故事，让你的想法被听见。' },
-    { id: 'more-tools', icon: 'fa-solid fa-grip', label: '更多工具', placeholder: '正在开发更多 AI 功能...', subtitle: '无限可能，尽在你的掌握之中。' },
+    { id: 'ai-writing', icon: 'fa-solid fa-pen-nib', label: 'AI 写作助手', 
+      available: false,
+      placeholder: '描述你想写的内容，我会帮你创作文章、文案、故事...', subtitle: '笔尖化思想，让创意成为文字。' },
+    { id: 'smart-presentation', icon: 'fa-solid fa-chart-pie', label: '智能演示', 
+      available: false,
+      placeholder: '告诉我演示的主题，我会为你生成专业的演示文稿...', subtitle: '数据有声音，让演示更生动有力。' },
+    { id: 'deep-search', icon: 'fa-solid fa-magnifying-glass', label: '深度搜索', 
+      available: false,
+      placeholder: '输入你想搜索的问题，我会为你深度挖掘答案...', subtitle: '深度探索信息，找到你真正需要的答案。' },
+    { id: 'ai-drawing', icon: 'fa-solid fa-image', label: 'AI 绘图', 
+      available: true,
+      placeholder: '描述你想要生成的画面...', subtitle: '创作直观视觉呈现，让创意跃然眼前。' },
+    { id: 'podcast', icon: 'fa-solid fa-microphone-lines', label: '播客生成', 
+      available: false,
+      placeholder: '告诉我播客的主题和风格，我会帮你生成音频内容...', subtitle: '声音承载故事，让你的想法被听见。' },
+    { id: 'more-tools', icon: 'fa-solid fa-grip', label: '更多工具', 
+      available: false,
+      placeholder: '正在开发更多 AI 功能...', subtitle: '无限可能，尽在你的掌握之中。' },
   ];
+
+  // 功能ID到AppMode的映射
+  const featureToModeMap: Record<string, AppMode> = {
+    'ai-writing': AppMode.AI_WRITING,
+    'smart-presentation': AppMode.SMART_PRESENTATION,
+    'deep-search': AppMode.DEEP_SEARCH,
+    'ai-drawing': AppMode.AI_DRAWING,
+    'podcast': AppMode.PODCAST,
+    'more-tools': AppMode.MORE_TOOLS, 
+  };
 
   // 获取当前 placeholder
   const getCurrentPlaceholder = () => {
@@ -107,31 +128,38 @@ const MainView: React.FC = () => {
   };
 
   // 点击功能图标
-  const handleFeatureClick = (featureId: string) => {
-    setActiveFeature(featureId);
-    setPrompt(''); // 清空输入
-    setGeneratedImage(null); // 清空已生成的内容
-    setError(null); // 清空错误
+const handleFeatureClick = (featureId: string) => {
+  const feature = features.find(f => f.id === featureId);
+  
+  if (!feature) return;
+  
+  // 检查是否可用
+  if (!feature.available) {
+    // 显示优雅的提示
+    setError(`${feature.label}功能正在开发中，敬请期待！\n 当前可用功能：通用问答/AI绘图`);
+    
+    // 3秒后自动清除提示
+    setTimeout(() => {
+      setError(null);
+    }, 3000);
+    
+    return;
+  }
+  
+  setActiveFeature(featureId);
+  setPrompt(''); // 清空输入
+  setGeneratedImage(null); // 清空已生成的内容
+  setError(null); // 清空错误
+  
+  // 设置对应的AppMode
+  const mode = featureToModeMap[featureId] || AppMode.TEXT_CHAT;
+  onModeChange(mode);
   };
 
   return (
     <div className="flex-1 h-screen overflow-y-auto relative bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
       
-      {/* Top Bar */}
-      <div className="flex justify-between items-center px-8 py-4 sticky top-0 z-10 backdrop-blur-sm">
-        <div className="text-sm text-gray-400">
-          <span className="text-orange-400 font-semibold">Loblok UPC Pro</span> 现已上线 UINO，
-          <a href="#" className="underline decoration-orange-400 underline-offset-4 hover:text-white transition-colors">免费试用</a>
-        </div>
-        <div className="flex items-center gap-4 text-gray-400 text-sm">
-          <button className="hover:text-white"><i className="fa-solid fa-globe"></i> 中文</button>
-          <button 
-            onClick={handleLoginClick}
-            className="bg-white/10 hover:bg-white/20 text-white px-4 py-1.5 rounded-lg transition-all">
-              登录
-          </button>
-        </div>
-      </div>
+      
 
       {/* Content Container */}
       <div className="max-w-5xl mx-auto px-6 pt-10 pb-20 flex flex-col items-center">
