@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, MessageSquare, Image, Type, Clock, MoreHorizontal, Filter,Trash2  } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, MessageSquare, Image, Type, Clock, MoreHorizontal, Filter, Trash2 } from 'lucide-react';
 import type { HistoryItem } from '../../types';
 
 interface HistoryViewProps {
@@ -8,21 +8,41 @@ interface HistoryViewProps {
   onDeleteHistory: (id: string) => void;
 }
 
-const HistoryView: React.FC<HistoryViewProps> = ({ historyItems, onSelectHistory, onDeleteHistory }) => {
+const HistoryView: React.FC<HistoryViewProps> = ({ 
+  historyItems, 
+  onSelectHistory, 
+  onDeleteHistory 
+}) => {
+  // ✅ 状态管理：控制哪个菜单被打开
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  const formatDate = (timestamp: number | string) => {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '刚刚';
+    return date.toLocaleString('zh-CN', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // ✅ 点击外部关闭菜单
+  useEffect(() => {
+    const handleClickOutside = () => setActiveMenuId(null);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
 
   return (
-    // 1. 容器：保持与 DocumentsView 一致的动画和基础样式，使用 padding
-    <div className="animate-fade-in px-8 py-8 w-full h-full overflow-y-auto">
+    <div className="animate-fade-in px-8 py-8 w-full h-full">
       
-      {/* 2. 头部区域：完全复刻 DocumentsView 的结构 */}
+      {/* 头部区域 */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          {/* 修改：移除 font-serif，保持 sans-serif，字号颜色一致 */}
           <h1 className="text-3xl font-bold text-white mb-2">历史记录</h1> 
           <p className="text-gray-400">查看并回顾您与 AI 的过往对话</p>
         </div>
-        
-        {/* 右侧按钮：可选，这里放一个筛选按钮示例，保持布局平衡 */}
         <div className="flex gap-3">
             <button className="bg-[#1A1D2D] border border-white/10 text-gray-300 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-2">
                 <Filter size={18} />
@@ -31,7 +51,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ historyItems, onSelectHistory
         </div>
       </div>
 
-      {/* 3. 搜索栏：复刻 DocumentsView 的搜索栏，保持视觉一致性 */}
+      {/* 搜索栏 */}
       <div className="relative mb-10">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <Search className="h-5 w-5 text-gray-500" />
@@ -43,24 +63,25 @@ const HistoryView: React.FC<HistoryViewProps> = ({ historyItems, onSelectHistory
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 pb-20">
         {historyItems.map((item) => (
           <div 
             key={item.id} 
+            // ✅ 点击整个卡片恢复对话
             onClick={() => onSelectHistory(item)}
-            className="group bg-[#151725] border border-white/5 hover:border-indigo-500/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-900/10 cursor-pointer"
+            className="group bg-[#151725] border border-white/5 hover:border-indigo-500/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-900/10 cursor-pointer relative"
           >
             <div className="flex flex-col gap-4">
-                {/* Prompt Text */}
-                <div className="text-gray-200 font-medium text-lg leading-relaxed group-hover:text-white transition-colors">
+                {/* 文本内容 */}
+                <div className="text-gray-200 font-medium text-lg leading-relaxed group-hover:text-white transition-colors line-clamp-2">
                    {item.messages && item.messages.length > 0 
                       ? item.messages[0].content 
                       : '无内容'}
                 </div>
 
-                {/* Metadata Row */}
-                <div className="flex items-center gap-4 text-xs text-gray-500 pt-2 border-t border-white/5 mt-1">
-                    {/* Type Badge */}
+                {/* 底部信息栏 */}
+                <div className="flex items-center gap-4 text-xs text-gray-500 pt-2 border-t border-white/5 mt-1 relative">
+                    {/* 类型标签 */}
                     <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#1E2130] text-emerald-400 border border-emerald-500/20">
                         {item.type === 'IMAGE' ? <Image size={12} /> : <Type size={12} />}
                         <span className="font-semibold tracking-wide">
@@ -68,25 +89,47 @@ const HistoryView: React.FC<HistoryViewProps> = ({ historyItems, onSelectHistory
                         </span>
                     </div>
 
-                    {/* Divider */}
                     <div className="w-px h-3 bg-gray-700"></div>
 
-                    {/* Date */}
+                    {/* 时间 */}
                     <div className="flex items-center gap-1.5 font-mono">
                         <Clock size={12} />
-                       {new Date(item.timestamp).toLocaleString()}
+                        {formatDate(item.timestamp)}
                     </div>
 
-                    {/* Action Icon (Right aligned) */}
-                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* ✅ 右侧菜单按钮 */}
+                    <div className="ml-auto relative">
                         <button 
-                        onClick={(e) => {
-                            e.stopPropagation(); // 阻止点击事件向上冒泡到父 div
-                            console.log("点击了更多选项");
+                          onClick={(e) => {
+                            e.stopPropagation(); // 阻止冒泡，防止触发 onSelectHistory
+                            // 切换菜单显示
+                            setActiveMenuId(activeMenuId === item.id ? null : item.id);
                           }}
-                        className="p-1.5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors">
+                          className={`p-1.5 rounded-full transition-colors ${
+                            activeMenuId === item.id 
+                              ? 'bg-white/10 text-white opacity-100' 
+                              : 'text-gray-400 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100'
+                          }`}
+                        >
                             <MoreHorizontal size={16} />
                         </button>
+
+                        {/* ✅ 弹出删除菜单 */}
+                        {activeMenuId === item.id && (
+                          <div className="absolute right-0 bottom-full mb-2 w-32 bg-[#1E2130] border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation(); // 阻止冒泡
+                                onDeleteHistory(item.id); // 执行删除
+                                setActiveMenuId(null);    // 关闭菜单
+                              }}
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors text-left"
+                            >
+                              <Trash2 size={14} />
+                              <span>删除</span>
+                            </button>
+                          </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -94,17 +137,19 @@ const HistoryView: React.FC<HistoryViewProps> = ({ historyItems, onSelectHistory
         ))}
 
         {historyItems.length === 0 && (
-            <div className="text-center py-20">
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-600">
+            <div className="h-[40vh] flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-600">
                     <MessageSquare size={24} />
                 </div>
                 <p className="text-gray-500">暂无历史记录</p>
             </div>
         )}
         
-        <div className="text-center mt-12 mb-12">
-            <p className="text-gray-600 text-sm">There's nothing more</p>
-        </div>
+        {historyItems.length > 0 && (
+          <div className="text-center mt-8">
+              <p className="text-gray-600 text-sm">已加载全部记录</p>
+          </div>
+        )}
       </div>
     </div>
   );

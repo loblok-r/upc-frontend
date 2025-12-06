@@ -110,7 +110,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
       }
     } else {
       // 处理其他支付方式
-      alert(`正在跳转到${paymentMethod === 'alipay' ? '支付宝' : '其他'}支付`);
+      alert(`不支持${paymentMethod === 'alipay' ? '支付宝' : '其他'}支付`);
     }
   };
 
