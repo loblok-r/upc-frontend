@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Chat } from "@google/genai";
 import { MessageSquare, X, Send, User, Bot, Minus, Smile, Paperclip } from 'lucide-react';
-import type { ChatMessage } from '../../types';
-import { AI_SYSTEM_INSTRUCTION } from '../../data/constants';
+import type { ChatMessage } from '../types';
+import { AI_SYSTEM_INSTRUCTION } from '../data/constants';
 
 const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,11 +26,11 @@ const ChatWidget: React.FC = () => {
 
   // Initialize Gemini Chat
   useEffect(() => {
-    if (!process.env.API_KEY) {
+    if (!import.meta.env.VITE_API_KEY) {
         console.warn("API_KEY not found in environment variables.");
         return;
     }
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
     chatRef.current = ai.chats.create({
       model: 'gemini-2.5-flash',
       config: {

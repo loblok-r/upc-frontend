@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -9,10 +9,26 @@ import LotteryPage from './pages/LotteryPage';
 import DefaultLayout from './layouts/DefaultLayout';
 import NoNavbarLayout from './layouts/NoNavbarLayout';
 import PayInfoPage from './pages/PayInfoPage';
+import ChatWidget from './components/ChatWidget';
+
+
+// 聊天组件包装器，根据路由控制显示
+const ChatWidgetWrapper: React.FC = () => {
+  const location = useLocation();
+  
+  // 定义不显示 ChatWidget 的路由路径
+  const hiddenRoutes = ['/login', '/register'];
+  
+  // 检查当前路径是否在隐藏列表中
+  const shouldHideChat = hiddenRoutes.includes(location.pathname);
+  
+  return shouldHideChat ? null : <ChatWidget />;
+};
 
 function App() {
   return (
     <Router>
+      <ChatWidgetWrapper />
       <Routes>
         {/* ⭐ 默认带 Navbar 的页面 */}
         <Route

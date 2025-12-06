@@ -3,7 +3,7 @@ import React from 'react';
 import TopTicker from '../components/lottery/TopTicker';
 import HeroCarousel from '../components/lottery/HeroCarousel';
 import InfoSection from '../components/lottery/InfoSection';
-import ChatWidget from '../components/lottery/ChatWidget';
+import ChatWidget from '../components/ChatWidget';
 
 const LotteryPage: React.FC = () => {
   return (

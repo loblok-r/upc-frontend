@@ -14,58 +14,58 @@ export const PRODUCTS: ProductCard[] = [
     id: '1',
     title: '现金奖励',
     subtitle: '赠送100美元现金奖励',
-    icon: 'Star',
-    color: 'text-purple-400',
+    icon: 'DollarSign',
+    color: 'text-green-400',
     badge: '热门'
   },
   {
     id: '2',
     title: '专业版月卡',
     subtitle: '赠送一个月的专业版接口使用权益',
-    icon: 'Video',
+    icon: 'Zap',
     color: 'text-blue-400'
   },
   {
     id: '3',
     title: '专业版永久使用',
     subtitle: '赠送专业版接口永久使用权益, 无需续费',
-    icon: 'Calendar',
+    icon: 'Infinity',
     color: 'text-yellow-400'
   },
   {
     id: '4',
     title: '积分+200点',
     subtitle: '赠送200积分',
-    icon: 'Infinity',
+    icon: 'Coins',
     color: 'text-orange-400'
   },
   {
     id: '5',
     title: '抽奖次数X3',
     subtitle: '使用该卡可以增加抽奖次数3次',
-    icon: 'Banknote',
-    color: 'text-green-400'
+    icon: 'Dices',
+    color: 'text-pink-400'
   },
   {
     id: '6',
     title: '智能任务额度X3',
     subtitle: '智能任务使用额度+3',
-    icon: 'Banknote',
-    color: 'text-green-400'
+    icon: 'Sparkles',
+    color: 'text-purple-400'
   },
   {
     id: '7',
     title: '补签卡',
     subtitle: '使用该卡可以补签一次',
-    icon: 'Banknote',
-    color: 'text-green-400'
+    icon: 'CheckCircle',
+    color: 'text-cyan-400'
   },
   {
     id: '8',
     title: 'AI绘图额度x3',
     subtitle: 'AI绘图使用额度+3',
-    icon: 'Banknote',
-    color: 'text-green-400'
+    icon: 'Palette',
+    color: 'text-rose-400'
   }
 ];
 
