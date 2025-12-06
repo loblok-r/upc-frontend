@@ -6,6 +6,8 @@ interface SidebarProps {
   isCollapsed: boolean;
   toggleSidebar: () => void;
   openUpgradeModal: () => void; 
+  currentView: string;
+  onNavigate: (viewId: string) => void;
 }
 
 const navItems: NavItem[] = [
@@ -15,7 +17,8 @@ const navItems: NavItem[] = [
   { id: 'documents', label: '我的文档', icon: 'fa-folder-open' },
 ];
 
-const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgradeModal }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgradeModal,currentView, onNavigate
+}) => {
   return (
     <div 
       className={`

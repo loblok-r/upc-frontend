@@ -9,14 +9,15 @@ import type { Message } from '../types';
 import { Sender, AppMode } from '../types';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { DocumentView } from '../components/workPage/DocumentView';
 
 const WorkPage: React.FC = () => {
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 双视图状态管理
-  const [viewState, setViewState] = useState<'landing' | 'chat'>('landing');
+  // 视图状态管理
+  const [viewState, setViewState] = useState<'landing' | 'chat' | 'document'>('landing');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>(AppMode.TEXT_CHAT);
@@ -122,6 +123,11 @@ const WorkPage: React.FC = () => {
     setMessages([]);
     setViewState('landing');
   };
+// 切换到文档视图
+  const handleSwitchToDocument = () => {
+    setMessages([]);
+    setViewState('document');
+  };
 
   // 处理MainView中的模式选择
   const handleModeChange = (mode: AppMode) => {
@@ -197,6 +203,11 @@ const WorkPage: React.FC = () => {
                 onModeChange={handleModeChange}
                 currentMode={currentMode}
               />
+            </div>
+          )}
+           {viewState === 'document' && (
+            <div className="h-full overflow-y-auto">
+              <DocumentView/>
             </div>
           )}
 
