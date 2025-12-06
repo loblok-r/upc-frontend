@@ -1,5 +1,15 @@
-import type { ProductCard,Document, Winner, MallProduct, FlashSaleItem } from '../types';
-
+import type { SidebarItem, PointTransaction,ProductCard,Document, Winner, MallProduct, FlashSaleItem } from '../types';
+import { WalletTabId } from '../types';
+import {
+  Coffee,
+  Heart,
+  Gift,
+  Dices,
+  Coins,
+  Package,
+  Medal,
+  Ticket,
+} from 'lucide-react';
 export const WINNERS: Winner[] = [
   { username: "p***x", prize: "专业版次数+10", time: "1分钟前" },
   { username: "m***9", prize: "专业版月卡", time: "2分钟前" },
@@ -118,9 +128,9 @@ export const MOCK_DOCUMENTS: Document[] = [
 export const MallPRODUCTS: MallProduct[] = [
   {
     id: '1',
-    name: '京东E卡 30元 [折扣兑]',
-    points: 1665,
-    cash: 15,
+    name: '年费会员8折兑换码',
+    points: 765,
+    cash: 9,
     originalPoints: 3840,
     image: 'https://picsum.photos/300/300?random=1',
     category: 'card',
@@ -128,9 +138,9 @@ export const MallPRODUCTS: MallProduct[] = [
   },
   {
     id: '2',
-    name: '7天WPS大会员 [折扣兑]',
+    name: '7天专业版会员',
     points: 170,
-    cash: 6.8,
+    cash: 1,
     originalPoints: 850,
     image: 'https://picsum.photos/300/300?random=2',
     category: 'office',
@@ -138,25 +148,23 @@ export const MallPRODUCTS: MallProduct[] = [
   },
   {
     id: '3',
-    name: '京东E卡 5元 [折扣兑]',
-    points: 274,
-    cash: 3,
+    name: '年费会员7折兑换码',
+    points: 1470,
+    cash: 6.8,
     originalPoints: 700,
     image: 'https://picsum.photos/300/300?random=3',
     category: 'card'
   },
   {
     id: '4',
-    name: '20元话费充值 [折扣兑]',
-    points: 1400,
-    cash: 9,
-    originalPoints: 2760,
+    name: '抽奖机会一次',
+    points: 500,
     image: 'https://picsum.photos/300/300?random=4',
     category: 'card'
   },
   {
     id: '5',
-    name: '帆布手提包 [折扣兑]',
+    name: '帆布手提包',
     points: 150,
     cash: 4.8,
     originalPoints: 630,
@@ -166,8 +174,8 @@ export const MallPRODUCTS: MallProduct[] = [
   },
   {
     id: '6',
-    name: 'AI生成点数包 (100点)',
-    points: 500,
+    name: '智能任务额度包（10次）',
+    points: 1500,
     image: 'https://picsum.photos/300/300?random=6',
     category: 'virtual'
   }
@@ -176,7 +184,7 @@ export const MallPRODUCTS: MallProduct[] = [
 export const FLASH_SALES: FlashSaleItem[] = [
   {
     id: 'f1',
-    name: 'CoCo代金券10元',
+    name: 'Hpc联名咖啡代金券10元',
     description: '每日每场限量15份',
     price: 799,
     originalPrice: 1200,
@@ -196,7 +204,7 @@ export const FLASH_SALES: FlashSaleItem[] = [
   },
   {
     id: 'f3',
-    name: '爱奇艺黄金会员月卡',
+    name: 'Lob黄金视频会员月卡',
     description: '每日每场限量50份',
     price: 2500,
     originalPrice: 3000,
@@ -213,5 +221,25 @@ export const FILTERS = [
   '会员卡券',
   '家居日用',
   '数码家电',
-  'WPS周边'
+  '新手周边'
+];
+
+export const SIDEBAR_ITEMS: SidebarItem[] = [
+  { id: WalletTabId.BENEFITS, label: '生活权益', icon: Coffee },
+  { id: WalletTabId.JOINT_MEMBER, label: '联合会员', icon: Heart },
+  { id: WalletTabId.GIFT_CARDS, label: '礼品卡', icon: Gift },
+  { id: WalletTabId.DRAW_CHANCES, label: '抽奖次数', icon: Dices },
+  { id: WalletTabId.POINTS, label: '积分', icon: Coins },
+  { id: WalletTabId.PHYSICAL_ITEMS, label: '实物', icon: Package },
+  { id: WalletTabId.BADGES, label: '勋章', icon: Medal },
+  { id: WalletTabId.COUPONS, label: '优惠券', icon: Ticket },
+];
+
+export const MOCK_TRANSACTIONS: PointTransaction[] = [
+  { id: '1', amount: -90, source: '积分过期', date: '2021/09/01', type: 'expire' },
+  { id: '2', amount: -90, source: '积分过期', date: '2021/08/01', type: 'expire' },
+  { id: '3', amount: 90, source: '会员赠送', date: '2020/07/08', type: 'earn' },
+  { id: '4', amount: 90, source: '会员赠送', date: '2020/06/07', type: 'earn' },
+  { id: '5', amount: -1200, source: '咖啡兑换', date: '2020/05/15', type: 'spend' },
+  { id: '6', amount: 500, source: '每日登录', date: '2020/05/14', type: 'earn' },
 ];

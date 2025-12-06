@@ -3,12 +3,17 @@ import { Coins, ChevronRight, Bell, Calendar, ChevronLeft, ShoppingBag } from 'l
 import { useNavigate } from 'react-router-dom'; 
 import { MallPRODUCTS, FLASH_SALES, FILTERS } from '../data/constants';
 
+
 const Mall: React.FC = () => {
     const navigate = useNavigate();
 
 
     const handleLotteryClick = () => {
         navigate('/lottery'); // 导航到抽奖页面
+    };
+
+    const handleWalletClick = () => {
+        navigate('/wallet'); // 导航到钱包页面
     };
   return (
     <div className="pt-24 pb-12 min-h-screen px-4 md:px-8 max-w-7xl mx-auto relative z-10">
@@ -38,8 +43,12 @@ const Mall: React.FC = () => {
         </div>
         <div className="flex gap-6 text-sm text-slate-300">
             <button className="hover:text-blue-400 transition-colors">积分规则</button>
-            <button className="hover:text-blue-400 transition-colors">兑换记录</button>
-            <button className="hover:text-blue-400 transition-colors">积分记录</button>
+            <button 
+                onClick={() => navigate('/exchange-record')}
+            className="hover:text-blue-400 transition-colors">兑换记录</button>
+            <button 
+                onClick={handleWalletClick}
+            className="hover:text-blue-400 transition-colors">积分记录</button>
         </div>
       </div>
 

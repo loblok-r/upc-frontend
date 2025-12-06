@@ -1,11 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+// @ts-ignore
+import ScrollToTop from './components/ScrollToTop';
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import WorkPage from './pages/WorkPage';
 import LotteryPage from './pages/LotteryPage';
 import MallPage from './pages/Mall';
+import WalletPage from './pages/WalletPage';
+import ExchangeRecordPage from './pages/ExchangeRecordPage';
+import UpcPage from './pages/UpcPage';
 
 
 
@@ -14,24 +19,24 @@ import NoNavbarLayout from './layouts/NoNavbarLayout';
 import PayInfoPage from './pages/PayInfoPage';
 import ChatWidget from './components/ChatWidget';
 
-
-// 聊天组件包装器，根据路由控制显示
+// 聊天组件包装器
 const ChatWidgetWrapper: React.FC = () => {
   const location = useLocation();
-  
-  // 定义不显示 ChatWidget 的路由路径
-  const hiddenRoutes = ['/login', '/register'];
-  
-  // 检查当前路径是否在隐藏列表中
+  const hiddenRoutes = ['/login', '/register', '/exchange-record','/wallet'];
   const shouldHideChat = hiddenRoutes.includes(location.pathname);
-  
   return shouldHideChat ? null : <ChatWidget />;
 };
 
 function App() {
   return (
+    // 1. 这里只使用 Router (即 BrowserRouter)
+    // 2. 去掉了外层的 <BrowserRouter> 标签
     <Router>
+      {/* 3. ScrollToTop 必须在 Router 内部，才能监听到路由变化 */}
+      <ScrollToTop /> 
+      
       <ChatWidgetWrapper />
+      
       <Routes>
         {/* ⭐ 默认带 Navbar 的页面 */}
         <Route
@@ -43,11 +48,35 @@ function App() {
           }
         />
         <Route
+          path="/upc"
+          element={
+            <DefaultLayout>
+              <UpcPage />
+            </DefaultLayout>
+          }
+        />
+        <Route
           path="/mall"
           element={
             <DefaultLayout>
               <MallPage />
             </DefaultLayout>
+          }
+        />
+        <Route
+          path="/exchange-record"
+          element={
+            <NoNavbarLayout>
+              <ExchangeRecordPage />
+            </NoNavbarLayout>
+          }
+        />
+        <Route
+          path="/wallet"
+          element={
+            <NoNavbarLayout>
+              <WalletPage />
+            </NoNavbarLayout>
           }
         />
 

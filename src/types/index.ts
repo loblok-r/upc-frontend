@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react';
 export interface LoginFormData {
   username: string;
   password: string;
@@ -238,4 +239,31 @@ export interface FlashSaleItem {
   time: string;
   status: 'active' | 'ended' | 'upcoming';
   image: string;
+}
+
+export const WalletTabId = {
+  BENEFITS: 'benefits',
+  JOINT_MEMBER: 'joint_member',
+  GIFT_CARDS: 'gift_cards',
+  DRAW_CHANCES: 'draw_chances',
+  POINTS: 'points',
+  PHYSICAL_ITEMS: 'physical_items',
+  BADGES: 'badges',
+  COUPONS: 'coupons',
+} as const;
+export type WalletTabId = typeof WalletTabId[keyof typeof WalletTabId];
+ 
+
+export interface SidebarItem {
+  id: WalletTabId;
+  label: string;
+  icon: LucideIcon;
+}
+
+export interface PointTransaction {
+  id: string;
+  amount: number;
+  source: string;
+  date: string;
+  type: 'earn' | 'spend' | 'expire';
 }

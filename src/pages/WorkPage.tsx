@@ -229,7 +229,7 @@ const WorkPage: React.FC = () => {
             <>
               <div className="flex items-center gap-2">
                <div className="text-sm text-gray-400">
-                  <span className="text-orange-400 font-semibold">Loblok UPC Pro</span> 现已上线 UINO，
+                  <span className="text-orange-400 font-semibold">Loblok Upc Pro</span> 现已上线 UINO，
                   <a href="#" className="underline decoration-orange-400 underline-offset-4 hover:text-white transition-colors">免费试用</a>
                 </div>
               </div>

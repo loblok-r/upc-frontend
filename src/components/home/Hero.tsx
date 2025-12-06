@@ -2,10 +2,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom'; // 导入导航钩子
 import { Typewriter } from './Typewriter';
 
-export const Hero: React.FC = () => {
+export const Hero: React.FC = () => {       
 
   const navigate = useNavigate(); // 创建导航实例
-
   const handleCreateClick = () => {
     navigate('/work'); // 导航到工作页面
   };

@@ -19,12 +19,12 @@ const ChatWidget: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<Chat | null>(null);
 
-  // Auto-scroll to bottom
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
-  // Initialize Gemini Chat
+  
   useEffect(() => {
     if (!import.meta.env.VITE_API_KEY) {
         console.warn("API_KEY not found in environment variables.");
@@ -55,7 +55,6 @@ const ChatWidget: React.FC = () => {
 
     try {
       if (!chatRef.current) {
-         // Fallback if no API key or init failed
          setTimeout(() => {
             setMessages(prev => [...prev, {
                 id: Date.now().toString(),
@@ -101,7 +100,7 @@ const ChatWidget: React.FC = () => {
 
   return (
     <>
-      {/* Floating Action Button */}
+ 
       <button
         onClick={() => setIsOpen(true)}
         className={`fixed bottom-6 right-6 z-50 p-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-transform duration-300 ${isOpen ? 'scale-0' : 'scale-100'}`}
