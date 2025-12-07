@@ -160,7 +160,7 @@ const Mall: React.FC = () => {
     };
 
     const handleLotteryClick = () => navigate('/lottery');
-    const handleWalletClick = () => navigate('/wallet');
+    const handleWalletClick = () =>  navigate('/wallet?tab=points');
     
     const scroll = (direction: 'left' | 'right') => {
         if (scrollContainerRef.current) {
