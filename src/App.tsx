@@ -11,7 +11,7 @@ import MallPage from './pages/Mall';
 import WalletPage from './pages/WalletPage';
 import ExchangeRecordPage from './pages/ExchangeRecordPage';
 import UpcPage from './pages/UpcPage';
-
+import CommunityPage from './pages/CommunityPage';
 
 
 import DefaultLayout from './layouts/DefaultLayout';
@@ -19,10 +19,11 @@ import NoNavbarLayout from './layouts/NoNavbarLayout';
 import PayInfoPage from './pages/PayInfoPage';
 import ChatWidget from './components/ChatWidget';
 
+
 // 聊天组件包装器
 const ChatWidgetWrapper: React.FC = () => {
   const location = useLocation();
-  const hiddenRoutes = ['/login', '/register', '/exchange-record','/wallet'];
+  const hiddenRoutes = ['/login', '/register', '/exchange-record','/wallet','/community'];
   const shouldHideChat = hiddenRoutes.includes(location.pathname);
   return shouldHideChat ? null : <ChatWidget />;
 };
@@ -68,6 +69,14 @@ function App() {
           element={
             <NoNavbarLayout>
               <ExchangeRecordPage />
+            </NoNavbarLayout>
+          }
+        />
+        <Route
+          path="/community"
+          element={
+            <NoNavbarLayout>
+              <CommunityPage />
             </NoNavbarLayout>
           }
         />

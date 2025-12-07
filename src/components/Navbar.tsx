@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const navItems: NavItem[] = [
   { label: '首页', href: '/' },
   { label: '灵感', href: '#inspiration' },
-  { label: '社区', href: '#community' },
+  { label: '社区', href: '/community' },
   { label: '商城', href: '/mall' },
   { label: '2025抽奖活动', href: '/lottery' },
   { label: '关于', href: '/upc' },

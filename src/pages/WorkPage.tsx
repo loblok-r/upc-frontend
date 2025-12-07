@@ -62,7 +62,7 @@ const WorkPage: React.FC = () => {
         const updatedItem: HistoryItem = {
           id: currentSessionId,
           title: title,
-          timestamp: Date.now(),
+          timestamp: Date.now().toString(),
           messages: currentMessages,
           type: currentMode === AppMode.AI_DRAWING ? 'IMAGE' : 'TEXT',
         };
@@ -74,7 +74,7 @@ const WorkPage: React.FC = () => {
       const newItem: HistoryItem = {
         id: newId,
         title: title,
-        timestamp: Date.now(),
+        timestamp: Date.now().toString(),
         messages: currentMessages,
         type: currentMode === AppMode.AI_DRAWING ? 'IMAGE' : 'TEXT',
       };

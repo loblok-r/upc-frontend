@@ -1,0 +1,81 @@
+import React from 'react';
+// 假设 Post 接口定义在当前目录下的 types.ts 文件中
+import type { Post } from '../../types/community';
+import { Heart, MoreHorizontal, Bell, User as UserIcon, X, ArrowLeft } from 'lucide-react';
+
+interface ImageViewProps {
+  post: Post;
+  onClose: () => void;
+}
+
+const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
+  return (
+    <div className="fixed inset-0 z-[60] bg-black flex flex-col animate-in fade-in duration-200">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 md:px-6 py-4 fixed top-0 w-full z-10 bg-gradient-to-b from-black/80 to-transparent">
+        <div className="flex items-center gap-3 md:gap-4">
+           {/* Back Button for mobile/convenience */}
+           <button 
+             onClick={onClose} 
+             className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+           >
+             <ArrowLeft size={24} />
+           </button>
+
+           <img 
+             src={post.author.avatar} 
+             alt="Avatar" 
+             className="w-10 h-10 rounded-full border border-white/10" 
+           />
+           
+           <div className="flex flex-col">
+             <div className="flex items-center gap-2 text-sm md:text-base font-bold text-white shadow-black drop-shadow-md">
+               <span>{post.author.handle.replace('@', '')}</span>
+               <span className="text-white/40">•</span>
+               <span>{post.author.name}</span>
+             </div>
+             <span className="text-xs text-gray-400 font-medium">{post.timestamp}</span>
+           </div>
+        </div>
+        
+        <div className="flex items-center gap-4 md:gap-6 text-white">
+           <button className="hover:text-red-500 hover:scale-110 transition-all">
+             <Heart size={26} />
+           </button>
+           <button className="hover:text-gray-300 transition-colors hidden sm:block">
+             <MoreHorizontal size={26} />
+           </button>
+           <button className="hover:text-gray-300 transition-colors hidden sm:block">
+             <Bell size={26} />
+           </button>
+           <button className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+             <UserIcon size={18} />
+           </button>
+        </div>
+      </div>
+
+      {/* Main Image Area */}
+      <div 
+        className="flex-1 flex items-center justify-center p-0 md:p-8 cursor-pointer"
+        onClick={onClose} // Optional: click background to close
+      >
+        <img 
+          src={post.thumbnailUrl} 
+          alt={post.caption} 
+          className="max-h-full max-w-full object-contain shadow-2xl animate-in zoom-in-95 duration-300"
+          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
+        />
+      </div>
+
+      {/* Footer - Prompt */}
+      <div className="fixed bottom-0 w-full pb-8 pt-12 px-6 text-center bg-gradient-to-t from-black/90 to-transparent pointer-events-none">
+         <div className="inline-flex items-center gap-2 text-sm md:text-base pointer-events-auto bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/5">
+            <span className="text-gray-400 font-bold uppercase tracking-wide text-xs md:text-sm">Prompt</span>
+            <span className="text-white font-bold">{post.caption.length > 20 ? post.caption.substring(0, 20) + '...' : post.caption}</span>
+         </div>
+      </div>
+    </div>
+  );
+};
+
+export default ImageView;

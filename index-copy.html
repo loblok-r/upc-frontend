@@ -63,12 +63,6 @@
               light: '#24243e',
               accent: '#6366f1',
               orange: '#f97316'
-            },
-            // 新增 SoraCommunity 颜色系统
-            sora: {
-              dark: '#0f172a',
-              panel: '#141423',
-              border: 'rgba(255, 255, 255, 0.08)'
             }
           },
           // 动画配置 - 合并所有
@@ -115,7 +109,6 @@
       background-color: #020617;
       /* 使用 slate-950 背景色 */
       color: #ffffff;
-      /* overflow: hidden; 从新HTML添加：App handles scrolling */
     }
 
     /* 登录表单区域可以用 Inter 字体 */
@@ -164,35 +157,19 @@
     }
 
     ::-webkit-scrollbar-track {
-      background: #0f172a; /* 使用新HTML的颜色 */
+      background: #0f172a;
+      /* 深蓝色背景 */
     }
 
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2); /* 使用新HTML的颜色 */
+      background: #334155;
+      /* 灰色滑块 */
       border-radius: 4px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3); /* 使用新HTML的颜色 */
-    }
-
-    /* 新增：SoraCommunity 风格的滚动条 */
-    .scrollbar-sora::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    
-    .scrollbar-sora::-webkit-scrollbar-track {
-      background: transparent; /* 透明背景 */
-    }
-    
-    .scrollbar-sora::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
-    }
-    
-    .scrollbar-sora::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: #475569;
+      /* 浅灰色滑块 */
     }
 
     /* 兼容选项：旧版滚动条样式 */
@@ -204,25 +181,15 @@
       background: #334155;
     }
 
-    /* 隐藏滚动条 */
     .scrollbar-hide::-webkit-scrollbar {
       display: none;
     }
-    
+
     .scrollbar-hide {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    
-    /* 新增：从新HTML的 hide-scrollbar 类 */
-    .hide-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    
-    .hide-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+
 
     /* ========== 动画效果 ========== */
 
@@ -307,25 +274,6 @@
       border: 2px solid transparent;
       background: linear-gradient(#020617, #020617) padding-box,
         linear-gradient(135deg, #6366f1, #f97316) border-box;
-    }
-
-    /* ========== 新增：SoraCommunity 特殊类 ========== */
-    
-    /* 毛玻璃面板效果 */
-    .glass-panel {
-      background: rgba(20, 20, 35, 0.7);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-right: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    /* 从新HTML添加的通用类 */
-    .bg-sora-dark {
-      background-color: #0f172a;
-    }
-
-    .border-sora-light {
-      border-color: rgba(255, 255, 255, 0.08);
     }
   </style>
 </head>
