@@ -3,10 +3,10 @@ import { SidebarTab } from '../../types/community';
 import { MOCK_USERS, LEADERBOARD_DATA } from '../../data/constants_community';
 import { Search, Trophy, X, ChevronRight, TrendingUp, Music, Film, 
   ArrowLeft, Loader2, Check, User, LogIn, LogOut, 
-  Settings, Image as ImageIcon, Heart, Zap, CreditCard, ChevronRight as ArrowRight 
-
-} from 'lucide-react';
+  Settings, Image as ImageIcon, Heart, Zap, CreditCard, ChevronRight as ArrowRight } from 'lucide-react';
 import MockApiService from '../../services/MockApiService';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate , useLocation} from 'react-router-dom';
 
 //模拟当前用户
 const MOCK_CURRENT_USER = {
@@ -35,6 +35,7 @@ interface FollowButtonProps {
 }
 
 const FollowButton: React.FC<FollowButtonProps> = ({ userId, className }) => {
+   
   const [isFollowed, setIsFollowed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -86,6 +87,8 @@ interface SidebarPanelProps {
 type LeaderboardView = 'SUMMARY' | 'ALL_CREATORS' | 'ALL_REMIXES';
 
 const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
+  const navigate = useNavigate();
+   const location = useLocation();
   const [lbView, setLbView] = useState<LeaderboardView>('SUMMARY');
   
   // --- 搜索功能相关的状态 ---
@@ -94,8 +97,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
   // ==========================================
   //登录状态管理
   // ==========================================
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const { isLoggedIn, user , logout} = useAuth(); // 获取状态
 
 
   const [displayUsers, setDisplayUsers] = useState(MOCK_USERS); // 默认显示推荐用户
@@ -103,18 +105,18 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
 
 // 模拟登录动作
   const handleLogin = () => {
-    setIsLoggingIn(true);
-    // 模拟 API 请求延迟
-    setTimeout(() => {
-      setIsLoggedIn(true);
-      setIsLoggingIn(false);
-    }, 1200);
+    navigate('/login',{ 
+      state: { 
+        from: location.pathname, // 记录当前路径 (比如 /community)
+        returnTab: SidebarTab.PROFILE // 记录希望回来时打开的 Tab
+      } 
+  });
   };
 
   // 模拟退出登录
   const handleLogout = () => {
     // 可以加个确认弹窗，这里直接退出
-    setIsLoggedIn(false);
+    logout();
   };
 
   // 当 Tab 切换时重置状态
@@ -350,11 +352,10 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
 
                  <button 
                     onClick={handleLogin}
-                    disabled={isLoggingIn}
                     className="w-full group relative flex items-center justify-center gap-2 py-3.5 bg-white text-black rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-white/10 disabled:opacity-70 disabled:cursor-wait"
                  >
-                    {isLoggingIn ? <Loader2 size={18} className="animate-spin"/> : <LogIn size={18} />}
-                    <span>{isLoggingIn ? '登录验证中...' : '立即登录'}</span>
+                    {/* { <Loader2 size={18} className="animate-spin"/> } */}
+                    <span>立即登录</span>
                  </button>
                  
                  <div className="mt-6 text-xs text-gray-500">

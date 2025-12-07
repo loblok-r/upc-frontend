@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import type { LoginFormData, FormErrors } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+interface LoginLocationState {
+  from?: string;
+  returnTab?: string;
+}
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
+   const navigate = useNavigate();
+   const location = useLocation();
+  const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     username: '',
     password: '',
@@ -27,6 +37,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   }, [countdown]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+   
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -45,8 +56,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const newErrors: FormErrors = {};
 
     if (!formData.username) newErrors.username = '请输入用户名或邮箱';
@@ -57,13 +69,56 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       setErrors(newErrors);
       return;
     }
-
     setIsLoading(true);
-    // Simulate login delay
-    setTimeout(() => {
+    try {
+
+      const requestBody = {
+        username: formData.username,
+        password: formData.password,
+        captcha: formData.captcha, // 关键：前端 captcha 对应后端 code 字段
+        // 注意：不需要 rememberMe 字段
+      };
+
+      // 调试信息：打印请求体
+      console.log('登录请求体:', JSON.stringify(requestBody));
+      console.log('发送到:', 'http://localhost:8069/api/user/login');
+      // 调用登录 API
+      const response = await fetch('http://localhost:8069/api/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('响应状态:', response.status);
+      console.log('响应状态文本:', response.statusText);
+      // 解析响应
+      const result = await response.json();
+
+      if (response.ok && result.code === 200) {
+        console.log('登录成功，token:', result.data.token);
+
+        // 调用全局 login 函数，更新状态
+        login(result.data.token, result.data);
+        //导航回原页面或首页
+        const state = location.state as LoginLocationState | null;
+        const from = state?.from || '/';
+        const returnTab = state?.returnTab;
+        navigate(from, { 
+          replace: true, // 使用 replace 防止用户点浏览器的“后退”又回到登录页
+          state: returnTab ? { activeTab: returnTab } : undefined 
+        });
+        
+      } else {
+        // 处理错误
+        alert(result.msg || `登录失败: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('登录请求失败:', error);
+      alert('网络请求失败，请检查网络连接');
+    } finally {
       setIsLoading(false);
-      alert('模拟登录成功! (Simulated Login Success)');
-    }, 1500);
+    }
+    
   };
 
   return (
@@ -79,7 +134,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        
+
         {/* Username Input */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-gray-700 ml-1">
@@ -90,9 +145,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             name="username"
             value={formData.username}
             onChange={handleInputChange}
-            className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${
-              errors.username ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-            } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm`}
+            className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${errors.username ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+              } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm`}
             placeholder="example@upc.com"
           />
           {errors.username && <p className="text-xs text-red-500 ml-1">{errors.username}</p>}
@@ -113,9 +167,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             name="password"
             value={formData.password}
             onChange={handleInputChange}
-            className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${
-              errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-            } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm tracking-widest`}
+            className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+              } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm tracking-widest`}
             placeholder="••••••••••••"
           />
           {errors.password && <p className="text-xs text-red-500 ml-1">{errors.password}</p>}
@@ -132,20 +185,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
               name="captcha"
               value={formData.captcha}
               onChange={handleInputChange}
-              className={`flex-1 px-4 py-3 rounded-lg bg-slate-50 border ${
-                errors.captcha ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-              } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm`}
+              className={`flex-1 px-4 py-3 rounded-lg bg-slate-50 border ${errors.captcha ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+                } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm`}
               placeholder="输入验证码"
             />
             <button
               type="button"
               onClick={handleGetCode}
               disabled={countdown > 0}
-              className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[110px] transition-all duration-200 ${
-                countdown > 0
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[110px] transition-all duration-200 ${countdown > 0
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                }`}
             >
               {countdown > 0 ? `${countdown}s 后重试` : '获取验证码'}
             </button>
@@ -170,11 +221,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
               记住登录状态?
             </span>
           </label>
-          
+
           <div className="text-sm">
             <span className="text-gray-400">新用户? </span>
-            <a 
-              href="#" 
+            <a
+              href="#"
               onClick={(e) => { e.preventDefault(); onSwitchToRegister(); }}
               className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
             >

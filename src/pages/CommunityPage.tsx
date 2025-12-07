@@ -2,41 +2,44 @@ import React, { useState, useEffect } from 'react';
 import type { Post } from '../types/community';
 import { SidebarTab } from '../types/community';
 import { ViewState } from '../types/community';
-import { MOCK_POSTS } from '../data/constants_community'; // 假设这是你之前的模拟数据源
+import { MOCK_POSTS } from '../data/constants_community'; 
 import MockPostService from '../services/MockPostService';
 import SidebarPanel from '../components/community/SidebarPanel';
 import DetailView from '../components/community/DetailView';
 import ImageView from '../components/community/ImageView';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Search, Trophy, User, MessageSquare, Heart, Share2, Play, Sparkles, Loader2 } from 'lucide-react';
-
-
 
 // 定义 Feed Tab 类型
 type FeedTabType = 'RECOMMEND' | 'FOLLOWING' | 'LATEST';
 
 const CommunityPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleCreateClick = () => {
+    // 移除登录判断，直接跳转
     navigate('/work');
   };
   
-  const [viewState, setViewState] = useState<ViewState>(ViewState.LANDING);
-  const [activeTab, setActiveTab] = useState<SidebarTab>(SidebarTab.HOME);
-  
-  // ==========================================
-  // 2. 新增：Feed流相关的状态管理
-  // ==========================================
-  const [activeFeedTab, setActiveFeedTab] = useState<FeedTabType>('RECOMMEND'); // 默认选中推荐
-  const [displayPosts, setDisplayPosts] = useState<Post[]>(MOCK_POSTS); // 当前展示的帖子
-  const [isFeedLoading, setIsFeedLoading] = useState(false); // 加载状态
+  // 仅保留基础的路由状态判断（比如从工作台返回时是否直接显示主界面），不涉及登录状态
+  const shouldOpenAppDirectly = location.state?.activeTab !== undefined;
 
-  // ==========================================
-  // 3. 新增：监听 Tab 切换，请求接口
-  // ==========================================
+  const [viewState, setViewState] = useState<ViewState>(
+    shouldOpenAppDirectly ? ViewState.APP : ViewState.LANDING
+  );
+
+  const [activeTab, setActiveTab] = useState<SidebarTab>(
+    location.state?.activeTab || SidebarTab.HOME
+  );
+  
+  // Feed流状态管理
+  const [activeFeedTab, setActiveFeedTab] = useState<FeedTabType>('RECOMMEND'); 
+  const [displayPosts, setDisplayPosts] = useState<Post[]>(MOCK_POSTS); 
+  const [isFeedLoading, setIsFeedLoading] = useState(false); 
+
+  // 监听 Tab 切换，请求接口
   useEffect(() => {
-    // 只有在进入 APP 主界面后才开始加载数据
     if (viewState === ViewState.APP) {
       const fetchData = async () => {
         setIsFeedLoading(true);
@@ -53,13 +56,12 @@ const CommunityPage = () => {
 
       fetchData();
     }
-  }, [activeFeedTab, viewState]); // 当 Tab 变化或进入主页时触发
+  }, [activeFeedTab, viewState]); 
 
-  
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [viewingImage, setViewingImage] = useState<Post | null>(null);
 
-  // Landing Page Component (保持不变)
+  // Landing Page Component
   const LandingPage = () => (
     <div className="min-h-screen bg-[#05050a] flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/30 rounded-full blur-[120px]" />
@@ -77,7 +79,6 @@ const CommunityPage = () => {
         <button 
           onClick={() => {
             setViewState(ViewState.APP);
-            // 确保进入时默认是推荐
             setActiveFeedTab('RECOMMEND'); 
           }}
           className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-semibold transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)]"
@@ -95,7 +96,7 @@ const CommunityPage = () => {
   const MainApp = () => (
     <div className="flex h-screen w-full bg-[#05050a] text-white overflow-hidden relative">
       
-      {/* Navigation (保持不变) */}
+      {/* Navigation */}
       <nav className="w-16 md:w-20 bg-black/40 border-r border-white/5 flex flex-col items-center py-8 z-50 backdrop-blur-xl shrink-0">
         <div className="mb-10 text-2xl font-bold tracking-tighter">U.</div>
         <div className="flex flex-col gap-8 w-full">
@@ -104,6 +105,7 @@ const CommunityPage = () => {
           <SidebarBtn icon={<Trophy size={24} />} isActive={activeTab === SidebarTab.LEADERBOARD} onClick={() => setActiveTab(activeTab === SidebarTab.LEADERBOARD ? SidebarTab.HOME : SidebarTab.LEADERBOARD)} label="榜单"/>
         </div>
         <div className="mt-auto">
+          {/* 移除头像判断，始终显示 User 图标 */}
           <SidebarBtn icon={<User size={24} />} isActive={activeTab === SidebarTab.PROFILE} onClick={() => setActiveTab(SidebarTab.PROFILE)} label="我的"/>
         </div>
       </nav>
@@ -114,9 +116,6 @@ const CommunityPage = () => {
       {/* Main Feed Content Area */}
       <main className="flex-1 relative overflow-y-auto scroll-smooth">
         
-        {/* ========================================== */}
-        {/* 4. 修改：Header/Top Bar - 支持点击切换样式 */}
-        {/* ========================================== */}
         <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-[#05050a]/80 backdrop-blur-md border-b border-white/5">
            <div className="flex gap-2">
              <TabButton 
@@ -137,7 +136,6 @@ const CommunityPage = () => {
            </div>
            
            <div className="hidden md:flex items-center gap-4">
-              {/* 如果正在加载，显示 Loading 提示 */}
               {isFeedLoading && (
                 <div className="flex items-center gap-2 text-xs text-purple-400 animate-in fade-in">
                   <Loader2 size={14} className="animate-spin"/>
@@ -151,11 +149,7 @@ const CommunityPage = () => {
         {/* Masonry Grid Feed */}
         <div className="p-4 md:p-6 lg:p-8 pb-32">
           
-          {/* ========================================== */}
-          {/* 5. 修改：根据 Loading 状态展示内容 */}
-          {/* ========================================== */}
           {isFeedLoading ? (
-             // Loading Skeleton (简单的加载占位符)
              <div className="flex items-center justify-center h-64 w-full">
                 <Loader2 size={40} className="text-purple-500 animate-spin" />
              </div>
@@ -167,7 +161,6 @@ const CommunityPage = () => {
                     onClick={() => setViewingImage(post)}
                     className="break-inside-avoid relative group rounded-2xl overflow-hidden bg-[#1a1a1a] cursor-pointer border border-transparent hover:border-white/20 transition-all"
                   >
-                    {/* ...此处保持原来的 Card 渲染逻辑不变... */}
                     <div className="relative aspect-[3/4] overflow-hidden">
                        <img 
                         src={post.thumbnailUrl} 
@@ -202,7 +195,6 @@ const CommunityPage = () => {
              </div>
           )}
           
-          {/* 如果数据为空 */}
           {!isFeedLoading && displayPosts.length === 0 && (
               <div className="text-center py-20 text-gray-500">
                  暂无内容
@@ -210,7 +202,7 @@ const CommunityPage = () => {
           )}
         </div>
 
-        {/* Floating Create Button (保持不变) */}
+        {/* Floating Create Button */}
         <div className="fixed bottom-10 left-[calc(50%+2rem)] md:left-[calc(50%+2.5rem)] -translate-x-1/2 z-40">
            <button onClick={handleCreateClick} className="group relative flex items-center gap-3 px-8 py-3.5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white font-semibold shadow-lg shadow-purple-500/40 hover:shadow-purple-500/60 hover:scale-105 active:scale-95 transition-all duration-300 ring-1 ring-white/20">
               <div className="absolute inset-0 rounded-full bg-white/20 blur-md opacity-0 group-hover:opacity-50 transition-opacity" />
@@ -220,7 +212,7 @@ const CommunityPage = () => {
         </div>
       </main>
 
-      {/* Modals (保持不变) */}
+      {/* Modals */}
       {selectedPost && (<DetailView post={selectedPost} onClose={() => setSelectedPost(null)} />)}
       {viewingImage && (<ImageView post={viewingImage} onClose={() => setViewingImage(null)} />)}
     </div>
@@ -229,9 +221,7 @@ const CommunityPage = () => {
   return viewState === ViewState.LANDING ? <LandingPage /> : <MainApp />;
 };
 
-// ==========================================
-// 6. 新增：Tab Button 组件 (提取样式逻辑)
-// ==========================================
+// 辅助组件：Tab 按钮
 const TabButton = ({ label, isActive, onClick }: { label: string, isActive: boolean, onClick: () => void }) => (
   <button 
     onClick={onClick}
@@ -245,7 +235,7 @@ const TabButton = ({ label, isActive, onClick }: { label: string, isActive: bool
   </button>
 );
 
-// SidebarBtn (保持不变)
+// 辅助组件：侧边栏按钮
 const SidebarBtn = ({ icon, isActive, onClick, label }: { icon: React.ReactNode, isActive: boolean, onClick: () => void, label: string }) => (
   <button onClick={onClick} className="relative group flex flex-col items-center gap-1">
     <div className={`p-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}>

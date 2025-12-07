@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+import { AuthProvider } from './contexts/AuthContext';
 // @ts-ignore
 import ScrollToTop from './components/ScrollToTop';
 
@@ -13,6 +15,7 @@ import ExchangeRecordPage from './pages/ExchangeRecordPage';
 import UpcPage from './pages/UpcPage';
 import CommunityPage from './pages/CommunityPage';
 import DailyCheckInPage from './pages/DailyCheckInPage';
+
 
 
 
@@ -34,6 +37,7 @@ function App() {
   return (
     // 1. 这里只使用 Router (即 BrowserRouter)
     // 2. 去掉了外层的 <BrowserRouter> 标签
+    <AuthProvider>
     <Router>
       {/* 3. ScrollToTop 必须在 Router 内部，才能监听到路由变化 */}
       <ScrollToTop /> 
@@ -140,6 +144,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }
 

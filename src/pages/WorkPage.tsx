@@ -8,20 +8,23 @@ import { mockAiService } from '../services/mockAiService';
 import type { Message } from '../types';
 import { Sender, AppMode } from '../types';
 import { ChevronLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import HistoryView from '../components/workPage/HistoryView'; // 确保导入路径正确
+// ✅ 修改 1: 引入 useLocation
+import { useNavigate, useLocation } from 'react-router-dom';
+import HistoryView from '../components/workPage/HistoryView'; 
 import { DocumentView } from '../components/workPage/DocumentView';
-import { UserMenu } from '../components/workPage/UserMenu'; // 引入新组件
-import { Loader2 } from 'lucide-react'; // 引入 Loading 图标
+import { UserMenu } from '../components/workPage/UserMenu'; 
+import { Loader2 } from 'lucide-react'; 
 import type { HistoryItem } from '../types';
-
+import { useAuth } from '../contexts/AuthContext'; 
 
 const WorkPage: React.FC = () => {
   const navigate = useNavigate();
+  // ✅ 修改 2:以此获取当前路径和返回时的状态
+  const location = useLocation(); 
+  
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // ✅ 新增：用于追踪当前会话ID，实现“更新旧记录”而非“总是新增”
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   
   const [viewState, setViewState] = useState<'landing' | 'chat' | 'document' | 'history'>('landing');
@@ -32,27 +35,45 @@ const WorkPage: React.FC = () => {
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // ✅ 登录状态管理
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false); // 控制登录按钮 Loading
+  const { isLoggedIn, user , logout} = useAuth(); 
 
+  // ✅ 修改 3: 添加 Effect 用于处理登录返回后的视图恢复
+  // LoginForm 登录成功后会执行: navigate(from, { state: { activeTab: returnTab } });
+  useEffect(() => {
+    if (location.state && location.state.activeTab) {
+      setViewState(location.state.activeTab);
+      
+      // 如果是为了防止刷新后仍然读取旧状态，可以在这里清除 location.state
+      // 但 React Router 默认行为通常是可以接受的
+      window.history.replaceState({}, document.title)
+    }
+  }, [location]);
 
+  // ✅ 修改 4: 更新跳转逻辑，传递当前路径和视图状态
   const handleLoginClick = () => {
-
-    if (isLoggingIn) return;
-    
-    setIsLoggingIn(true);
-    // 模拟 API 请求
-    setTimeout(() => {
-      setIsLoggedIn(true);
-      setIsLoggingIn(false);
-    }, 1500);
-    // navigate('/login');
+    if (!isLoggedIn) {
+      // 传递当前路径 (from) 和当前视图 (returnTab)
+      navigate('/login', {
+        state: {
+          from: location.pathname, // 例如 "/" 或 "/work"
+          returnTab: viewState     // 例如 "chat", "history", "landing"
+        }
+      });
+    } else {
+      console.log('用户已登录，显示下拉菜单');
+    }
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    // todo 清除当前会话或历史记录等
+    logout();
+    setIsSidebarCollapsed(false);
+    setIsModalOpen(false);
+    setCurrentSessionId(null);
+    setViewState('landing'); 
+    setMessages([]); 
+    setIsGenerating(false);
+    setCurrentMode(AppMode.TEXT_CHAT);
+    setHistoryList([]); 
   };
 
   const toggleSidebar = () => {
@@ -66,7 +87,7 @@ const WorkPage: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isGenerating]);
-  // ✅ 修改：保存当前会话逻辑 (支持更新现有记录)
+
   const saveCurrentChatToHistory = () => {
     if (messages.length === 0) return;
 
@@ -77,7 +98,6 @@ const WorkPage: React.FC = () => {
       : '新的对话';
 
     if (currentSessionId) {
-      // 如果是旧会话，更新它并移到最前
       setHistoryList(prevList => {
         const otherItems = prevList.filter(item => item.id !== currentSessionId);
         const updatedItem: HistoryItem = {
@@ -90,7 +110,6 @@ const WorkPage: React.FC = () => {
         return [updatedItem, ...otherItems];
       });
     } else {
-      // 如果是新会话，创建新的
       const newId = Date.now().toString();
       const newItem: HistoryItem = {
         id: newId,
@@ -100,7 +119,7 @@ const WorkPage: React.FC = () => {
         type: currentMode === AppMode.AI_DRAWING ? 'IMAGE' : 'TEXT',
       };
       setHistoryList(prev => [newItem, ...prev]);
-      setCurrentSessionId(newId); // 标记当前会话ID
+      setCurrentSessionId(newId); 
     }
   };
 
@@ -171,7 +190,7 @@ const WorkPage: React.FC = () => {
   const handleBackToLanding = () => {
     saveCurrentChatToHistory();
     setMessages([]);
-    setCurrentSessionId(null); // 重置会话ID
+    setCurrentSessionId(null); 
     setViewState('landing');
   };
 
@@ -202,7 +221,6 @@ const WorkPage: React.FC = () => {
     }
   };
 
-  // ✅ 新增：删除历史记录逻辑
   const handleDeleteHistory = (id: string) => {
     setHistoryList(prev => prev.filter(item => item.id !== id));
     if (currentSessionId === id) {
@@ -211,13 +229,11 @@ const WorkPage: React.FC = () => {
     }
   };
 
-  // ✅ 修改：恢复历史记录逻辑
   const handleRestoreHistory = (item: HistoryItem) => {
-    setMessages(item.messages); // 恢复消息
-    setCurrentSessionId(item.id); // 恢复 Session ID
-    setViewState('chat'); // 跳转回 Chat 视图
+    setMessages(item.messages); 
+    setCurrentSessionId(item.id); 
+    setViewState('chat'); 
     
-    // 如果是图片类型的历史，可能需要同步更新 currentMode，这里可视需求添加
     if (item.type === 'IMAGE') {
        setCurrentMode(AppMode.AI_DRAWING);
     } else {
@@ -238,7 +254,6 @@ const WorkPage: React.FC = () => {
 
       <main className="flex-1 flex flex-col min-w-0 relative">
         <header className="h-16 flex items-center justify-between px-6 shrink-0 relative z-30 border-b border-white/10">
-          {/* 左侧：返回按钮 或 广告语 */}
           {viewState === 'chat' ? (
             <button
               onClick={handleBackToLanding}
@@ -256,25 +271,19 @@ const WorkPage: React.FC = () => {
             </div>
           )}
 
-          {/* 右上角登录/用户区域 */}
           <div className="flex items-center gap-6 pr-4">
-             {/* 语言切换 (始终显示) */}
              <button className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
                 <i className="fa-solid fa-globe"></i> 中文
              </button>
 
-             {/* 登录状态判定 */}
              {!isLoggedIn ? (
-                // 未登录状态
                 <button 
                   onClick={handleLoginClick} 
-                  disabled={isLoggingIn}
                   className="bg-white/10 hover:bg-white/20 text-white px-5 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 min-w-[80px] justify-center"
                 >
-                  {isLoggingIn ? <Loader2 size={16} className="animate-spin" /> : '登录'}
+                登录
                 </button>
              ) : (
-                // 已登录状态 -> UserMenu 组件
                 <UserMenu onLogout={handleLogout} />
              )}
           </div>
@@ -293,7 +302,6 @@ const WorkPage: React.FC = () => {
             </div>
           )}
           
-          {/* ✅ 传递 handleRestoreHistory 和 handleDeleteHistory */}
           {viewState === 'history' && (
             <div className="h-full overflow-y-auto">
               <HistoryView 
