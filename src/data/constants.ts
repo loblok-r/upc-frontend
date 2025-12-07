@@ -148,9 +148,8 @@ export const MallPRODUCTS: MallProduct[] = [
   },
   {
     id: '3',
-    name: '年费会员7折兑换码',
-    points: 1470,
-    cash: 6.8,
+    name: '算力值120点',
+    points: 500,
     originalPoints: 700,
     image: 'https://picsum.photos/300/300?random=3',
     category: 'card'
@@ -174,7 +173,7 @@ export const MallPRODUCTS: MallProduct[] = [
   },
   {
     id: '6',
-    name: '200点算力',
+    name: '算力值500点',
     points: 1500,
     image: 'https://picsum.photos/300/300?random=6',
     category: 'virtual'
@@ -228,10 +227,10 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: WalletTabId.BENEFITS, label: '生活权益', icon: Coffee },
   { id: WalletTabId.JOINT_MEMBER, label: '联合会员', icon: Heart },
   { id: WalletTabId.GIFT_CARDS, label: '礼品卡', icon: Gift },
-  { id: WalletTabId.DRAW_CHANCES, label: '抽奖次数', icon: Dices },
+  // { id: WalletTabId.DRAW_CHANCES, label: '抽奖次数', icon: Dices },
   { id: WalletTabId.POINTS, label: '积分', icon: Coins },
   { id: WalletTabId.PHYSICAL_ITEMS, label: '实物', icon: Package },
-  { id: WalletTabId.BADGES, label: '算力点数', icon: Medal },
+  // { id: WalletTabId.BADGES, label: '算力点数', icon: Medal },
   { id: WalletTabId.COUPONS, label: '优惠券', icon: Ticket },
 ];
 

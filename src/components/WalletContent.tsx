@@ -1,72 +1,61 @@
-import React from 'react';
-import { WalletTabId } from '../types';
-import { MOCK_TRANSACTIONS, SIDEBAR_ITEMS } from '../data/constants';
-import { Coins, Filter, ChevronDown, Archive } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { WalletTabId} from '../types';
+import type { PointTransaction, Coupon, OrderItem, BenefitItem } from '../types/index';
+import { SIDEBAR_ITEMS } from '../data/constants';
+import { 
+  Coins, Filter, ChevronDown, Archive, Loader2, 
+  Ticket, Calendar, Package, Truck, ShieldCheck, Lock 
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MockWalletService } from '../services/mockWalletService';
 
 interface WalletContentProps {
   activeTab: WalletTabId;
 }
 
 export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
-
   const navigate = useNavigate();
+  
+  // 数据状态
+  const [data, setData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Handle "去使用" button click
+  // 监听 activeTab 变化，调用模拟接口
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      // 清空旧数据，防止闪烁
+      setData([]);
+      try {
+        const result = await MockWalletService.fetchTabContent(activeTab);
+        setData(result);
+      } catch (err) {
+        console.error("Fetch tab content failed", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [activeTab]);
+
+
   const handleUseClick = () => {
     navigate('/mall');
   };
-  
-  // If active tab is Points, render the list (Image 2)
-  if (activeTab === WalletTabId.POINTS) {
-    return (
-      <div className="relative z-10 h-full flex flex-col animate-fade-in">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-white/5 pb-6">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            积分 <span className="text-sm font-normal text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">当前积分</span>
-          </h2>
-          <button 
-            onClick={handleUseClick}
-          className="bg-amber-500 hover:bg-amber-400 text-black text-sm font-bold px-6 py-2 rounded-lg shadow-lg shadow-amber-500/20 transition-all">
-            去使用
-          </button>
-        </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div className="flex bg-black/30 rounded-lg p-1 border border-white/5">
-            {['全部', '已消耗', '已过期'].map((filter, idx) => (
-              <button
-                key={filter}
-                className={`px-4 py-1.5 text-sm rounded-md transition-all ${
-                  idx === 0
-                    ? 'bg-white/10 text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-          
-          <div className="flex items-center gap-2 text-slate-400 text-sm cursor-pointer hover:text-white transition-colors">
-            <Filter className="w-4 h-4" />
-            <span>筛选</span>
-            <ChevronDown className="w-3 h-3" />
-          </div>
-        </div>
+  // --- 渲染辅助方法 ---
 
-        {/* List Header */}
-        <div className="grid grid-cols-12 gap-4 text-xs font-medium text-slate-500 uppercase tracking-wider mb-4 px-4">
+  // 1. 积分列表渲染
+  const renderPoints = (list: PointTransaction[]) => (
+    <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+       {/* List Header */}
+       <div className="grid grid-cols-12 gap-4 text-xs font-medium text-slate-500 uppercase tracking-wider mb-4 px-4">
           <div className="col-span-4 md:col-span-3">积分 <span className="text-amber-500/80 bg-amber-500/10 px-1 rounded text-[10px] ml-1">流水</span></div>
           <div className="col-span-4 md:col-span-6">来源</div>
           <div className="col-span-4 md:col-span-3 text-right">时间</div>
         </div>
-
-        {/* List Items */}
-        <div className="space-y-2">
-          {MOCK_TRANSACTIONS.map((tx) => (
+        {list.map((tx) => (
             <div 
               key={tx.id}
               className="grid grid-cols-12 gap-4 items-center bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 rounded-xl p-4 transition-all duration-200 group"
@@ -92,28 +81,144 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
                 {tx.date}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+        ))}
+    </div>
+  );
 
-  // Generic Empty State for other tabs (Image 3)
-  return (
-    <div className="relative z-10 h-full flex flex-col animate-fade-in">
-        <div className="border-b border-white/5 pb-6 mb-12">
-            <h2 className="text-2xl font-bold text-white capitalize">
-              {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
-            </h2>
+  // 2. 优惠券渲染
+  const renderCoupons = (list: Coupon[]) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {list.map(coupon => (
+        <div key={coupon.id} className={`relative flex rounded-xl overflow-hidden border ${coupon.status === 'active' ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/5 bg-white/5 opacity-60'}`}>
+           {/* Left Part */}
+           <div className={`w-24 flex flex-col items-center justify-center p-4 border-r border-dashed ${coupon.status === 'active' ? 'border-amber-500/30 bg-amber-500/10' : 'border-white/10 bg-white/5'}`}>
+              <Ticket className={`w-6 h-6 mb-2 ${coupon.status === 'active' ? 'text-amber-500' : 'text-slate-500'}`}/>
+              <span className={`text-lg font-bold ${coupon.status === 'active' ? 'text-amber-500' : 'text-slate-500'}`}>{coupon.type === 'discount' ? coupon.discount : '¥' + coupon.discount}</span>
+           </div>
+           {/* Right Part */}
+           <div className="flex-1 p-4 flex flex-col justify-between">
+              <div>
+                <h3 className="text-white font-medium">{coupon.title}</h3>
+                <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                  <Calendar className="w-3 h-3"/> 有效期至 {coupon.expiry}
+                </p>
+              </div>
+              <div className="mt-3 flex justify-end">
+                 <span className={`text-xs px-2 py-1 rounded ${coupon.status === 'active' ? 'bg-amber-500 text-black font-bold' : 'bg-slate-700 text-slate-400'}`}>
+                    {coupon.status === 'active' ? '立即使用' : coupon.status === 'expired' ? '已过期' : '已使用'}
+                 </span>
+              </div>
+           </div>
+           {/* Decorative Circles */}
+           <div className="absolute -top-2 left-[5.75rem] w-4 h-4 bg-[#111827] rounded-full"></div>
+           <div className="absolute -bottom-2 left-[5.75rem] w-4 h-4 bg-[#111827] rounded-full"></div>
         </div>
+      ))}
+    </div>
+  );
 
-        <div className="flex-1 flex flex-col items-center justify-center text-center opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]" style={{ animationDelay: '0.1s' }}>
-            <div className="w-20 h-20 bg-slate-800/50 rounded-2xl flex items-center justify-center mb-6 relative overflow-hidden">
-                <Archive className="w-8 h-8 text-slate-600" />
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 opacity-50"></div>
+  // 3. 实物订单渲染
+  const renderOrders = (list: OrderItem[]) => (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {list.map(order => (
+        <div key={order.id} className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
+           <img src={order.image} className="w-16 h-16 rounded-lg bg-black object-cover" />
+           <div className="flex-1">
+              <div className="flex justify-between items-start">
+                 <h3 className="text-white font-medium">{order.name}</h3>
+                 <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                   order.status === 'delivered' ? 'border-green-500/30 text-green-400 bg-green-500/10' : 'border-blue-500/30 text-blue-400 bg-blue-500/10'
+                 }`}>
+                   {order.status === 'delivered' ? '已送达' : '运输中'}
+                 </span>
+              </div>
+              <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+                 <span className="flex items-center gap-1"><Package className="w-3 h-3"/> 订单号: {order.id}</span>
+                 <span>{order.date}</span>
+              </div>
+           </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // 4. 权益列表渲染
+  const renderBenefits = (list: BenefitItem[]) => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+       {list.map(benefit => (
+         <div key={benefit.id} className={`p-6 rounded-xl border flex flex-col items-center text-center gap-3 transition-all ${
+           benefit.isUnlocked ? 'bg-gradient-to-b from-white/10 to-transparent border-white/10' : 'bg-black/20 border-white/5 opacity-50'
+         }`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${benefit.isUnlocked ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-600'}`}>
+               {benefit.isUnlocked ? <ShieldCheck className="w-6 h-6"/> : <Lock className="w-6 h-6"/>}
             </div>
-            <p className="text-slate-400 text-sm">空空如也，还没有奖励哦~</p>
-        </div>
+            <div>
+               <h3 className="text-white font-bold">{benefit.title}</h3>
+               <p className="text-xs text-slate-400 mt-1">{benefit.description}</p>
+            </div>
+            <span className="mt-2 text-[10px] border border-white/10 px-2 py-0.5 rounded text-slate-500">{benefit.level}</span>
+         </div>
+       ))}
+    </div>
+  );
+
+
+  // --- 主渲染逻辑 ---
+
+  return (
+    <div className="relative z-10 h-full flex flex-col">
+      {/* 标题栏 */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-white/5 pb-6">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+           {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
+           {/* 只有在积分 Tab 显示余额标签 */}
+           {activeTab === WalletTabId.POINTS && !isLoading && (
+             <span className="text-sm font-normal text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">当前积分 2450</span>
+           )}
+        </h2>
+        
+        {/* 只有积分 Tab 显示 "去使用" */}
+        {activeTab === WalletTabId.POINTS && (
+          <div className="flex gap-4">
+              {/* Filter UI (Simplified) */}
+              <div className="hidden md:flex items-center gap-2 text-slate-400 text-sm cursor-pointer hover:text-white transition-colors mr-4">
+                <Filter className="w-4 h-4" /> <span>筛选</span> <ChevronDown className="w-3 h-3" />
+              </div>
+              <button onClick={handleUseClick} className="bg-amber-500 hover:bg-amber-400 text-black text-sm font-bold px-6 py-2 rounded-lg shadow-lg shadow-amber-500/20 transition-all">
+                去使用
+              </button>
+          </div>
+        )}
+      </div>
+
+      {/* 内容区域：处理 Loading、空数据、不同 Tab */}
+      <div className="flex-1">
+        {isLoading ? (
+          // Loading State
+          <div className="h-64 flex flex-col items-center justify-center text-slate-500 gap-3">
+             <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+             <p className="text-sm">加载数据中...</p>
+          </div>
+        ) : data.length > 0 ? (
+          // Has Data - Switch Render based on Tab
+          <>
+            {activeTab === WalletTabId.POINTS && renderPoints(data)}
+            {activeTab === WalletTabId.COUPONS && renderCoupons(data)}
+            {activeTab === WalletTabId.PHYSICAL_ITEMS && renderOrders(data)}
+            {activeTab === WalletTabId.BENEFITS && renderBenefits(data)}
+            {/* Fallback for generic list if implemented */}
+          </>
+        ) : (
+          // Empty State
+          <div className="flex-1 flex flex-col items-center justify-center text-center opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]" style={{ animationDelay: '0.1s' }}>
+              <div className="w-20 h-20 bg-slate-800/50 rounded-2xl flex items-center justify-center mb-6 relative overflow-hidden">
+                  <Archive className="w-8 h-8 text-slate-600" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 opacity-50"></div>
+              </div>
+              <p className="text-slate-400 text-sm">空空如也，还没有内容哦~</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -138,7 +138,7 @@ const ChatWidget: React.FC = () => {
                 </div>
                 <div className="text-xs text-gray-600">
                     <p className="mb-1">客服暂不在线，工作时间9:00-18:00,您当前可以附带问题截图，点击此链接说明您的问题</p>
-                    <a href="#" className="text-blue-600 hover:underline break-all">https://mitce.net/submitticket?step=2&deptid=1</a>
+                    <a href="#" className="text-blue-600 hover:underline break-all">https://upc.net/submitticket?step=2&deptid=1</a>
                 </div>
              </div>
         </div>

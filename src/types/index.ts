@@ -267,3 +267,30 @@ export interface PointTransaction {
   date: string;
   type: 'earn' | 'spend' | 'expire';
 }
+/**
+ * wallet
+ */
+export interface Coupon {
+  id: string;
+  title: string;
+  discount: string;
+  expiry: string;
+  type: 'discount' | 'cash';
+  status: 'active' | 'used' | 'expired';
+}
+
+export interface OrderItem {
+  id: string;
+  name: string;
+  status: 'shipping' | 'delivered' | 'processing';
+  image: string;
+  date: string;
+}
+
+export interface BenefitItem {
+  id: string;
+  title: string;
+  description: string;
+  level: 'Lv.1' | 'Lv.2' | 'Lv.3';
+  isUnlocked: boolean;
+}

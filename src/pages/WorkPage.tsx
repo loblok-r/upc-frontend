@@ -11,6 +11,8 @@ import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import HistoryView from '../components/workPage/HistoryView'; // 确保导入路径正确
 import { DocumentView } from '../components/workPage/DocumentView';
+import { UserMenu } from '../components/workPage/UserMenu'; // 引入新组件
+import { Loader2 } from 'lucide-react'; // 引入 Loading 图标
 import type { HistoryItem } from '../types';
 
 
@@ -30,8 +32,27 @@ const WorkPage: React.FC = () => {
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ✅ 登录状态管理
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false); // 控制登录按钮 Loading
+
+
   const handleLoginClick = () => {
-    navigate('/login');
+
+    if (isLoggingIn) return;
+    
+    setIsLoggingIn(true);
+    // 模拟 API 请求
+    setTimeout(() => {
+      setIsLoggedIn(true);
+      setIsLoggingIn(false);
+    }, 1500);
+    // navigate('/login');
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    // todo 清除当前会话或历史记录等
   };
 
   const toggleSidebar = () => {
@@ -217,6 +238,7 @@ const WorkPage: React.FC = () => {
 
       <main className="flex-1 flex flex-col min-w-0 relative">
         <header className="h-16 flex items-center justify-between px-6 shrink-0 relative z-30 border-b border-white/10">
+          {/* 左侧：返回按钮 或 广告语 */}
           {viewState === 'chat' ? (
             <button
               onClick={handleBackToLanding}
@@ -226,21 +248,37 @@ const WorkPage: React.FC = () => {
               <span>返回工作台</span>
             </button>
           ) : (
-            <>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
                <div className="text-sm text-gray-400">
                   <span className="text-orange-400 font-semibold">Loblok Upc Pro</span> 现已上线 UINO，
                   <a href="#" className="underline decoration-orange-400 underline-offset-4 hover:text-white transition-colors">免费试用</a>
                 </div>
-              </div>
-              <div className="flex items-center gap-8 pr-8">
-                <div className="flex items-center gap-4 text-gray-400 text-sm">
-                  <button className="hover:text-white"><i className="fa-solid fa-globe"></i> 中文</button>
-                  <button onClick={handleLoginClick} className="bg-white/10 hover:bg-white/20 text-white px-4 py-1.5 rounded-lg transition-all">登录</button>
-                </div>
-              </div>
-            </>
+            </div>
           )}
+
+          {/* 右上角登录/用户区域 */}
+          <div className="flex items-center gap-6 pr-4">
+             {/* 语言切换 (始终显示) */}
+             <button className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
+                <i className="fa-solid fa-globe"></i> 中文
+             </button>
+
+             {/* 登录状态判定 */}
+             {!isLoggedIn ? (
+                // 未登录状态
+                <button 
+                  onClick={handleLoginClick} 
+                  disabled={isLoggingIn}
+                  className="bg-white/10 hover:bg-white/20 text-white px-5 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 min-w-[80px] justify-center"
+                >
+                  {isLoggingIn ? <Loader2 size={16} className="animate-spin" /> : '登录'}
+                </button>
+             ) : (
+                // 已登录状态 -> UserMenu 组件
+                <UserMenu onLogout={handleLogout} />
+             )}
+          </div>
+         
         </header>
 
         <div className="flex-1 overflow-hidden relative">
