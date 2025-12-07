@@ -1,13 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { SidebarTab } from '../../types/community';
 import { MOCK_USERS, LEADERBOARD_DATA } from '../../data/constants_community';
-import { Search, Trophy, X, ChevronRight, TrendingUp, Music, Film, ArrowLeft, Loader2, Check } from 'lucide-react';
+import { Search, Trophy, X, ChevronRight, TrendingUp, Music, Film, 
+  ArrowLeft, Loader2, Check, User, LogIn, LogOut, 
+  Settings, Image as ImageIcon, Heart, Zap, CreditCard, ChevronRight as ArrowRight 
+
+} from 'lucide-react';
 import MockApiService from '../../services/MockApiService';
 
-
+//模拟当前用户
+const MOCK_CURRENT_USER = {
+  id: 'me_01',
+  name: 'NeoCreator',
+  handle: '@neo_design_lab',
+  avatar: 'https://picsum.photos/seed/me_01/200/200',
+  isPro: true,
+  stats: {
+    works: 142,
+    followers: '2.5k',
+    likes: '12.8k'
+  },
+  credits: {
+    current: 850,
+    total: 1000
+  }
+};
 
 // ==========================================
-// 2. Follow Button Component (保持不变)
+// 2. Follow Button Component
 // ==========================================
 interface FollowButtonProps {
   userId: string;
@@ -57,9 +77,6 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId, className }) => {
 };
 
 
-// ==========================================
-// 3. Main Sidebar Panel
-// ==========================================
 
 interface SidebarPanelProps {
   activeTab: SidebarTab;
@@ -73,8 +90,32 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
   
   // --- 搜索功能相关的状态 ---
   const [searchQuery, setSearchQuery] = useState('');
+
+  // ==========================================
+  //登录状态管理
+  // ==========================================
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+
   const [displayUsers, setDisplayUsers] = useState(MOCK_USERS); // 默认显示推荐用户
   const [isSearching, setIsSearching] = useState(false);
+
+// 模拟登录动作
+  const handleLogin = () => {
+    setIsLoggingIn(true);
+    // 模拟 API 请求延迟
+    setTimeout(() => {
+      setIsLoggedIn(true);
+      setIsLoggingIn(false);
+    }, 1200);
+  };
+
+  // 模拟退出登录
+  const handleLogout = () => {
+    // 可以加个确认弹窗，这里直接退出
+    setIsLoggedIn(false);
+  };
 
   // 当 Tab 切换时重置状态
   useEffect(() => {
@@ -108,7 +149,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
   }, [searchQuery, activeTab]);
 
 
-  if (activeTab === SidebarTab.HOME || activeTab === SidebarTab.PROFILE) return null;
+  if (activeTab === SidebarTab.HOME) return null;
 
   // 模拟排行榜长列表数据
   const FULL_CREATORS_LIST = [...LEADERBOARD_DATA.creators, ...LEADERBOARD_DATA.creators].map((item, i) => ({...item, rank: i + 1}));
@@ -184,7 +225,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
         </>
       )}
 
-      {/* Leaderboard Panel Content (保持不变) */}
+      {/* Leaderboard Panel Content*/}
       {activeTab === SidebarTab.LEADERBOARD && (
         <>
           {lbView === 'SUMMARY' && (
@@ -276,8 +317,146 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
           )}
         </>
       )}
+
+      {/* ========================================================================= */}
+      {/* 个人主页面板 (Profile Panel) */}
+      {/* ========================================================================= */}
+      {activeTab === SidebarTab.PROFILE && (
+        <>
+          {/* Header Area */}
+          <div className="p-5 border-b border-white/10 flex items-center justify-between">
+             <h2 className="text-xl font-bold">我的主页</h2>
+             <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+               <X size={16} />
+             </button>
+          </div>
+
+          {/* Body Content - 根据登录状态切换 */}
+          <div className="flex-1 overflow-y-auto">
+            
+            {/* Case 1: 未登录 (Guest View) */}
+            {!isLoggedIn ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center h-full animate-in fade-in duration-500">
+                 <div className="w-24 h-24 bg-gradient-to-tr from-white/5 to-white/10 rounded-full flex items-center justify-center mb-6 ring-1 ring-white/10 shadow-2xl relative">
+                    <User size={48} className="text-gray-400" />
+                    {/* 装饰性光点 */}
+                    <div className="absolute top-0 right-0 w-6 h-6 bg-purple-500 rounded-full blur-lg opacity-50"></div>
+                 </div>
+
+                 <h3 className="text-xl font-bold text-white mb-3">开启创作之旅</h3>
+                 <p className="text-sm text-gray-400 mb-8 leading-relaxed">
+                   登录解锁完整功能，<br/>管理作品、获取灵感并与社区互动。
+                 </p>
+
+                 <button 
+                    onClick={handleLogin}
+                    disabled={isLoggingIn}
+                    className="w-full group relative flex items-center justify-center gap-2 py-3.5 bg-white text-black rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-white/10 disabled:opacity-70 disabled:cursor-wait"
+                 >
+                    {isLoggingIn ? <Loader2 size={18} className="animate-spin"/> : <LogIn size={18} />}
+                    <span>{isLoggingIn ? '登录验证中...' : '立即登录'}</span>
+                 </button>
+                 
+                 <div className="mt-6 text-xs text-gray-500">
+                   继续即代表同意 <span className="underline cursor-pointer">服务条款</span>
+                 </div>
+              </div>
+            ) : (
+              // Case 2: 已登录 (User Profile View)
+              <div className="p-5 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                 
+                 {/* 1. 用户基本信息卡片 */}
+                 <div className="flex items-center gap-4 pb-2">
+                    <div className="relative">
+                      <img src={MOCK_CURRENT_USER.avatar} className="w-16 h-16 rounded-full border-2 border-white/10" />
+                      {MOCK_CURRENT_USER.isPro && (
+                        <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full border border-black">
+                          PRO
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                       <div className="text-lg font-bold">{MOCK_CURRENT_USER.name}</div>
+                       <div className="text-sm text-gray-400">{MOCK_CURRENT_USER.handle}</div>
+                    </div>
+                 </div>
+
+                 {/* 2. 数据统计栏 */}
+                 <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 border border-white/5">
+                    <div className="text-center cursor-pointer hover:opacity-80">
+                       <div className="text-lg font-bold">{MOCK_CURRENT_USER.stats.works}</div>
+                       <div className="text-xs text-gray-500">作品</div>
+                    </div>
+                    <div className="w-px h-8 bg-white/10"></div>
+                    <div className="text-center cursor-pointer hover:opacity-80">
+                       <div className="text-lg font-bold">{MOCK_CURRENT_USER.stats.followers}</div>
+                       <div className="text-xs text-gray-500">粉丝</div>
+                    </div>
+                    <div className="w-px h-8 bg-white/10"></div>
+                    <div className="text-center cursor-pointer hover:opacity-80">
+                       <div className="text-lg font-bold">{MOCK_CURRENT_USER.stats.likes}</div>
+                       <div className="text-xs text-gray-500">获赞</div>
+                    </div>
+                 </div>
+
+                 {/* 3. 算力/积分余额 (AI应用特色) */}
+                 <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl p-4 border border-purple-500/20 relative overflow-hidden group cursor-pointer">
+                    <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
+                       <Zap size={48} />
+                    </div>
+                    <div className="relative z-10">
+                       <div className="flex items-center gap-2 text-purple-300 text-sm font-medium mb-2">
+                          <Zap size={14} fill="currentColor"/> 剩余算力
+                       </div>
+                       <div className="text-2xl font-bold mb-2">
+                          {MOCK_CURRENT_USER.credits.current} <span className="text-sm text-gray-400 font-normal">/ {MOCK_CURRENT_USER.credits.total}</span>
+                       </div>
+                       {/* 进度条 */}
+                       <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 w-[85%]"></div>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* 4. 功能菜单列表 */}
+                 <div className="space-y-1 pt-2">
+                    <MenuItem icon={<ImageIcon size={18}/>} label="我的作品" hasArrow />
+                    <MenuItem icon={<Heart size={18}/>} label="收藏夹" hasArrow />
+                    <MenuItem icon={<CreditCard size={18}/>} label="订阅管理" />
+                    <MenuItem icon={<Settings size={18}/>} label="设置" />
+                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer - 仅在登录时显示退出按钮 */}
+          {isLoggedIn && (
+            <div className="p-4 border-t border-white/5">
+               <button 
+                 onClick={handleLogout}
+                 className="flex items-center gap-3 w-full p-3 rounded-xl text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-colors text-sm font-medium"
+               >
+                  <LogOut size={18} />
+                  退出登录
+               </button>
+            </div>
+          )}
+        </>
+      )}
+
     </div>
   );
 };
+
+// 辅助组件：菜单项
+const MenuItem = ({ icon, label, hasArrow }: { icon: React.ReactNode, label: string, hasArrow?: boolean }) => (
+  <button className="w-full flex items-center justify-between p-3.5 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition-colors group">
+     <div className="flex items-center gap-3">
+        <span className="text-gray-500 group-hover:text-white transition-colors">{icon}</span>
+        <span className="text-sm font-medium">{label}</span>
+     </div>
+     {hasArrow && <ArrowRight size={14} className="text-gray-600 group-hover:text-white transition-colors"/>}
+  </button>
+);
 
 export default SidebarPanel;

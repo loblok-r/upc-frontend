@@ -11,11 +11,11 @@ import {
   Ticket,
 } from 'lucide-react';
 export const WINNERS: Winner[] = [
-  { username: "p***x", prize: "专业版次数+10", time: "1分钟前" },
+  { username: "p***x", prize: "算力+200点", time: "1分钟前" },
   { username: "m***9", prize: "专业版月卡", time: "2分钟前" },
   { username: "a***k", prize: "积分+100点", time: "5分钟前" },
   { username: "user_88", prize: "抽奖次数+3", time: "刚刚" },
-  { username: "fox**", prize: "智能任务额度X3", time: "10分钟前" },
+  { username: "fox**", prize: "算力+30点", time: "10分钟前" },
   { username: "moon**", prize: "2***1 积分+200点", time: "12分钟前" },
 ];
 
@@ -31,7 +31,7 @@ export const PRODUCTS: ProductCard[] = [
   {
     id: '2',
     title: '专业版月卡',
-    subtitle: '赠送一个月的专业版接口使用权益',
+    subtitle: '赠送一个月的专业版功能使用权益',
     icon: 'Zap',
     color: 'text-blue-400'
   },
@@ -58,8 +58,8 @@ export const PRODUCTS: ProductCard[] = [
   },
   {
     id: '6',
-    title: '智能任务额度X3',
-    subtitle: '智能任务使用额度+3',
+    title: '算力点数+400',
+    subtitle: '智能算力点数+400',
     icon: 'Sparkles',
     color: 'text-purple-400'
   },
@@ -72,8 +72,8 @@ export const PRODUCTS: ProductCard[] = [
   },
   {
     id: '8',
-    title: 'AI绘图额度x3',
-    subtitle: 'AI绘图使用额度+3',
+    title: 'AI绘图包',
+    subtitle: 'AI绘图使用额度+20',
     icon: 'Palette',
     color: 'text-rose-400'
   }
@@ -174,7 +174,7 @@ export const MallPRODUCTS: MallProduct[] = [
   },
   {
     id: '6',
-    name: '智能任务额度包（10次）',
+    name: '200点算力',
     points: 1500,
     image: 'https://picsum.photos/300/300?random=6',
     category: 'virtual'
@@ -231,7 +231,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: WalletTabId.DRAW_CHANCES, label: '抽奖次数', icon: Dices },
   { id: WalletTabId.POINTS, label: '积分', icon: Coins },
   { id: WalletTabId.PHYSICAL_ITEMS, label: '实物', icon: Package },
-  { id: WalletTabId.BADGES, label: '勋章', icon: Medal },
+  { id: WalletTabId.BADGES, label: '算力点数', icon: Medal },
   { id: WalletTabId.COUPONS, label: '优惠券', icon: Ticket },
 ];
 
