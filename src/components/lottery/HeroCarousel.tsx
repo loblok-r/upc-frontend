@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PRODUCTS } from '../../data/constants';
-import { useNavigate } from 'react-router-dom'; 
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate , useLocation} from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { Loader2, X, Trophy, AlertCircle } from 'lucide-react';
 
@@ -13,17 +14,6 @@ const MockLotteryService = {
    * 模拟：已登录，且剩余 3 次机会
    * 你可以修改这里的返回逻辑来测试不同状态
    */
-  getUserStatus: (): Promise<{ isLoggedIn: boolean; chances: number }> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // 模拟数据：isLoggedIn: true, chances: 3
-        // 场景1: 未登录 -> { isLoggedIn: false, chances: 0 }
-        // 场景2: 无次数 -> { isLoggedIn: true, chances: 0 }
-        resolve({ isLoggedIn: true, chances: 3 });
-      }, 500);
-    });
-  },
-
   /**
    * 请求抽奖接口
    */
@@ -44,11 +34,20 @@ const MockLotteryService = {
 
 const HeroCarousel: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isLoggedIn, user, logout } = useAuth(); 
+
+
+  
   // Ensure we have enough items for a smooth loop
   const displayProducts = [...PRODUCTS, ...PRODUCTS]; // Double it for smoother loop if needed
 
   // --- States ---
-  const [userStatus, setUserStatus] = useState({ isLoggedIn: false, chances: 0 });
+  // --- States ---
+  const [userStatus, setUserStatus] = useState({ 
+    isLoggedIn: false, 
+    chances: 0 
+  });
   const [loading, setLoading] = useState(true);
   
   // Animation Control
@@ -60,22 +59,48 @@ const HeroCarousel: React.FC = () => {
   const [winPrize, setWinPrize] = useState<any>(null);
 
   // --- Initialization ---
+ // --- Initialization ---
   useEffect(() => {
     const init = async () => {
       try {
-        const status = await MockLotteryService.getUserStatus();
+        // 直接使用最新的 isLoggedIn 状态
+        // 这里模拟获取用户机会，实际应该从 API 获取
+        const status = { 
+          isLoggedIn: isLoggedIn, 
+          chances: isLoggedIn ? 3 : 0 // 登录用户有3次机会
+        };
         setUserStatus(status);
       } finally {
         setLoading(false);
       }
     };
     init();
-  }, []);
+  }, [isLoggedIn]); 
+
+   // 添加另一个 useEffect 来响应登录状态变化
+  useEffect(() => {
+    if (!loading) {
+      setUserStatus(prev => ({
+        ...prev,
+        isLoggedIn: isLoggedIn,
+        chances: isLoggedIn ? 3 : 0
+      }));
+    }
+  }, [isLoggedIn, loading]);
 
   // --- Handlers ---
 
   const handleLoginClick = () => {
-    navigate('/login');
+    if (!isLoggedIn) {
+      // 传递当前路径 (from) 和当前视图 (returnTab)
+      navigate('/login', {
+        state: {
+          from: location.pathname
+        }
+      });
+    } else {
+      console.log('用户已登录，显示下拉菜单');
+    }
   };
 
   const handleGetChancesClick = () => {
