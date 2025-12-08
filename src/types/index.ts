@@ -294,3 +294,22 @@ export interface BenefitItem {
   level: 'Lv.1' | 'Lv.2' | 'Lv.3';
   isUnlocked: boolean;
 }
+
+// 添加以下接口到您的 types.ts 文件
+export interface ApiResponse<T = any> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  code?: string;
+  timestamp?: number;
+}
+
+// 或者在现有的 FormErrors 中添加更多字段（如果还没有）
+export interface FormErrors {
+  username?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  captcha?: string;
+  agreeToTerms?: string;
+}

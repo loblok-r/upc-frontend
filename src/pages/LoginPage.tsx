@@ -1,30 +1,46 @@
-// src/pages/LoginPage.tsx
 import React, { useState } from 'react';
 import { TechBackground } from '../components/login/TechBackground';
 import { LoginForm } from '../components/login/LoginForm';
 import { RegisterForm } from '../components/login/RegisterForm';
-import { Link } from 'react-router-dom';
+import { ForgotPasswordForm } from '../components/login/ForgotPasswordForm';
 
 function LoginPage() {
-  const [view, setView] = useState<'login' | 'register'>('login');
+  const [view, setView] = useState<'login' | 'register' | 'forgot'>('login');
+  
+  const [email, setEmail] = useState('');
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4">
       <TechBackground />
       
-      {/* 返回首页按钮
-      <Link 
-        to="/" 
-        className="absolute top-6 left-6 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/20 transition-colors z-20"
-      >
-        ← 返回首页
-      </Link> */}
-      
       <main className="w-full flex justify-center z-10">
-        {view === 'login' ? (
-          <LoginForm onSwitchToRegister={() => setView('register')} />
-        ) : (
-          <RegisterForm onSwitchToLogin={() => setView('login')} />
+        {view === 'login' && (
+          <LoginForm 
+            // 🔥 关键修改：加上 key，强制 React 彻底重新渲染组件
+            key="login-form" 
+            onSwitchToRegister={() => setView('register')}
+            onSwitchToForgot={() => setView('forgot')} 
+            initialEmail={email}
+          />
+        )}
+        
+        {view === 'register' && (
+          <RegisterForm 
+            // 🔥 关键修改：加上 key
+            key="register-form"
+            onSwitchToLogin={(registeredEmail) => {
+              if (registeredEmail) setEmail(registeredEmail);
+              setView('login');
+            }} 
+          />
+        )}
+  
+        {view === 'forgot' && (
+          <ForgotPasswordForm 
+            // 🔥 关键修改：加上 key，确保之前的 Input 状态完全清空
+            key="forgot-form"
+            onSwitchToLogin={() => setView('login')} 
+          />
         )}
       </main>
     </div>
