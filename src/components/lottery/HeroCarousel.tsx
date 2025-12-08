@@ -28,29 +28,30 @@ const MockLotteryService = {
   }
 };
 
-// ==========================================
-// 2. Component Implementation
-// ==========================================
-
 const HeroCarousel: React.FC = () => {
+
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoggedIn, user, logout } = useAuth(); 
+  const { isLoggedIn, user: authUser,isLoading: authIsLoading} = useAuth(); 
 
+  console.log('HeroCarousel authUser:', authUser);
 
-  
-  // Ensure we have enough items for a smooth loop
-  const displayProducts = [...PRODUCTS, ...PRODUCTS]; // Double it for smoother loop if needed
+  const displayProducts = [...PRODUCTS, ...PRODUCTS]; 
 
-  // --- States ---
-  // --- States ---
-  const [userStatus, setUserStatus] = useState({ 
-    isLoggedIn: false, 
-    chances: 0 
+ const [userStatus, setUserStatus] = useState({
+    isLoggedIn: false,
+    chances: 0,
   });
-  const [loading, setLoading] = useState(true);
+
+   useEffect(() => {
+    if (!authIsLoading) {
+      setUserStatus({
+        isLoggedIn: isLoggedIn,
+        chances: authUser?.lotteryCounts || 0,
+      });
+    }
+  }, [authIsLoading, isLoggedIn, authUser]);
   
-  // Animation Control
   const [isSpinning, setIsSpinning] = useState(false);
   const [marqueeSpeed, setMarqueeSpeed] = useState('40s'); // 初始慢速
   
@@ -58,41 +59,10 @@ const HeroCarousel: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [winPrize, setWinPrize] = useState<any>(null);
 
-  // --- Initialization ---
- // --- Initialization ---
-  useEffect(() => {
-    const init = async () => {
-      try {
-        // 直接使用最新的 isLoggedIn 状态
-        // 这里模拟获取用户机会，实际应该从 API 获取
-        const status = { 
-          isLoggedIn: isLoggedIn, 
-          chances: isLoggedIn ? 3 : 0 // 登录用户有3次机会
-        };
-        setUserStatus(status);
-      } finally {
-        setLoading(false);
-      }
-    };
-    init();
-  }, [isLoggedIn]); 
-
-   // 添加另一个 useEffect 来响应登录状态变化
-  useEffect(() => {
-    if (!loading) {
-      setUserStatus(prev => ({
-        ...prev,
-        isLoggedIn: isLoggedIn,
-        chances: isLoggedIn ? 3 : 0
-      }));
-    }
-  }, [isLoggedIn, loading]);
-
-  // --- Handlers ---
-
   const handleLoginClick = () => {
+  
     if (!isLoggedIn) {
-      // 传递当前路径 (from) 和当前视图 (returnTab)
+      // 传递当前路径和当前视图
       navigate('/login', {
         state: {
           from: location.pathname
@@ -104,34 +74,33 @@ const HeroCarousel: React.FC = () => {
   };
 
   const handleGetChancesClick = () => {
-    // 导航去任务中心或钱包
     navigate('/mall'); 
   };
 
   const handleDrawClick = async () => {
     if (isSpinning || userStatus.chances <= 0) return;
 
-    // 1. 开始抽奖动画
+    // 开始抽奖动画
     setIsSpinning(true);
     setMarqueeSpeed('0.5s'); // 🚀 急速变快 (模拟老虎机旋转)
 
     try {
-      // 2. 调用后台接口 (同时转盘在狂转)
+      
       const prize = await MockLotteryService.draw();
       setWinPrize(prize);
 
-      // 3. 拿到结果，进入缓冲阶段
+      // 拿到结果，缓冲
       setMarqueeSpeed('2s'); // 🐢 缓缓变慢
 
-      // 4. 模拟缓缓停下的过程 (延迟展示结果)
+      // 缓缓停下
       setTimeout(() => {
         setIsSpinning(false);
-        setMarqueeSpeed('40s'); // 恢复正常巡航速度
-        setShowResult(true);    // 弹出结果
+        setMarqueeSpeed('40s'); 
+        setShowResult(true);    
         
         // 扣除次数
         setUserStatus(prev => ({ ...prev, chances: prev.chances - 1 }));
-      }, 2000); // 缓冲2秒后停下
+      }, 2000); 
 
     } catch (error) {
       console.error("Draw failed", error);
@@ -140,9 +109,8 @@ const HeroCarousel: React.FC = () => {
     }
   };
 
-  // --- Render Button Logic ---
   const renderButton = () => {
-    if (loading) {
+    if (authIsLoading) {
       return (
         <button className="px-10 py-3.5 rounded-full bg-white/10 text-white font-bold flex items-center gap-2 cursor-wait">
           <Loader2 className="animate-spin w-5 h-5" /> 加载中...
@@ -150,7 +118,7 @@ const HeroCarousel: React.FC = () => {
       );
     }
 
-    // 状态 1: 未登录
+    // 未登录
     if (!userStatus.isLoggedIn) {
       return (
         <button 
@@ -164,7 +132,7 @@ const HeroCarousel: React.FC = () => {
       );
     }
 
-    // 状态 2: 已登录且有次数 (抽奖状态)
+    // 已登录且有次数
     if (userStatus.chances > 0) {
       return (
         <button 
@@ -190,7 +158,7 @@ const HeroCarousel: React.FC = () => {
       );
     }
 
-    // 状态 3: 已登录但无次数
+    // 已登录但无次数
     return (
       <button 
         onClick={handleGetChancesClick}

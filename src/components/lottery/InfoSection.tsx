@@ -27,9 +27,9 @@ const InfoSection: React.FC = () => {
             <h3 className="text-2xl font-bold text-red-500 mb-4">获得抽奖次数</h3>
             <p className="text-slate-300 leading-relaxed text-lg">
               通过积分兑换、参加活动、充值、签到赢得抽奖次数，连续签到 <span className="text-white font-semibold">7天</span> 即可获得 <span className="text-white font-semibold">1次</span> 抽奖机会，另外可以通过签到、日常活动可以增加账户积分，积分可以兑换抽奖次数。
-              <button onClick={handleMallNavigation} className="text-blue-400 hover:text-blue-300 ml-2 underline underline-offset-4 bg-none border-none cursor-pointer">
+              {/* <button onClick={handleMallNavigation} className="text-blue-400 hover:text-blue-300 ml-2 underline underline-offset-4 bg-none border-none cursor-pointer">
                 赢得积分
-              </button>
+              </button> */}
               <button onClick={handleMallNavigation} className="text-blue-400 hover:text-blue-300 ml-2 underline underline-offset-4 bg-none border-none cursor-pointer">
                 积分兑换
               </button>

@@ -10,23 +10,6 @@ import MockApiService from '../../services/MockApiService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-//模拟当前用户
-const MOCK_CURRENT_USER = {
-   id: 'me_01',
-   name: 'NeoCreator',
-   handle: '@neo_design_lab',
-   avatar: 'https://picsum.photos/seed/me_01/200/200',
-   isPro: true,
-   stats: {
-      works: 142,
-      followers: '2.5k',
-      likes: '12.8k'
-   },
-   credits: {
-      current: 850,
-      total: 1000
-   }
-};
 
 // ==========================================
 // 2. Follow Button Component
@@ -92,6 +75,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
    const navigate = useNavigate();
    const location = useLocation();
    const { isLoggedIn, user, logout } = useAuth(); 
+   console.log("sidebar user:", user)
    const [lbView, setLbView] = useState<LeaderboardView>('SUMMARY');
 
    // --- 搜索功能相关的状态 ---
@@ -324,7 +308,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
          )}
 
          {/* ========================================================================= */}
-         {/* 个人主页面板 (Profile Panel) */}
+         {/* 个人主页面板*/}
          {/* ========================================================================= */}
          {activeTab === SidebarTab.PROFILE && (
             <>
@@ -336,10 +320,10 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                   </button>
                </div>
 
-               {/* Body Content - 根据登录状态切换 */}
+               {/* 根据登录状态切换 */}
                <div className="flex-1 overflow-y-auto">
 
-                  {/* Case 1: 未登录 (Guest View) */}
+                  {/* 未登录 */}
                   {!isLoggedIn ? (
                      <div className="flex flex-col items-center justify-center p-8 text-center h-full animate-in fade-in duration-500">
                         <div className="w-24 h-24 bg-gradient-to-tr from-white/5 to-white/10 rounded-full flex items-center justify-center mb-6 ring-1 ring-white/10 shadow-2xl relative">
@@ -366,44 +350,44 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                         </div>
                      </div>
                   ) : (
-                     // Case 2: 已登录 (User Profile View)
+                     // 已登录 
                      <div className="p-5 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
 
-                        {/* 1. 用户基本信息卡片 */}
+                        {/* 基本信息卡片 */}
                         <div className="flex items-center gap-4 pb-2">
                            <div className="relative">
-                              <img src={MOCK_CURRENT_USER.avatar} className="w-16 h-16 rounded-full border-2 border-white/10" />
-                              {MOCK_CURRENT_USER.isPro && (
+                              <img src={user?.avatar || 'https://picsum.photos/seed/default/200/200'} className="w-16 h-16 rounded-full border-2 border-white/10" />
+                              {user?.isMember && (
                                  <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full border border-black">
                                     PRO
                                  </div>
                               )}
                            </div>
                            <div>
-                              <div className="text-lg font-bold">{MOCK_CURRENT_USER.name}</div>
-                              <div className="text-sm text-gray-400">{MOCK_CURRENT_USER.handle}</div>
+                              <div className="text-lg font-bold">{user?.username}</div>
+                              <div className="text-sm text-gray-400">{'@' + user?.username}</div>
                            </div>
                         </div>
 
-                        {/* 2. 数据统计栏 */}
+                        {/* 数据统计栏 */}
                         <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 border border-white/5">
                            <div className="text-center cursor-pointer hover:opacity-80">
-                              <div className="text-lg font-bold">{MOCK_CURRENT_USER.stats.works}</div>
+                              <div className="text-lg font-bold">{user?.stats?.works || 0}</div>
                               <div className="text-xs text-gray-500">作品</div>
                            </div>
                            <div className="w-px h-8 bg-white/10"></div>
                            <div className="text-center cursor-pointer hover:opacity-80">
-                              <div className="text-lg font-bold">{MOCK_CURRENT_USER.stats.followers}</div>
+                              <div className="text-lg font-bold">{user?.stats?.followers || 0}</div>
                               <div className="text-xs text-gray-500">粉丝</div>
                            </div>
                            <div className="w-px h-8 bg-white/10"></div>
                            <div className="text-center cursor-pointer hover:opacity-80">
-                              <div className="text-lg font-bold">{MOCK_CURRENT_USER.stats.likes}</div>
+                              <div className="text-lg font-bold">{user?.stats?.likes || 0}</div>
                               <div className="text-xs text-gray-500">获赞</div>
                            </div>
                         </div>
 
-                        {/* 3. 算力/积分余额 (AI应用特色) */}
+                       {/* 算力余额 */}
                         <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl p-4 border border-purple-500/20 relative overflow-hidden group cursor-pointer">
                            <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
                               <Zap size={48} />
@@ -413,7 +397,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                                  <Zap size={14} fill="currentColor" /> 剩余算力
                               </div>
                               <div className="text-2xl font-bold mb-2">
-                                 {MOCK_CURRENT_USER.credits.current} <span className="text-sm text-gray-400 font-normal">/ {MOCK_CURRENT_USER.credits.total}</span>
+                                 {user?.computingPower || 0} <span className="text-sm text-gray-400 font-normal">/ {user?.maxcomputingPower || 1000}</span>
                               </div>
                               {/* 进度条 */}
                               <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">

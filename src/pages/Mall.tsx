@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Coins, ChevronRight, Bell, Calendar, ChevronLeft, ShoppingBag, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; 
 import { MallPRODUCTS, FLASH_SALES, FILTERS } from '../data/constants';
+import { useAuth } from '../contexts/AuthContext';
+
+
 
 // --- Type Definitions (如果 constants 里没导出的补充定义) ---
 interface FlashSaleItem {
@@ -98,6 +101,7 @@ const MockMallService = {
 };
 
 const Mall: React.FC = () => {
+    const { user } = useAuth();
     const navigate = useNavigate();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -187,8 +191,10 @@ const Mall: React.FC = () => {
                 <div>
                     <span className="text-slate-400 text-sm">我的积分</span>
                     <div className="text-2xl font-bold text-white flex items-baseline gap-1">
-                        2,450 
-                        <span className="text-xs font-normal text-amber-400 cursor-pointer hover:underline flex items-center">
+                        {user?.points || 0}
+                        <span 
+                        onClick={() => navigate('/daily-check-in')}
+                        className="text-xs font-normal text-amber-400 cursor-pointer hover:underline flex items-center">
                             签到领积分 <ChevronRight size={12} />
                         </span>
                     </div>

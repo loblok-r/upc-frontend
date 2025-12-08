@@ -5,21 +5,21 @@ import { Modal } from '../components/pay/Modal';
 import { PromptInput } from '../components/workPage/PromptInput';
 import { ChatMessage } from '../components/workPage/ChatMessage';
 import { mockAiService } from '../services/mockAiService';
-import type { Message } from '../types';
-import { Sender, AppMode } from '../types';
-import { ChevronLeft } from 'lucide-react';
-// ✅ 修改 1: 引入 useLocation
+import { ChevronLeft,Loader2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import HistoryView from '../components/workPage/HistoryView'; 
 import { DocumentView } from '../components/workPage/DocumentView';
 import { UserMenu } from '../components/workPage/UserMenu'; 
-import { Loader2 } from 'lucide-react'; 
-import type { HistoryItem } from '../types';
+import { Sender, AppMode } from '../types';
+import type { HistoryItem, Message } from '../types';
+
 import { useAuth } from '../contexts/AuthContext'; 
+
+
 
 const WorkPage: React.FC = () => {
   const navigate = useNavigate();
-  // ✅ 修改 2:以此获取当前路径和返回时的状态
+  
   const location = useLocation(); 
   
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -37,7 +37,7 @@ const WorkPage: React.FC = () => {
 
   const { isLoggedIn, user , logout} = useAuth(); 
 
-  // ✅ 修改 3: 添加 Effect 用于处理登录返回后的视图恢复
+  
   // LoginForm 登录成功后会执行: navigate(from, { state: { activeTab: returnTab } });
   useEffect(() => {
     if (location.state && location.state.activeTab) {
@@ -49,7 +49,7 @@ const WorkPage: React.FC = () => {
     }
   }, [location]);
 
-  // ✅ 修改 4: 更新跳转逻辑，传递当前路径和视图状态
+  // 更新跳转逻辑，传递当前路径和视图状态
   const handleLoginClick = () => {
     if (!isLoggedIn) {
       // 传递当前路径 (from) 和当前视图 (returnTab)
@@ -284,7 +284,7 @@ const WorkPage: React.FC = () => {
                 登录
                 </button>
              ) : (
-                <UserMenu onLogout={handleLogout} />
+                <UserMenu onLogout={handleLogout} user={user!} />
              )}
           </div>
          

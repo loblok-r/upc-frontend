@@ -7,6 +7,7 @@ import {
   Ticket, Calendar, Package, Truck, ShieldCheck, Lock 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { MockWalletService } from '../services/mockWalletService';
 
 interface WalletContentProps {
@@ -15,6 +16,7 @@ interface WalletContentProps {
 
 export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   const navigate = useNavigate();
+  const {  user: authUser} = useAuth();
   
   // 数据状态
   const [data, setData] = useState<any[]>([]);
@@ -173,7 +175,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
            {SIDEBAR_ITEMS.find(i => i.id === activeTab)?.label}
            {/* 只有在积分 Tab 显示余额标签 */}
            {activeTab === WalletTabId.POINTS && !isLoading && (
-             <span className="text-sm font-normal text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">当前积分 2450</span>
+             <span className="text-sm font-normal text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">当前积分 {authUser?.points || 0}</span>
            )}
         </h2>
         

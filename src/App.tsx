@@ -129,8 +129,6 @@ function App() {
             </DefaultLayout>
           }
         />
-
-        {/* ⭐ 不带 Navbar 的页面 */}
         <Route
           path="/work"
           element={

@@ -1,4 +1,52 @@
 import type { LucideIcon } from 'lucide-react';
+
+
+export interface User {
+  token?: string;
+  id: string;
+  username: string;
+  email?: string;
+  exp?: number;
+  points: number;  
+  maxPoints: number;
+  level: string; 
+  displayLevel: string;
+  lotteryCounts?: number;
+
+  streakDays: number;
+
+  checkedIn: boolean;
+
+  computingPower?: number; 
+  maxcomputingPower: number;
+
+
+  // 会员相关字段
+  isPermanentMember: boolean;
+  memberExpireAt?: number;
+  isMember ?: boolean;
+  // 会员剩余天数
+  memberDaysLeft ?: number;         
+  // 会员状态
+  memberStatus ?: 'permanent' | 'active' | 'expired' | 'none'; 
+
+
+  //社区相关字段
+  stats?: {
+    works: number;
+    followers: number;
+    likes: number;
+  };
+
+
+
+  avatar: string; 
+  //token过期时间   
+  expireTime?: number;
+  
+}
+
+
 export interface LoginFormData {
   username: string;
   password: string;
@@ -77,8 +125,8 @@ export interface ProductCard {
   id: string;
   title: string;
   subtitle: string;
-  icon: string; // Name of lucide icon or image url
-  color: string; // Tailwind color class for glow/icon
+  icon: string; 
+  color: string; 
   badge?: string;
 }
 
@@ -165,6 +213,8 @@ export const AppMode = {
   MORE_TOOLS: 'more_tools',
 } as const;
 export type AppMode = typeof AppMode[keyof typeof AppMode];
+
+
 export const Sender = {
   USER: 'User',
   AI: 'AI'

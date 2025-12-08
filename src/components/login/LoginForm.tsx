@@ -171,7 +171,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwit
       if (response.ok && result.code === 200) {
         console.log('登录成功');
         login(result.data.token, result.data);
-
         const state = location.state as LoginLocationState | null;
         const from = state?.from || '/';
         const returnTab = state?.returnTab;
