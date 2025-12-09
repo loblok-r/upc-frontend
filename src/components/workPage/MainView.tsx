@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 import Gallery from './Gallery';
 import { AppMode } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface MainViewProps {
   onSendMessage: (prompt: string, base64?: string, mode?: AppMode) => void;
@@ -10,6 +11,8 @@ interface MainViewProps {
 }
 
 const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, currentMode }) => {
+
+  const { isLoggedIn, user, checkGenerationPermission, calculateCost } = useAuth();
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -54,6 +57,31 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
+    //检查登录状态
+    if (!isLoggedIn) {
+      alert("请先登录");
+      navigate('/login', {
+        state: { from: '/work', returnTab: 'chat' }
+      });
+      return;
+    }
+
+    // 检查权限
+    const permission = checkGenerationPermission(currentMode, {
+      requireHD: false,
+      estimatedCost: calculateCost(currentMode, { wordCount: prompt.length })
+    });
+
+    if (!permission.allowed) {
+      alert(permission.reason);
+      // 如果是算力不足，可以跳转到充值页面
+      if (permission.insufficientComputingPower) {
+        // 可以在这里打开充值模态框
+        console.log("需要充值算力");
+      }
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
     setGeneratedImage(null);
@@ -62,15 +90,14 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
       // 将 File 转成 base64 字符串再传入
       const base64 = referenceImage
         ? await new Promise<string | null>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(referenceImage);
-          })
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(referenceImage);
+        })
         : null;
-      
+
       onSendMessage(prompt, base64 ?? undefined, currentMode);
-      //const result = await generateImageFromText(prompt, base64);
     } catch (err) {
       setError("生成过程中发生错误，请稍后重试。");
     } finally {
@@ -79,24 +106,36 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
   };
 
   const features = [
-    { id: 'ai-writing', icon: 'fa-solid fa-pen-nib', label: 'AI 写作助手', 
+    {
+      id: 'ai-writing', icon: 'fa-solid fa-pen-nib', label: 'AI 写作助手',
       available: false,
-      placeholder: '描述你想写的内容，我会帮你创作文章、文案、故事...', subtitle: '笔尖化思想，让创意成为文字。' },
-    { id: 'smart-presentation', icon: 'fa-solid fa-chart-pie', label: '智能演示', 
+      placeholder: '描述你想写的内容，我会帮你创作文章、文案、故事...', subtitle: '笔尖化思想，让创意成为文字。'
+    },
+    {
+      id: 'smart-presentation', icon: 'fa-solid fa-chart-pie', label: '智能演示',
       available: false,
-      placeholder: '告诉我演示的主题，我会为你生成专业的演示文稿...', subtitle: '数据有声音，让演示更生动有力。' },
-    { id: 'deep-search', icon: 'fa-solid fa-magnifying-glass', label: '深度搜索', 
+      placeholder: '告诉我演示的主题，我会为你生成专业的演示文稿...', subtitle: '数据有声音，让演示更生动有力。'
+    },
+    {
+      id: 'deep-search', icon: 'fa-solid fa-magnifying-glass', label: '深度搜索',
       available: false,
-      placeholder: '输入你想搜索的问题，我会为你深度挖掘答案...', subtitle: '深度探索信息，找到你真正需要的答案。' },
-    { id: 'ai-drawing', icon: 'fa-solid fa-image', label: 'AI 绘图', 
+      placeholder: '输入你想搜索的问题，我会为你深度挖掘答案...', subtitle: '深度探索信息，找到你真正需要的答案。'
+    },
+    {
+      id: 'ai-drawing', icon: 'fa-solid fa-image', label: 'AI 绘图',
       available: true,
-      placeholder: '描述你想要生成的画面...', subtitle: '创作直观视觉呈现，让创意跃然眼前。' },
-    { id: 'podcast', icon: 'fa-solid fa-microphone-lines', label: '播客生成', 
+      placeholder: '描述你想要生成的画面...', subtitle: '创作直观视觉呈现，让创意跃然眼前。'
+    },
+    {
+      id: 'podcast', icon: 'fa-solid fa-microphone-lines', label: '播客生成',
       available: false,
-      placeholder: '告诉我播客的主题和风格，我会帮你生成音频内容...', subtitle: '声音承载故事，让你的想法被听见。' },
-    { id: 'more-tools', icon: 'fa-solid fa-grip', label: '更多工具', 
+      placeholder: '告诉我播客的主题和风格，我会帮你生成音频内容...', subtitle: '声音承载故事，让你的想法被听见。'
+    },
+    {
+      id: 'more-tools', icon: 'fa-solid fa-grip', label: '更多工具',
       available: false,
-      placeholder: '正在开发更多 AI 功能...', subtitle: '无限可能，尽在你的掌握之中。' },
+      placeholder: '正在开发更多 AI 功能...', subtitle: '无限可能，尽在你的掌握之中。'
+    },
   ];
 
   // 功能ID到AppMode的映射
@@ -106,7 +145,7 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
     'deep-search': AppMode.DEEP_SEARCH,
     'ai-drawing': AppMode.AI_DRAWING,
     'podcast': AppMode.PODCAST,
-    'more-tools': AppMode.MORE_TOOLS, 
+    'more-tools': AppMode.MORE_TOOLS,
   };
 
   // 获取当前 placeholder
@@ -127,39 +166,54 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
     return feature?.subtitle || '全能 AI 创意工作空间，让每个创意瞬间变现。';
   };
 
-  // 点击功能图标
-const handleFeatureClick = (featureId: string) => {
-  const feature = features.find(f => f.id === featureId);
-  
-  if (!feature) return;
-  
-  // 检查是否可用
-  if (!feature.available) {
-    // 显示优雅的提示
-    setError(`${feature.label}功能正在开发中，敬请期待！\n 当前可用功能：通用问答/AI绘图`);
-    
-    // 3秒后自动清除提示
-    setTimeout(() => {
-      setError(null);
-    }, 3000);
-    
-    return;
-  }
-  
-  setActiveFeature(featureId);
-  setPrompt(''); // 清空输入
-  setGeneratedImage(null); // 清空已生成的内容
-  setError(null); // 清空错误
-  
-  // 设置对应的AppMode
-  const mode = featureToModeMap[featureId] || AppMode.TEXT_CHAT;
-  onModeChange(mode);
+  // 在功能点击时也检查权限
+  const handleFeatureClick = (featureId: string) => {
+    const feature = features.find(f => f.id === featureId);
+
+    if (!feature) return;
+
+    // 检查登录状态
+    if (!isLoggedIn) {
+      alert("请先登录才能使用此功能");
+      navigate('/login', {
+        state: { from: '/work', returnTab: 'landing' }
+      });
+      return;
+    }
+
+    // 检查是否可用
+    if (!feature.available) {
+      setError(`${feature.label}功能正在开发中，敬请期待！\n 当前可用功能：通用问答/AI绘图`);
+
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
+
+      return;
+    }
+
+    // 检查权限
+    const mode = featureToModeMap[featureId] || AppMode.TEXT_CHAT;
+    const permission = checkGenerationPermission(mode);
+
+    if (!permission.allowed && !permission.dailyLimitReached) {
+      // 如果不是日限问题，直接提示
+      alert(permission.reason);
+      return;
+    }
+
+    setActiveFeature(featureId);
+    setPrompt('');
+    setGeneratedImage(null);
+    setError(null);
+
+    onModeChange(mode);
   };
 
   return (
     <div className="flex-1 h-screen overflow-y-auto relative bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
-      
-      
+
+
 
       {/* Content Container */}
       <div className="max-w-5xl mx-auto px-6 pt-10 pb-20 flex flex-col items-center">
@@ -176,7 +230,7 @@ const handleFeatureClick = (featureId: string) => {
 
         {/* Input Area with Return Button */}
         <div className="w-full max-w-3xl relative mb-12 group">
-          
+
           {/* Return Button - appears when a feature is selected */}
           {activeFeature && (
             <button
@@ -194,18 +248,17 @@ const handleFeatureClick = (featureId: string) => {
           )}
 
           <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-          
+
           <div className="relative bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/10 p-4 shadow-2xl">
-            
+
             <textarea
               ref={textareaRef}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder={getCurrentPlaceholder()}
               disabled={activeFeature === 'more-tools'}
-              className={`w-full bg-transparent border-none outline-none text-white text-lg placeholder-gray-500 resize-none min-h-[80px] max-h-[300px] ${
-                activeFeature === 'more-tools' ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`w-full bg-transparent border-none outline-none text-white text-lg placeholder-gray-500 resize-none min-h-[80px] max-h-[300px] ${activeFeature === 'more-tools' ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               rows={1}
             />
 
@@ -227,7 +280,7 @@ const handleFeatureClick = (featureId: string) => {
             )}
 
             {/* Hidden file input */}
-            <input 
+            <input
               type="file"
               accept="image/*"
               ref={fileInputRef}
@@ -238,14 +291,13 @@ const handleFeatureClick = (featureId: string) => {
             <div className="flex justify-between items-end mt-4 pt-2 border-t border-white/5">
 
               <div className="flex gap-2 text-gray-400">
-                <button 
+                <button
                   onClick={handleUploadClick}
                   disabled={activeFeature === 'more-tools'}
-                  className={`p-2 rounded-full transition-colors tooltip ${
-                    activeFeature === 'more-tools' 
-                      ? 'opacity-50 cursor-not-allowed' 
+                  className={`p-2 rounded-full transition-colors tooltip ${activeFeature === 'more-tools'
+                      ? 'opacity-50 cursor-not-allowed'
                       : 'hover:bg-white/10'
-                  }`}
+                    }`}
                   title="上传参考图"
                 >
                   <i className="fa-solid fa-paperclip"></i>
@@ -254,13 +306,13 @@ const handleFeatureClick = (featureId: string) => {
 
               <div className="flex items-center gap-4">
                 <span className="text-xs text-gray-600">{prompt.length} / 5000</span>
-                <button 
+                <button
                   onClick={handleGenerate}
                   disabled={isGenerating || !prompt.trim() || activeFeature === 'more-tools'}
                   className={`
                     w-10 h-10 rounded-full flex items-center justify-center transition-all
-                    ${activeFeature === 'more-tools' 
-                      ? 'bg-gray-800 text-gray-600 cursor-not-allowed' 
+                    ${activeFeature === 'more-tools'
+                      ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
                       : prompt.trim() ? 'bg-orange-500 text-white hover:bg-orange-400' : 'bg-gray-800 text-gray-600 cursor-not-allowed'}
                     ${isGenerating ? 'animate-spin' : ''}
                   `}
@@ -278,25 +330,25 @@ const handleFeatureClick = (featureId: string) => {
 
         {/* Feature Icons */}
         <div className="flex flex-wrap justify-center gap-6 mb-16">
-            {features.map((feature) => (
-                <div 
-                  key={feature.id} 
-                  className="flex flex-col items-center gap-2 group cursor-pointer"
-                  onClick={() => handleFeatureClick(feature.id)}
-                >
-                    <div className={`
+          {features.map((feature) => (
+            <div
+              key={feature.id}
+              className="flex flex-col items-center gap-2 group cursor-pointer"
+              onClick={() => handleFeatureClick(feature.id)}
+            >
+              <div className={`
                         w-14 h-14 rounded-2xl flex items-center justify-center text-xl transition-all duration-300 border
                         ${activeFeature === feature.id
-                            ? 'bg-white text-slate-900 border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
-                            : 'bg-white/5 border-white/10 text-gray-400 group-hover:bg-white/10 group-hover:scale-105 group-hover:text-white'}
+                  ? 'bg-white text-slate-900 border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]'
+                  : 'bg-white/5 border-white/10 text-gray-400 group-hover:bg-white/10 group-hover:scale-105 group-hover:text-white'}
                     `}>
-                        <i className={feature.icon}></i>
-                    </div>
-                    <span className={`text-xs font-medium transition-colors ${activeFeature === feature.id ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>
-                        {feature.label}
-                    </span>
-                </div>
-            ))}
+                <i className={feature.icon}></i>
+              </div>
+              <span className={`text-xs font-medium transition-colors ${activeFeature === feature.id ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>
+                {feature.label}
+              </span>
+            </div>
+          ))}
         </div>
         {/* Result Display Area */}
         {error && (
@@ -331,7 +383,7 @@ const handleFeatureClick = (featureId: string) => {
               </button>
             ))}
           </div>
-          
+
           <Gallery />
         </div>
 

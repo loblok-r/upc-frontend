@@ -13,6 +13,7 @@ import { UserMenu } from '../components/workPage/UserMenu';
 import { Sender, AppMode } from '../types';
 import type { HistoryItem, Message } from '../types';
 
+
 import { useAuth } from '../contexts/AuthContext';
 
 import api from '../utils/api';
@@ -37,7 +38,18 @@ const WorkPage: React.FC = () => {
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { isLoggedIn, user, logout } = useAuth();
+  const {
+    isLoggedIn,
+    user,
+    logout,
+    userResources,
+    checkGenerationPermission,
+    deductComputingPower,
+    refreshResources,
+    recordDailyUsage,
+    addComputingPower,
+    calculateCost
+  } = useAuth();
 
 
   // LoginForm 登录成功后会执行: navigate(from, { state: { activeTab: returnTab } });
@@ -126,6 +138,35 @@ const WorkPage: React.FC = () => {
   };
 
   const handleSendMessage = async (prompt: string, base64?: string) => {
+
+    // 1. 检查权限
+    const permission = checkGenerationPermission(currentMode, {
+      requireHD: false, // 根据实际需求调整
+      estimatedCost: undefined // 可以计算或传值
+    });
+
+    if (!permission.allowed) {
+      // 显示权限不足的提示
+      alert(permission.reason || "您没有权限进行此操作");
+      return;
+    }
+
+    // 2. 计算消耗
+    const cost = calculateCost(currentMode, {
+      requireHD: false,
+      wordCount: prompt.length
+    });
+
+    // 3. 乐观更新：扣减前端算力
+    const deductSuccess = await deductComputingPower(cost);
+    if (!deductSuccess) {
+      alert("算力不足，请充值");
+      return;
+    }
+
+    // 4. 记录当日使用次数
+    recordDailyUsage(currentMode);
+
     const newMessage: Message = {
       id: Date.now().toString(),
       sender: Sender.USER,
@@ -160,38 +201,46 @@ const WorkPage: React.FC = () => {
     }]);
 
     try {
-      // 调用封装的 api 实例调用后端，生成内容
       const response = await api.post('/ai/generate', {
         mode: currentMode,
         prompt,
         referenceImage: base64,
-      });
+        deductCost: cost,
+        userId: user?.id
+      }) as any; // 临时使用 any 绕过类型检查
+
+      console.log('AI生成响应:', response);
 
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
 
-      // 响应数据已由拦截器自动解包为 response.data（即业务 data）
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: Sender.AI,
-        content: response.description || response.text || "内容已生成。",
+        content: response.description || response.content || response.text || response.result || "内容已生成。",
         timestamp: Date.now(),
         type: currentMode === AppMode.AI_DRAWING ? 'image' : 'text',
-        imageUrl: response.imageUrl // 后端需返回此字段（图像模式）
+        imageUrl: response.imageUrl || response.url || response.image || response.data
       };
-      setMessages(prev => [...prev, aiMessage]);
 
-    } catch (error) {
+      setMessages(prev => [...prev, aiMessage]);
+      await refreshResources();
+
+    } catch (error: any) {
       console.error("生成内容时出错", error);
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
+
+      // 6. 请求失败时，回滚算力（增加回去）
+      addComputingPower(cost); // 回滚算力
+
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         sender: Sender.AI,
-        content: "抱歉，生成内容时出现错误，请重试。",
+        content: "抱歉，生成内容时出现错误，已返还您的算力，请重试。",
         timestamp: Date.now(),
         type: 'text'
       }]);
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false); // 关键：确保无论成功失败都结束生成状态
     }
   };
 
@@ -279,7 +328,48 @@ const WorkPage: React.FC = () => {
             </div>
           )}
 
+
+
           <div className="flex items-center gap-6 pr-4">
+
+            {/* 显示用户资源状态 */}
+            {/* {isLoggedIn && userResources && (
+              <div className="hidden md:flex items-center gap-3 text-sm">
+                {/* 算力显示 */}
+                {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
+                  <i className="fa-solid fa-bolt text-yellow-400"></i>
+                  <span className="text-white font-medium">{userResources.computingPower}</span>
+                  <span className="text-gray-400">/</span>
+                  <span className="text-gray-400">{userResources.maxComputingPower}</span>
+                </div> */}
+
+                {/* 当日使用情况 - 根据会员状态显示不同 */}
+                {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
+                  <i className="fa-solid fa-message text-blue-400"></i>
+                  <span className="text-white font-medium">{userResources.dailyUsage.textChat}</span>
+                  {!user?.isMember ? (
+                    // 非会员：显示日限
+                    <span className="text-gray-400 text-xs">/20</span>
+                  ) : (
+                    // 会员：显示无限或隐藏限制
+                    <span className="text-green-400 text-xs">/~</span>
+                  )}
+                </div> */}
+
+                {/* AI绘图使用情况 - 根据会员状态显示不同 */}
+                {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
+                  <i className="fa-solid fa-image text-green-400"></i>
+                  <span className="text-white font-medium">{userResources.dailyUsage.aiDrawing}</span>
+                  {!user?.isMember ? (
+                    // 非会员：显示日限
+                    <span className="text-gray-400 text-xs">/5</span>
+                  ) : (
+                    // 会员：显示无限或隐藏限制
+                    <span className="text-green-400 text-xs">/~</span>
+                  )}
+                </div>
+              </div> */}
+            {/* )} */}
             <button className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
               <i className="fa-solid fa-globe"></i> 中文
             </button>
@@ -294,6 +384,8 @@ const WorkPage: React.FC = () => {
             ) : (
               <UserMenu onLogout={handleLogout} user={user!} />
             )}
+
+
           </div>
 
         </header>

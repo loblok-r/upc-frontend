@@ -37,6 +37,8 @@ export interface User {
     likes: number;
   };
 
+  
+
 
 
   avatar: string; 
@@ -361,4 +363,34 @@ export interface FormErrors {
   confirmPassword?: string;
   captcha?: string;
   agreeToTerms?: string;
+}
+
+// AI 生成响应接口
+export interface AiGenerationResponse {
+  // 通用字段
+  success: boolean;
+  message?: string;
+  
+  // 文本生成字段
+  content?: string;
+  text?: string;
+  description?: string;
+  
+  // 图像生成字段
+  imageUrl?: string;
+  image?: string; // base64 图像
+  url?: string;   // 图像 URL
+  
+  // 资源相关字段
+  userResources?: {
+    computingPower: number;
+    dailyUsage: {
+      textChat: number;
+      aiDrawing: number;
+    };
+  };
+  
+  // 其他可能字段
+  data?: any;
+  result?: any;
 }
