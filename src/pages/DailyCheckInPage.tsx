@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import type { CheckInDay} from '../types/checkIn';
+import type { CheckInDay } from '../types/checkIn';
 import generateWeekData from '../components/chickIn/generateWeekData';
 import api from '../utils/api';
 
@@ -20,19 +20,18 @@ const mockCheckInHistory = [
 
 export const DailyCheckInPage: React.FC = () => {
 
-  const { user, refreshUser} = useAuth();
-  console.log("chickin user:", user);
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const consecutiveDays = user?.streakDays || 0;
-  const isCheckedToday = user?.checkedIn || false; 
+  const isCheckedToday = user?.checkedIn || false;
 
   // const checkInSet = new Set(user?.checkInHistory || []);
   const checkInSet = new Set(mockCheckInHistory);
   const todayISO = new Date().toISOString().split('T')[0];
   // State
   const [weekData, setWeekData] = useState<CheckInDay[]>(() =>
-  generateWeekData(checkInSet, todayISO)
-);
+    generateWeekData(checkInSet, todayISO)
+  );
   const [retroCards, setRetroCards] = useState(2);
 
   // 核心数值状态
@@ -50,44 +49,39 @@ export const DailyCheckInPage: React.FC = () => {
 
 
   // 处理签到
- const handleCheckIn = async () => {
-  if (user?.checkedIn) return; // 已签到，直接返回
+  const handleCheckIn = async () => {
+    if (user?.checkedIn) return;
 
-  try {
-    // 调用后端签到接口
-    const response = await api.post('/checkin/checkin', {});
+    try {
+      const response = await api.post('/checkin/checkin', {});
 
-    console.log("checkin response:", response);
-    const { points, streakDays } = response.data.data; // 根据你的 Result<T> 结构调整
+      // ✅ 从 weekData 中找到 today 的奖励数据
+      const todayData = weekData.find(day => day.status === 'today');
 
-    // 1. 更新本地数值（用于即时反馈）
-    setUserPoints(prev => prev + points);
-    setUserExp(prev => prev + 0); // 注意：后端没返回 exp，你可能需要自己加逻辑或从配置读
+      if (!todayData) {
+        console.warn('未找到今日签到数据');
+        return;
+      }
 
-    // 2. 显示成功弹窗
-    setRewardMessage({ 
-      points, 
-      exp: 0, // 或从奖励配置中读取（如 Thursday 是 15）
-      extra: '' 
-    });
-    setShowSuccessModal(true);
+      setRewardMessage({
+        points: todayData.points,
+        exp: todayData.exp,
+        extra: todayData.specialReward || '',
+      });
 
-    // 3. 【关键】刷新用户状态，使 isChickIned = true, streakDays 更新
-    await refreshUser();
+      setShowSuccessModal(true);
+      await refreshUser();
 
-    // 4. 可选：更新 weekData 中 today 的状态为 'checked'
-    setWeekData(prev => 
-      prev.map(day => 
-        day.status === 'today' ? { ...day, status: 'checked' } : day
-      )
-    );
+      // 更新状态为 checked（可选，refreshUser 后会重新生成）
+      setWeekData(prev =>
+        prev.map(day => (day.status === 'today' ? { ...day, status: 'checked' } : day))
+      );
 
-  } catch (error) {
-    console.error('签到失败:', error);
-    // 可以弹出错误提示，例如“今日已签到”或“网络错误”
-    // alert('签到失败，请稍后重试');
-  }
-};
+    } catch (error) {
+      console.error('签到失败:', error);
+      alert('签到失败，请稍后再试');
+    }
+  };
 
   // 处理补签
   const handleRetroCheckIn = (index: number) => {
@@ -399,8 +393,8 @@ const TaskItem = ({ title, reward, status }: { title: string, reward: string, st
     <button
       disabled={status === 'completed'}
       className={`px-3 py-1.5 text-xs font-bold rounded-full border transition-all ${status === 'completed'
-          ? 'bg-green-500/20 text-green-400 border-green-500/30'
-          : 'bg-white text-black hover:bg-slate-200 border-transparent'
+        ? 'bg-green-500/20 text-green-400 border-green-500/30'
+        : 'bg-white text-black hover:bg-slate-200 border-transparent'
         }`}
     >
       {status === 'completed' ? '已领取' : '去完成'}

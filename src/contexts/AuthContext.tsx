@@ -94,39 +94,56 @@ export const useAuth = () => {
   return context;
 };
 
-// 从原始用户数据构建完整 User 对象（含计算字段）
 const buildFullUser = (rawUserData: any): User => {
+  // 1. 处理 level 字段映射
+  const level = (rawUserData.userLevel || 'LEVEL1').toLowerCase(); // "LEVEL1" → "level1"
+
+  // 2. 处理 memberExpireAt：ISO 字符串 → Unix 时间戳（秒）
+  let memberExpireAtTimestamp: number | undefined;
+  if (rawUserData.memberExpireAt) {
+    const date = new Date(rawUserData.memberExpireAt);
+    if (!isNaN(date.getTime())) {
+      memberExpireAtTimestamp = Math.floor(date.getTime() / 1000); // 转为秒
+    }
+  }
+
+  // 3. 计算会员状态
   const memberStatus = calculateMemberStatus(
     rawUserData.isPermanentMember || false,
-    rawUserData.memberExpireAt
+    memberExpireAtTimestamp
   );
 
-  const displayLevel = mapLevelToDisplay(rawUserData.level || 'level1');
+  // 4. 映射等级显示
+  const displayLevel = mapLevelToDisplay(level);
 
   return {
-    id: rawUserData.id || rawUserData.userId || '',
+    // 基础字段
+    id: String(rawUserData.userId || rawUserData.id || ''),
     username: rawUserData.username || '',
     email: rawUserData.email || '',
+    token: rawUserData.token,
+    avatar: rawUserData.avatar || '',
+
+    // 数值字段
     exp: rawUserData.exp || 0,
     points: rawUserData.points || 0,
-    maxPoints: (rawUserData.maxPoints as number) || 1000,
+    maxPoints: 1000, // 或从配置获取
     computingPower: rawUserData.computingPower || 0,
-    maxcomputingPower: (rawUserData.maxcomputingPower as number) || 1000,
-    level: rawUserData.level || 'level1',
+    maxcomputingPower: 1000,
+
+    // 关键修正字段 👇
+    level,                  // ← 来自 userLevel
     displayLevel,
     lotteryCounts: rawUserData.lotteryCounts || 0,
     streakDays: rawUserData.streakDays || 0,
-    checkedIn: rawUserData.checkedIn || false,
+    checkedIn: rawUserData.checkedIn || false, // 注意：后端是 isCheckedIn！
 
-    stats: rawUserData.stats || {
-      works: 0,
-      followers: 0,
-      likes: 0,
-    },
+    // 会员字段
     isPermanentMember: rawUserData.isPermanentMember || false,
-    memberExpireAt: rawUserData.memberExpireAt,
-    avatar: rawUserData.avatar || '',
-    expireTime: rawUserData.expireTime || 0,
+    memberExpireAt: memberExpireAtTimestamp,
+
+    // 社区 stats
+    stats: rawUserData.stats || { works: 0, followers: 0, likes: 0 },
 
     // 计算字段
     ...memberStatus,
@@ -205,37 +222,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearInterval(checkInterval);
   }, [user]);
 
-  const login = (newToken: string, userData: any) => {
-    // 构建完整用户对象
-    const newUser = buildFullUser(userData);
+  const login = async (newToken: string, userData: any) => {
+  setToken(newToken);
+  localStorage.setItem('auth_token', newToken);
 
-    setToken(newToken);
+  try {
+    const profileResponse = await apiClient.get('/user/profile');
+    console.log('✅ profileResponse:', profileResponse); // 现在能看到了！
+
+    const newUser = buildFullUser(profileResponse);
     setUser(newUser);
     setIsLoggedIn(true);
 
-    // 保存 token 和原始用户数据（不含计算字段）
-    localStorage.setItem('auth_token', newToken);
-    localStorage.setItem('auth_user', JSON.stringify({
-      id: userData.userId || userData.id || '',
-      username: userData.username || '',
-      email: userData.email || '',
-      exp: userData.exp || 0,
-      lotteryCounts: userData.lotteryCounts || 0,
-      streakDays: userData.streakDays || 0,
-      checkedIn: userData.checkedIn || false,
-      points: userData.points || 0,
-      maxPoints: userData.maxPoints || 1000,
-      computingPower: userData.computingPower || 0,
-      maxcomputingPower: userData.maxcomputingPower || 1000,
-      level: userData.level || 'level1',
-      stats: userData.stats || { works: 0, followers: 0, likes: 0 },
-      isPermanentMember: userData.isPermanentMember || false,
-      memberExpireAt: userData.memberExpireAt,
-      avatar: userData.avatar || '',
-      expireTime: userData.expireTime || 0,
-    }));
-  };
-
+    const { displayLevel, isMember, memberStatus, memberDaysLeft, ...rawFields } = newUser;
+    localStorage.setItem('auth_user', JSON.stringify(rawFields));
+    
+  } catch (error) {
+    console.error('❌ 获取用户资料失败:', error);
+    // 可选：登出并提示用户
+    logout();
+    alert('登录成功，但加载用户信息失败，请重试');
+  }
+};
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -247,7 +255,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const refreshUser = async () => {
   try {
-    const rawUserData = await apiClient.get('/api/user/profile'); // 假设 apiClient 已解包 Result<T>
+    const rawUserData = await apiClient.get('/user/profile'); 
     const fullUser = buildFullUser(rawUserData);
 
     setUser(fullUser);
