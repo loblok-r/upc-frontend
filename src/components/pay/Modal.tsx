@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Zap, Sparkles, LayoutTemplate, Bot } from 'lucide-react';
+import { X, Check, Zap, Sparkles, LayoutTemplate, Bot, MessageSquare, Image, Crown, Shield, BatteryCharging } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; 
 import { CountdownTimer } from './CountdownTimer';
 import type { PricingPlan } from '../../types';
@@ -102,7 +102,7 @@ function getPeriodFromBillingText(billingText: string): string {
         <div className="relative z-10 w-full bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 dark:from-orange-900/40 dark:via-amber-900/20 dark:to-orange-900/40 border-b border-orange-500/20 py-3 px-6 flex flex-col sm:flex-row items-center justify-center sm:space-x-4 text-center">
             <span className="flex items-center text-orange-400 font-semibold mb-2 sm:mb-0">
                <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
-               限时优惠
+               限时特惠 · 年度会员61% OFF
             </span>
             <CountdownTimer />
             
@@ -118,7 +118,7 @@ function getPeriodFromBillingText(billingText: string): string {
         {/* Main Content */}
         <div className="relative z-10 flex flex-col lg:flex-row p-6 lg:p-10 gap-8 lg:gap-12">
           
-          {/* Left Column: Value Proposition */}
+          {/* Left Column: Value Proposition - 修改后 */}
           <div className="flex-1 flex flex-col justify-center space-y-8">
             <div className="space-y-4">
               <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 rounded-full px-3 py-1">
@@ -126,60 +126,79 @@ function getPeriodFromBillingText(billingText: string): string {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                 </span>
-                <span className="text-xs font-medium text-indigo-300">Loblok UPC Pro</span>
+                <span className="text-xs font-medium text-indigo-300">UPC Pro 会员专属特权</span>
               </div>
               
               <h2 className="text-3xl lg:text-4xl font-bold text-white leading-tight">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
-                  黑色星期五特惠
+                  从限制到自由创作
                 </span>
                 <br />
                 <span className="text-2xl lg:text-3xl font-medium text-slate-300 mt-2 block">
-                  立省 <span className="text-orange-500 font-bold text-4xl lg:text-5xl mx-1">61%</span>
+                  告别次数限制，专注内容创作
                 </span>
               </h2>
               <p className="text-slate-400 text-lg">
-                全能 AI 工作台，让每个人都成为专家。
+                专业 AI 创作工具，为创作者量身打造。
               </p>
             </div>
 
             <div className="space-y-6">
-              {/* Feature 1 */}
+              {/* Feature 1 - 修改后 */}
               <div className="flex items-start space-x-4 group">
-                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500/20 group-hover:scale-110 transition-all duration-300">
-                  <Zap className="w-5 h-5" />
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 group-hover:bg-blue-500/20 group-hover:scale-110 transition-all duration-300">
+                  <MessageSquare className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-lg">一体化 AI 生产力工具</h3>
-                  <p className="text-slate-400 text-sm mt-1">集成 10+ 种 AI 功能，一个平台省去数百元的订阅费。</p>
+                  <h3 className="text-white font-semibold text-lg">无限制 AI 对话</h3>
+                  <p className="text-slate-400 text-sm mt-1">
+                    告别每日20次限制，自由对话AI助手，单次最长5000字，深入探讨复杂问题。
+                  </p>
                 </div>
               </div>
 
-              {/* Feature 2 */}
+              {/* Feature 2 - 修改后 */}
+              <div className="flex items-start space-x-4 group">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 border border-green-500/20 group-hover:bg-green-500/20 group-hover:scale-110 transition-all duration-300">
+                  <Image className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-lg">专业级 AI 绘图</h3>
+                  <p className="text-slate-400 text-sm mt-1">
+                    高清分辨率、批量生成、无水印输出，满足专业创作需求。
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature 3 - 修改后 */}
+              <div className="flex items-start space-x-4 group">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400 border border-yellow-500/20 group-hover:bg-yellow-500/20 group-hover:scale-110 transition-all duration-300">
+                  <BatteryCharging className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-lg">每月1000点算力</h3>
+                  <p className="text-slate-400 text-sm mt-1">
+                    每月赠送1000点算力 + 多种额外获取途径，创作不再担心资源不足。
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature 4 - 新增 */}
               <div className="flex items-start space-x-4 group">
                 <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20 group-hover:bg-purple-500/20 group-hover:scale-110 transition-all duration-300">
-                  <Bot className="w-5 h-5" />
+                  <Crown className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-lg">解锁高级 Agent 模式</h3>
-                  <p className="text-slate-400 text-sm mt-1">您的 24/7 智能助手，自主规划并完成复杂工作任务。</p>
-                </div>
-              </div>
-
-               {/* Feature 3 */}
-               <div className="flex items-start space-x-4 group">
-                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 group-hover:bg-blue-500/20 group-hover:scale-110 transition-all duration-300">
-                  <LayoutTemplate className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold text-lg">一键 AI 演示文稿生成</h3>
-                  <p className="text-slate-400 text-sm mt-1">从简单的提示词到精美的幻灯片，内置当下流行的设计模板。</p>
+                  <h3 className="text-white font-semibold text-lg">创作者专属特权</h3>
+                  <p className="text-slate-400 text-sm mt-1">
+                    优先排队、30天历史记录保存、更多导出格式，提升创作效率。
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Pricing Selection */}
+          {/* Right Column: Pricing Selection - 保持不变 */}
           <div className="flex-1 max-w-md w-full mx-auto lg:mx-0">
              <div className="flex flex-col space-y-4">
                 {PLANS.map((plan) => {
@@ -247,13 +266,44 @@ function getPeriodFromBillingText(billingText: string): string {
                 className="relative w-full group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl blur opacity-60 group-hover:opacity-100 transition duration-200"></div>
                   <div className="relative w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold py-4 rounded-xl shadow-xl flex items-center justify-center space-x-2 transition-all active:scale-[0.98]">
-                    <span>立即升级解锁</span>
-                    <Sparkles className="w-5 h-5 fill-white/20" />
+                    <span>立即解锁专业创作</span>
+                    <Crown className="w-5 h-5 fill-white/20" />
                   </div>
                 </button>
                 <p className="text-center text-slate-500 text-xs">
                   可随时取消订阅。7天无理由退款保证。
                 </p>
+                
+                {/* 添加会员特权概览 */}
+                <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
+                  <h4 className="text-sm font-semibold text-slate-300 mb-2">Pro 会员包含：</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <span className="text-slate-400">无限制对话</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <span className="text-slate-400">高清AI绘图</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <span className="text-slate-400">无水印输出</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <span className="text-slate-400">批量生成</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <span className="text-slate-400">1000点算力/月</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                      <span className="text-slate-400">30天历史记录</span>
+                    </div>
+                  </div>
+                </div>
              </div>
           </div>
         </div>

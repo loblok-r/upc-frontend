@@ -5,28 +5,30 @@ import { Modal } from '../components/pay/Modal';
 import { PromptInput } from '../components/workPage/PromptInput';
 import { ChatMessage } from '../components/workPage/ChatMessage';
 import { mockAiService } from '../services/mockAiService';
-import { ChevronLeft,Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import HistoryView from '../components/workPage/HistoryView'; 
+import HistoryView from '../components/workPage/HistoryView';
 import { DocumentView } from '../components/workPage/DocumentView';
-import { UserMenu } from '../components/workPage/UserMenu'; 
+import { UserMenu } from '../components/workPage/UserMenu';
 import { Sender, AppMode } from '../types';
 import type { HistoryItem, Message } from '../types';
 
-import { useAuth } from '../contexts/AuthContext'; 
+import { useAuth } from '../contexts/AuthContext';
+
+import api from '../utils/api';
 
 
 
 const WorkPage: React.FC = () => {
   const navigate = useNavigate();
-  
-  const location = useLocation(); 
-  
+
+  const location = useLocation();
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  
+
   const [viewState, setViewState] = useState<'landing' | 'chat' | 'document' | 'history'>('landing');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -35,14 +37,14 @@ const WorkPage: React.FC = () => {
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { isLoggedIn, user , logout} = useAuth(); 
+  const { isLoggedIn, user, logout } = useAuth();
 
-  
+
   // LoginForm 登录成功后会执行: navigate(from, { state: { activeTab: returnTab } });
   useEffect(() => {
     if (location.state && location.state.activeTab) {
       setViewState(location.state.activeTab);
-      
+
       // 如果是为了防止刷新后仍然读取旧状态，可以在这里清除 location.state
       // 但 React Router 默认行为通常是可以接受的
       window.history.replaceState({}, document.title)
@@ -69,11 +71,11 @@ const WorkPage: React.FC = () => {
     setIsSidebarCollapsed(false);
     setIsModalOpen(false);
     setCurrentSessionId(null);
-    setViewState('landing'); 
-    setMessages([]); 
+    setViewState('landing');
+    setMessages([]);
     setIsGenerating(false);
     setCurrentMode(AppMode.TEXT_CHAT);
-    setHistoryList([]); 
+    setHistoryList([]);
   };
 
   const toggleSidebar = () => {
@@ -93,7 +95,7 @@ const WorkPage: React.FC = () => {
 
     const currentMessages = [...messages];
     const firstUserMsg = currentMessages.find(m => m.sender === Sender.USER);
-    const title = firstUserMsg 
+    const title = firstUserMsg
       ? (firstUserMsg.content.slice(0, 20) + (firstUserMsg.content.length > 20 ? '...' : ''))
       : '新的对话';
 
@@ -119,7 +121,7 @@ const WorkPage: React.FC = () => {
         type: currentMode === AppMode.AI_DRAWING ? 'IMAGE' : 'TEXT',
       };
       setHistoryList(prev => [newItem, ...prev]);
-      setCurrentSessionId(newId); 
+      setCurrentSessionId(newId);
     }
   };
 
@@ -158,20 +160,26 @@ const WorkPage: React.FC = () => {
     }]);
 
     try {
-      const response = await mockAiService.processRequest(currentMode, prompt);
+      // 调用封装的 api 实例调用后端，生成内容
+      const response = await api.post('/ai/generate', {
+        mode: currentMode,
+        prompt,
+        referenceImage: base64,
+      });
+
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
 
-      if (response.success) {
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          sender: Sender.AI,
-          content: response.data.description || response.data.text || "内容已生成。",
-          timestamp: Date.now(),
-          type: currentMode === AppMode.AI_DRAWING ? 'image' : 'text',
-          imageUrl: response.data.imageUrl
-        };
-        setMessages(prev => [...prev, aiMessage]);
-      }
+      // 响应数据已由拦截器自动解包为 response.data（即业务 data）
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: Sender.AI,
+        content: response.description || response.text || "内容已生成。",
+        timestamp: Date.now(),
+        type: currentMode === AppMode.AI_DRAWING ? 'image' : 'text',
+        imageUrl: response.imageUrl // 后端需返回此字段（图像模式）
+      };
+      setMessages(prev => [...prev, aiMessage]);
+
     } catch (error) {
       console.error("生成内容时出错", error);
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
@@ -190,7 +198,7 @@ const WorkPage: React.FC = () => {
   const handleBackToLanding = () => {
     saveCurrentChatToHistory();
     setMessages([]);
-    setCurrentSessionId(null); 
+    setCurrentSessionId(null);
     setViewState('landing');
   };
 
@@ -230,14 +238,14 @@ const WorkPage: React.FC = () => {
   };
 
   const handleRestoreHistory = (item: HistoryItem) => {
-    setMessages(item.messages); 
-    setCurrentSessionId(item.id); 
-    setViewState('chat'); 
-    
+    setMessages(item.messages);
+    setCurrentSessionId(item.id);
+    setViewState('chat');
+
     if (item.type === 'IMAGE') {
-       setCurrentMode(AppMode.AI_DRAWING);
+      setCurrentMode(AppMode.AI_DRAWING);
     } else {
-       setCurrentMode(AppMode.TEXT_CHAT); 
+      setCurrentMode(AppMode.TEXT_CHAT);
     }
   };
 
@@ -264,30 +272,30 @@ const WorkPage: React.FC = () => {
             </button>
           ) : (
             <div className="flex items-center gap-2">
-               <div className="text-sm text-gray-400">
-                  <span className="text-orange-400 font-semibold">Loblok Upc Pro</span> 现已上线 UINO，
-                  <a href="#" className="underline decoration-orange-400 underline-offset-4 hover:text-white transition-colors">免费试用</a>
-                </div>
+              <div className="text-sm text-gray-400">
+                <span className="text-orange-400 font-semibold">Loblok Upc Pro</span> 现已上线 UINO，
+                <a href="#" className="underline decoration-orange-400 underline-offset-4 hover:text-white transition-colors">免费试用</a>
+              </div>
             </div>
           )}
 
           <div className="flex items-center gap-6 pr-4">
-             <button className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
-                <i className="fa-solid fa-globe"></i> 中文
-             </button>
+            <button className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
+              <i className="fa-solid fa-globe"></i> 中文
+            </button>
 
-             {!isLoggedIn ? (
-                <button 
-                  onClick={handleLoginClick} 
-                  className="bg-white/10 hover:bg-white/20 text-white px-5 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 min-w-[80px] justify-center"
-                >
+            {!isLoggedIn ? (
+              <button
+                onClick={handleLoginClick}
+                className="bg-white/10 hover:bg-white/20 text-white px-5 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-2 min-w-[80px] justify-center"
+              >
                 登录
-                </button>
-             ) : (
-                <UserMenu onLogout={handleLogout} user={user!} />
-             )}
+              </button>
+            ) : (
+              <UserMenu onLogout={handleLogout} user={user!} />
+            )}
           </div>
-         
+
         </header>
 
         <div className="flex-1 overflow-hidden relative">
@@ -296,17 +304,17 @@ const WorkPage: React.FC = () => {
               <MainView onSendMessage={handleMainViewSend} onModeChange={handleModeChange} currentMode={currentMode} />
             </div>
           )}
-           {viewState === 'document' && (
+          {viewState === 'document' && (
             <div className="h-full overflow-y-auto">
-              <DocumentView/>
+              <DocumentView />
             </div>
           )}
-          
+
           {viewState === 'history' && (
             <div className="h-full overflow-y-auto">
-              <HistoryView 
-                historyItems={historyList} 
-                onSelectHistory={handleRestoreHistory} 
+              <HistoryView
+                historyItems={historyList}
+                onSelectHistory={handleRestoreHistory}
                 onDeleteHistory={handleDeleteHistory}
               />
             </div>

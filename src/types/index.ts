@@ -21,7 +21,7 @@ export interface User {
 
 
   // 会员相关字段
-  isPermanentMember: boolean;
+  permanentMember: boolean;
   memberExpireAt?: number;
   isMember ?: boolean;
   // 会员剩余天数
