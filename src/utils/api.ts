@@ -1,9 +1,8 @@
-import axios  from 'axios';
+// api.ts - 修改拦截器的类型定义
+import axios from 'axios';
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 
-// 假设后端返回格式为：
-// { code: 200, message: "success", data: {...} }
-interface Result<T> {
+interface Result<T = any> {
   code: number;
   message: string;
   data: T;
@@ -11,48 +10,45 @@ interface Result<T> {
 
 // 创建 axios 实例
 const api = axios.create({
-   baseURL: 'http://localhost:8069/api', // 所有接口以 /api 开头
+  baseURL: 'http://localhost:8069/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 请求拦截器：添加 token 和 X-Tenant-ID
+// 请求拦截器
 api.interceptors.request.use((config) => {
-  // 从 localStorage 获取 token（请根据你的实际存储方式调整）
   const token = localStorage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
-  // 从 localStorage 或环境变量获取 tenantId
+  
   const tenantId = 'default';
   config.headers['X-Tenant-ID'] = tenantId;
-
+  
   return config;
 });
 
-// 响应拦截器：提取 data，并处理错误
+// 关键修改：明确声明拦截器返回类型
 api.interceptors.response.use(
+  // 第一个参数：成功处理函数
   (response: AxiosResponse<Result<any>>) => {
     const { code, message, data } = response.data;
 
-    // 假设 code === 200 表示成功（根据你的后端约定调整）
     if (code === 200) {
-      return data; // 直接返回业务数据
+      // 返回 data，并告诉 TypeScript 这是 any 类型
+      return data as any;
     } else {
-      // 抛出错误，可在调用处 catch
       return Promise.reject(new Error(message || '请求失败'));
     }
   },
+  // 第二个参数：错误处理函数
   (error) => {
-    // 网络错误或 HTTP 状态码非 2xx
     if (error.response) {
-      // 服务器返回了错误状态（如 401, 500）
       const { status, data } = error.response;
       const msg = data?.message || `请求错误 ${status}`;
-      alert(msg); // 可替换为 message.error() 等 UI 提示
+      alert(msg);
     } else if (error.request) {
       alert('网络异常，请检查连接');
     } else {
