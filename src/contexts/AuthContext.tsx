@@ -131,12 +131,12 @@ const buildFullUser = (rawUserData: any): User => {
     computingPower: rawUserData.computingPower || 0,
     maxcomputingPower: 1000,
 
-    // 关键修正字段 👇
-    level,                  // ← 来自 userLevel
+    // 关键修正字段
+    level,                 
     displayLevel,
     lotteryCounts: rawUserData.lotteryCounts || 0,
     streakDays: rawUserData.streakDays || 0,
-    checkedIn: rawUserData.checkedIn || false, // 注意：后端是 isCheckedIn！
+    checkedIn: rawUserData.checkedIn || false, 
 
     // 会员字段
     isPermanentMember: rawUserData.isPermanentMember || false,

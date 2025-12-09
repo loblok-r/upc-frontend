@@ -12,7 +12,6 @@ export interface User {
   level: string; 
   displayLevel: string;
   lotteryCounts?: number;
-
   streakDays: number;
 
   checkedIn: boolean;

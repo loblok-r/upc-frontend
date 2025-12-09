@@ -13,8 +13,8 @@ const generateWeekData = (userCheckInRecords: Set<string>, todayStr: string): Ch
   const rewardMap: Record<number, { points: number; exp: number; isMilestone: boolean; specialReward?: string }> = {
     0: { points: 10, exp: 5, isMilestone: false }, // 周一
     1: { points: 10, exp: 5, isMilestone: false }, // 周二
-    2: { points: 20, exp: 10, isMilestone: true, specialReward: '10% 优惠券' }, // 周三
-    3: { points: 50, exp: 15, isMilestone: false }, // 周四
+    2: { points: 20, exp: 10, isMilestone: false }, // 周三
+    3: { points: 50, exp: 15, isMilestone: true , specialReward: '10% 优惠券'}, // 周四
     4: { points: 15, exp: 5, isMilestone: false }, // 周五
     5: { points: 15, exp: 5, isMilestone: false }, // 周六
     6: { points: 100, exp: 50, isMilestone: true, specialReward: '神秘盲盒' }, // 周日
@@ -22,7 +22,7 @@ const generateWeekData = (userCheckInRecords: Set<string>, todayStr: string): Ch
 
   return days.map((date, idx) => {
     const dateStr = format(date, 'MM.dd');
-    const dayOfWeek = format(date, 'EEEE', { locale: zhCN });
+    const dayOfWeek = format(date, 'eee', { locale: zhCN });
     const isoDate = format(date, 'yyyy-MM-dd');
 
     let status: DayStatus = 'future';
