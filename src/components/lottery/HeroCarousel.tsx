@@ -26,26 +26,17 @@ const HeroCarousel: React.FC = () => {
   const [loadingPrizes, setLoadingPrizes] = useState(true);
 
   // 用户状态
-  const [userStatus, setUserStatus] = useState({
-    isLoggedIn: false,
-    chances: 0,
-  });
+  // const [userStatus, setUserStatus] = useState({
+  //   isLoggedIn: false,
+  //   chances: 0,
+  // });
+  const chances = authUser?.lotteryCounts || 0;
 
   // 抽奖状态
   const [isSpinning, setIsSpinning] = useState(false);
   const [marqueeSpeed, setMarqueeSpeed] = useState('40s');
   const [showResult, setShowResult] = useState(false);
   const [winPrize, setWinPrize] = useState<LotteryPrize | null>(null);
-
-  // 初始化用户状态
-  useEffect(() => {
-    if (!authIsLoading) {
-      setUserStatus({
-        isLoggedIn: isLoggedIn,
-        chances: authUser?.lotteryCounts || 0,
-      });
-    }
-  }, [authIsLoading, isLoggedIn, authUser]);
 
   // 从后端加载奖品列表
   useEffect(() => {
@@ -87,14 +78,14 @@ const HeroCarousel: React.FC = () => {
 
   // 抽奖函数
   const handleDrawClick = async () => {
-    if (isSpinning || userStatus.chances <= 0 || prizes.length === 0) return;
+    if (isSpinning || chances <= 0 || prizes.length === 0) return;
 
     setIsSpinning(true);
     setMarqueeSpeed('0.5s');
 
     try {
       const result = await api.post<DrawResult>('/lottery/draw');
-      const { prizeId, user: updatedUser } = result; 
+      const { prizeId } = result; 
 
       const matchedPrize = prizes.find(p => p.id === prizeId);
       if (!matchedPrize) {
@@ -102,11 +93,6 @@ const HeroCarousel: React.FC = () => {
       }
 
       await refreshUser();
-
-      setUserStatus(prev => ({
-        ...prev,
-        chances: updatedUser?.lotteryCounts ?? prev.chances - 1,
-      }));
 
       setMarqueeSpeed('2s');
       setTimeout(() => {
@@ -133,7 +119,7 @@ const HeroCarousel: React.FC = () => {
       );
     }
 
-    if (!userStatus.isLoggedIn) {
+    if (!isLoggedIn) {
       return (
         <button
           onClick={handleLoginClick}
@@ -146,7 +132,7 @@ const HeroCarousel: React.FC = () => {
       );
     }
 
-    if (userStatus.chances > 0 && prizes.length > 0) {
+    if (chances > 0 && prizes.length > 0) {
       return (
         <button
           onClick={handleDrawClick}
@@ -161,7 +147,7 @@ const HeroCarousel: React.FC = () => {
             </span>
             {!isSpinning && (
               <span className="text-[10px] text-white/80 mt-1 bg-black/20 px-2 py-0.5 rounded-full">
-                剩余次数: {userStatus.chances}
+                剩余次数: {chances}
               </span>
             )}
           </div>

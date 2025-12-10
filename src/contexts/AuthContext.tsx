@@ -212,38 +212,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userResources, setUserResources] = useState<UserResources | null>(null);
   
-  // 从 localStorage 恢复状态
-  useEffect(() => {
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUserStr = localStorage.getItem('auth_user');
-    const storedResourcesStr = localStorage.getItem('user_resources');
 
-    if (storedToken && storedUserStr) {
-      try {
-        const parsedRawUser = JSON.parse(storedUserStr);
-        const fullUser = buildFullUser(parsedRawUser);
+  // 初始化：从 token 恢复登录状态，并强制从后端拉取最新用户数据
+useEffect(() => {
+  const storedToken = localStorage.getItem('auth_token');
 
-        setToken(storedToken);
+  if (storedToken) {
+    setToken(storedToken);
+    setIsLoggedIn(true);
+
+    // 无论本地有没有缓存，都向后端请求最新用户资料
+    api.get('/user/profile')
+      .then((rawUserData) => {
+        const fullUser = buildFullUser(rawUserData);
+
         setUser(fullUser);
-        setIsLoggedIn(true);
-        
-        // 恢复资源状态
-        if (storedResourcesStr) {
-          const resources = JSON.parse(storedResourcesStr);
-          setUserResources(resources);
-        } else {
-          setUserResources({
-            ...DEFAULT_RESOURCES,
-            computingPower: fullUser.computingPower || 0
-          });
-        }
-      } catch (error) {
-        console.error('Failed to parse stored data:', error);
-        clearStoredData();
-      }
-    }
+
+        // 更新 localStorage（覆盖可能过期的旧缓存）
+        const { displayLevel, isMember, memberStatus, memberDaysLeft, ...rawFields } = fullUser;
+        localStorage.setItem('auth_user', JSON.stringify(rawFields));
+
+        // 初始化资源状态（基于最新用户数据）
+        const initialResources: UserResources = {
+          dailyUsage: {
+            textChat: 0,
+            aiDrawing: 0,
+            lastResetDate: new Date().toISOString().split('T')[0],
+          },
+          computingPower: fullUser.computingPower || 0,
+          maxComputingPower: fullUser.maxcomputingPower || 1000,
+        };
+        setUserResources(initialResources);
+        localStorage.setItem('user_resources', JSON.stringify(initialResources));
+      })
+      .catch((error) => {
+        console.error('初始化时获取用户资料失败，可能 token 已失效:', error);
+        // 清除无效登录状态
+        logout();
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  } else {
+    // 未登录
     setIsLoading(false);
-  }, []);
+  }
+}, []);
 
   // 检查是否需要重置当日使用（每日0点）
   useEffect(() => {
