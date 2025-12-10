@@ -4,7 +4,6 @@ import MainView from '../components/workPage/MainView';
 import { Modal } from '../components/pay/Modal';
 import { PromptInput } from '../components/workPage/PromptInput';
 import { ChatMessage } from '../components/workPage/ChatMessage';
-import { mockAiService } from '../services/mockAiService';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import HistoryView from '../components/workPage/HistoryView';
@@ -42,13 +41,9 @@ const WorkPage: React.FC = () => {
     isLoggedIn,
     user,
     logout,
-    userResources,
     checkGenerationPermission,
-    deductComputingPower,
     refreshResources,
-    recordDailyUsage,
-    addComputingPower,
-    calculateCost
+    isLoading
   } = useAuth();
 
 
@@ -151,22 +146,6 @@ const WorkPage: React.FC = () => {
       return;
     }
 
-    // 2. 计算消耗
-    const cost = calculateCost(currentMode, {
-      requireHD: false,
-      wordCount: prompt.length
-    });
-
-    // 3. 乐观更新：扣减前端算力
-    const deductSuccess = await deductComputingPower(cost);
-    if (!deductSuccess) {
-      alert("算力不足，请充值");
-      return;
-    }
-
-    // 4. 记录当日使用次数
-    recordDailyUsage(currentMode);
-
     const newMessage: Message = {
       id: Date.now().toString(),
       sender: Sender.USER,
@@ -204,45 +183,51 @@ const WorkPage: React.FC = () => {
       const response = await api.post('/ai/generate', {
         mode: currentMode,
         prompt,
-        referenceImage: base64,
-        deductCost: cost,
-        userId: user?.id
-      }) as any; // 临时使用 any 绕过类型检查
-
+        referenceImage: base64
+      });
       console.log('AI生成响应:', response);
 
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
 
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: Date.now().toString(),
         sender: Sender.AI,
-        content: response.description || response.content || response.text || response.result || "内容已生成。",
+        content: response?.content || "内容已生成。",
         timestamp: Date.now(),
         type: currentMode === AppMode.AI_DRAWING ? 'image' : 'text',
-        imageUrl: response.imageUrl || response.url || response.image || response.data
+        imageUrl: response?.imageUrl
       };
 
       setMessages(prev => [...prev, aiMessage]);
-      await refreshResources();
+      await refreshResources(); // 刷新算力等状态
 
     } catch (error: any) {
-      console.error("生成内容时出错", error);
+      // 关键：不再手动回滚算力！
+      await refreshResources(); // 直接拉取最新状态，覆盖本地可能的错误乐观更新
+
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
 
-      // 6. 请求失败时，回滚算力（增加回去）
-      addComputingPower(cost); // 回滚算力
+      // 可选：根据错误类型提示不同信息
+      let errorMsg = "抱歉，生成失败，请重试。";
+    
+      console.log('错误响应:', error);
+      if (error.response?.data?.code === 1008) {
+        errorMsg = "算力不足，请获取后重试。";
+      } else if (error.response?.data?.code === 1009) {
+        errorMsg = "今日使用次数已达上限。";
+      }
 
       setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
+        id: Date.now().toString(),
         sender: Sender.AI,
-        content: "抱歉，生成内容时出现错误，已返还您的算力，请重试。",
+        content: errorMsg,
         timestamp: Date.now(),
         type: 'text'
       }]);
     } finally {
-      setIsGenerating(false); // 关键：确保无论成功失败都结束生成状态
+      setIsGenerating(false);
     }
-  };
+  }
 
   const handleBackToLanding = () => {
     saveCurrentChatToHistory();
@@ -298,6 +283,14 @@ const WorkPage: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#0f0c29] text-white">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex h-screen w-full bg-[#0f0c29] text-white font-sans overflow-hidden">
@@ -336,15 +329,15 @@ const WorkPage: React.FC = () => {
             {/* {isLoggedIn && userResources && (
               <div className="hidden md:flex items-center gap-3 text-sm">
                 {/* 算力显示 */}
-                {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
+            {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
                   <i className="fa-solid fa-bolt text-yellow-400"></i>
                   <span className="text-white font-medium">{userResources.computingPower}</span>
                   <span className="text-gray-400">/</span>
                   <span className="text-gray-400">{userResources.maxComputingPower}</span>
                 </div> */}
 
-                {/* 当日使用情况 - 根据会员状态显示不同 */}
-                {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
+            {/* 当日使用情况 - 根据会员状态显示不同 */}
+            {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
                   <i className="fa-solid fa-message text-blue-400"></i>
                   <span className="text-white font-medium">{userResources.dailyUsage.textChat}</span>
                   {!user?.isMember ? (
@@ -356,8 +349,8 @@ const WorkPage: React.FC = () => {
                   )}
                 </div> */}
 
-                {/* AI绘图使用情况 - 根据会员状态显示不同 */}
-                {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
+            {/* AI绘图使用情况 - 根据会员状态显示不同 */}
+            {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
                   <i className="fa-solid fa-image text-green-400"></i>
                   <span className="text-white font-medium">{userResources.dailyUsage.aiDrawing}</span>
                   {!user?.isMember ? (

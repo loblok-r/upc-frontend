@@ -41,11 +41,6 @@ interface AuthContextType {
   userResources: UserResources | null;
   refreshResources: () => Promise<void>;
   
-  // 新增：资源操作方法
-  deductComputingPower: (amount: number) => Promise<boolean>;
-  addComputingPower: (amount: number) => void;
-  recordDailyUsage: (mode: AppMode) => void;
-  
   // 新增：权限检查方法
   checkGenerationPermission: (
     mode: AppMode, 
@@ -199,6 +194,12 @@ const buildFullUser = (rawUserData: any): User => {
 
     // 社区 stats
     stats: rawUserData.stats || { works: 0, followers: 0, likes: 0 },
+
+    // 每日额度
+    dailyUsage: rawUserData.dailyUsage || {
+      textChatCounts: 0,
+      aiDrawingCounts: 0,
+    },
 
     // 计算字段
     ...memberStatus,
@@ -457,97 +458,6 @@ const refreshResources = async () => {
   }
 };
 
-  // 扣减算力（前端乐观更新 + 后端同步）
-  const deductComputingPower = async (amount: number): Promise<boolean> => {
-    if (!user || !userResources || amount <= 0) return false;
-    
-    // 检查是否足够
-    if (userResources.computingPower < amount) {
-      return false;
-    }
-    
-    // 前端乐观更新
-    const newComputingPower = userResources.computingPower - amount;
-    setUserResources(prev => prev ? {
-      ...prev,
-      computingPower: newComputingPower
-    } : prev);
-    
-    // 同步更新 user 对象
-    setUser(prev => prev ? {
-      ...prev,
-      computingPower: newComputingPower
-    } : prev);
-    
-    // 保存到 localStorage
-    localStorage.setItem('user_resources', JSON.stringify({
-      ...userResources,
-      computingPower: newComputingPower
-    }));
-    
-    // 异步向后端同步
-    try {
-      // api 拦截器已经返回 data
-      await api.post('/user/deduct-computing', { amount });
-      console.log('扣减算力同步成功');
-    } catch (error) {
-      console.error('扣减算力同步失败:', error);
-      // 可以在这里添加失败重试逻辑或回滚
-    }
-    
-    return true;
-  };
-
-  // 增加算力
-  const addComputingPower = (amount: number) => {
-    if (!userResources || amount <= 0) return;
-    
-    const newComputingPower = Math.min(
-      userResources.computingPower + amount,
-      userResources.maxComputingPower
-    );
-    
-    setUserResources(prev => prev ? {
-      ...prev,
-      computingPower: newComputingPower
-    } : prev);
-    
-    setUser(prev => prev ? {
-      ...prev,
-      computingPower: newComputingPower
-    } : prev);
-    
-    // 保存到 localStorage
-    localStorage.setItem('user_resources', JSON.stringify({
-      ...userResources,
-      computingPower: newComputingPower
-    }));
-  };
-
-  // 记录当日使用
-  const recordDailyUsage = (mode: AppMode) => {
-    if (!userResources) return;
-    
-    const usageKey = mode === AppMode.AI_DRAWING ? 'aiDrawing' : 'textChat';
-    
-    setUserResources(prev => prev ? {
-      ...prev,
-      dailyUsage: {
-        ...prev.dailyUsage,
-        [usageKey]: prev.dailyUsage[usageKey] + 1
-      }
-    } : prev);
-    
-    // 保存到 localStorage
-    localStorage.setItem('user_resources', JSON.stringify({
-      ...userResources,
-      dailyUsage: {
-        ...userResources.dailyUsage,
-        [usageKey]: userResources.dailyUsage[usageKey] + 1
-      }
-    }));
-  };
-
   // 计算消耗
 const calculateCost = (
   mode: AppMode, 
@@ -636,9 +546,6 @@ const calculateCost = (
       // 新增
       userResources,
       refreshResources,
-      deductComputingPower,
-      addComputingPower,
-      recordDailyUsage,
       checkGenerationPermission,
       calculateCost
     }}>

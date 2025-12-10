@@ -32,30 +32,33 @@ api.interceptors.request.use((config) => {
 
 // 关键修改：明确声明拦截器返回类型
 api.interceptors.response.use(
-  // 第一个参数：成功处理函数
   (response: AxiosResponse<Result<any>>) => {
     const { code, message, data } = response.data;
 
     if (code === 200) {
-      // 返回 data，并告诉 TypeScript 这是 any 类型
-      return data as any;
+      return data; // 成功，只返回 data
     } else {
-      return Promise.reject(new Error(message || '请求失败'));
+      const err = new Error(message || '请求失败');
+      (err as any).response = {
+        data: response.data, // 保留完整的 { code, message, data }
+        status: response.status,
+        headers: response.headers,
+      };
+      return Promise.reject(err);
     }
   },
-  // 第二个参数：错误处理函数
   (error) => {
+    // 网络错误、超时等（非业务错误）
     if (error.response) {
-      const { status, data } = error.response;
-      const msg = data?.message || `请求错误 ${status}`;
+      // 注意：这里可能是 HTTP 500/404 等，不是业务 code ≠ 200
+      const msg = error.response.data?.message || `服务器错误 ${error.response.status}`;
       alert(msg);
     } else if (error.request) {
       alert('网络异常，请检查连接');
     } else {
       alert('请求配置错误');
     }
-    return Promise.reject(error);
+    return Promise.reject(error); // 原样抛出
   }
 );
-
 export default api;

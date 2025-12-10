@@ -14,6 +14,8 @@ export interface User {
   lotteryCounts?: number;
   streakDays: number;
 
+
+
   checkedIn: boolean;
 
   computingPower?: number; 
@@ -36,6 +38,12 @@ export interface User {
     followers: number;
     likes: number;
   };
+
+  //每日额度
+  dailyUsage?: {
+    textChatCounts: number,
+    aiDrawingCounts: number
+  }
 
   
 
