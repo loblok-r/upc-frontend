@@ -6,6 +6,7 @@ export interface User {
   avatar: string;
   followers: number;
   isVerified?: boolean;
+  isFollowed?: boolean; 
 }
 
 // 2. 评论接口优化
@@ -61,7 +62,7 @@ export type SidebarTab = typeof SidebarTab[keyof typeof SidebarTab];
 export interface LeaderboardItem {
   rank: number;
   score: number; // 热度、分数或粉丝增量
-  user: User;    // 关联的用户信息
+  author: User;    // 关联的用户信息
 }
 
 // 新增：排行榜聚合数据 (用于 Summary 视图)
