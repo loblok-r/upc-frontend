@@ -217,6 +217,7 @@ const WorkPage: React.FC = () => {
         errorMsg = "今日使用次数已达上限。";
       }
 
+      
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         sender: Sender.AI,
