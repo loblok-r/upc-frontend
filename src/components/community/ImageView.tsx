@@ -1,5 +1,4 @@
 import React from 'react';
-// 假设 Post 接口定义在当前目录下的 types.ts 文件中
 import type { Post } from '../../types/community';
 import { Heart, MoreHorizontal, Bell, User as UserIcon, X, ArrowLeft } from 'lucide-react';
 
@@ -14,7 +13,7 @@ const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
       {/* Header */}
       <div className="flex items-center justify-between px-4 md:px-6 py-4 fixed top-0 w-full z-10 bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex items-center gap-3 md:gap-4">
-           {/* Back Button for mobile/convenience */}
+           {/* Back Button */}
            <button 
              onClick={onClose} 
              className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
@@ -25,7 +24,7 @@ const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
            <img 
              src={post.author.avatar} 
              alt="Avatar" 
-             className="w-10 h-10 rounded-full border border-white/10" 
+             className="w-10 h-10 rounded-full border border-white/10 object-cover" 
            />
            
            <div className="flex flex-col">
@@ -34,7 +33,8 @@ const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
                <span className="text-white/40">•</span>
                <span>{post.author.name}</span>
              </div>
-             <span className="text-xs text-gray-400 font-medium">{post.timestamp}</span>
+             {/* 更新字段: createdAt */}
+             <span className="text-xs text-gray-400 font-medium">{post.createdAt || '刚刚'}</span>
            </div>
         </div>
         
@@ -57,23 +57,29 @@ const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
       {/* Main Image Area */}
       <div 
         className="flex-1 flex items-center justify-center p-0 md:p-8 cursor-pointer"
-        onClick={onClose} // Optional: click background to close
+        onClick={onClose} 
       >
+        {/* 更新字段: imageUrl */}
         <img 
-          src={post.thumbnailUrl} 
-          alt={post.caption} 
+          src={post.imageUrl} 
+          alt={post.content || "Image"} 
           className="max-h-full max-w-full object-contain shadow-2xl animate-in zoom-in-95 duration-300"
-          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
+          onClick={(e) => e.stopPropagation()} 
         />
       </div>
 
-      {/* Footer - Prompt */}
-      <div className="fixed bottom-0 w-full pb-8 pt-12 px-6 text-center bg-gradient-to-t from-black/90 to-transparent pointer-events-none">
-         <div className="inline-flex items-center gap-2 text-sm md:text-base pointer-events-auto bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/5">
-            <span className="text-gray-400 font-bold uppercase tracking-wide text-xs md:text-sm">Prompt</span>
-            <span className="text-white font-bold">{post.caption.length > 20 ? post.caption.substring(0, 20) + '...' : post.caption}</span>
-         </div>
-      </div>
+      {/* Footer - Prompt/Content */}
+      {post.content && (
+        <div className="fixed bottom-0 w-full pb-8 pt-12 px-6 text-center bg-gradient-to-t from-black/90 to-transparent pointer-events-none">
+           <div className="inline-flex items-center gap-2 text-sm md:text-base pointer-events-auto bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 max-w-[90%]">
+              <span className="text-gray-400 font-bold uppercase tracking-wide text-xs md:text-sm shrink-0">Prompt</span>
+              {/* 更新字段: content, 截断显示 */}
+              <span className="text-white font-bold truncate">
+                {post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
+              </span>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

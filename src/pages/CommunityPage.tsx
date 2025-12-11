@@ -1,20 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import type { Post } from '../types/community';
-import { SidebarTab } from '../types/community';
-import { ViewState } from '../types/community';
-// 移除 MOCK_POSTS 引用，改为从 api 获取
-// import { MOCK_POSTS } from '../data/constants_community'; 
-// 移除 MockPostService
-// import MockPostService from '../services/MockPostService';
+import type { Post, SidebarTab, ViewState } from '../types/community';
+import { MOCK_POSTS } from '../data/constants_community'; 
+import MockPostService from '../services/MockPostService';
 import SidebarPanel from '../components/community/SidebarPanel';
 import DetailView from '../components/community/DetailView';
 import ImageView from '../components/community/ImageView';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Trophy, User, MessageSquare, Heart, Share2, Play, Sparkles, Loader2 } from 'lucide-react';
-import api from '../utils/api'; // 引入真实的 api 实例
+import { 
+  Home, 
+  Search, 
+  Trophy, 
+  User, 
+  MessageSquare, 
+  Heart, 
+  Share2, 
+  Play, 
+  Sparkles, 
+  Loader2,
+  Image as ImageIcon 
+} from 'lucide-react';
 
 // 定义 Feed Tab 类型
 type FeedTabType = 'RECOMMEND' | 'FOLLOWING' | 'LATEST';
+
+// 辅助函数：格式化数字 (如 1200 -> 1.2k)
+const formatNumber = (num: number) => {
+  if (!num) return '0';
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k';
+  }
+  return num.toString();
+};
 
 const CommunityPage = () => {
   const navigate = useNavigate();
@@ -24,47 +40,39 @@ const CommunityPage = () => {
     navigate('/work');
   };
   
+  // 仅保留基础的路由状态判断
   const shouldOpenAppDirectly = location.state?.activeTab !== undefined;
 
   const [viewState, setViewState] = useState<ViewState>(
-    shouldOpenAppDirectly ? ViewState.APP : ViewState.LANDING
+    shouldOpenAppDirectly ? 'APP' : 'LANDING'
   );
 
   const [activeTab, setActiveTab] = useState<SidebarTab>(
-    location.state?.activeTab || SidebarTab.HOME
+    location.state?.activeTab || 'HOME'
   );
   
   // Feed流状态管理
   const [activeFeedTab, setActiveFeedTab] = useState<FeedTabType>('RECOMMEND'); 
-  // 初始状态设为空数组，不再使用 Mock 数据
-  const [displayPosts, setDisplayPosts] = useState<Post[]>([]); 
+  const [displayPosts, setDisplayPosts] = useState<Post[]>(MOCK_POSTS); 
   const [isFeedLoading, setIsFeedLoading] = useState(false); 
 
-  // 监听 Tab 切换，请求真实后端接口
+  // 监听 Tab 切换，请求接口
   useEffect(() => {
-    if (viewState === ViewState.APP) {
-      const fetchPosts = async () => {
+    if (viewState === 'APP') {
+      const fetchData = async () => {
         setIsFeedLoading(true);
         try {
-          // 映射 Tab 到后端 API 路径参数或查询参数
-          let endpoint = '/community/posts/recommend';
-          if (activeFeedTab === 'FOLLOWING') endpoint = '/community/posts/following';
-          if (activeFeedTab === 'LATEST') endpoint = '/community/posts/latest';
-
-          // api.ts 拦截器已经解包，这里返回的直接是 Post[] (T)
-          const data = await api.get<Post[]>(endpoint);
-          
-          // 确保数据是数组，防止后端异常返回 null
-          setDisplayPosts(Array.isArray(data) ? data : []);
+          // 调用模拟接口 (确保 Service 返回的数据已适配新的 Post 结构)
+          const data = await MockPostService.getPosts(activeFeedTab);
+          setDisplayPosts(data);
         } catch (error) {
           console.error("Failed to fetch posts", error);
-          // 错误处理已由 api.ts 拦截器统一处理（alert），这里只需停止 loading
         } finally {
           setIsFeedLoading(false);
         }
       };
 
-      fetchPosts();
+      fetchData();
     }
   }, [activeFeedTab, viewState]); 
 
@@ -88,7 +96,7 @@ const CommunityPage = () => {
         
         <button 
           onClick={() => {
-            setViewState(ViewState.APP);
+            setViewState('APP');
             setActiveFeedTab('RECOMMEND'); 
           }}
           className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-semibold transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)]"
@@ -110,21 +118,22 @@ const CommunityPage = () => {
       <nav className="w-16 md:w-20 bg-black/40 border-r border-white/5 flex flex-col items-center py-8 z-50 backdrop-blur-xl shrink-0">
         <div className="mb-10 text-2xl font-bold tracking-tighter">U.</div>
         <div className="flex flex-col gap-8 w-full">
-          <SidebarBtn icon={<Home size={24} />} isActive={activeTab === SidebarTab.HOME} onClick={() => setActiveTab(SidebarTab.HOME)} label="首页"/>
-          <SidebarBtn icon={<Search size={24} />} isActive={activeTab === SidebarTab.SEARCH} onClick={() => setActiveTab(activeTab === SidebarTab.SEARCH ? SidebarTab.HOME : SidebarTab.SEARCH)} label="搜索"/>
-          <SidebarBtn icon={<Trophy size={24} />} isActive={activeTab === SidebarTab.LEADERBOARD} onClick={() => setActiveTab(activeTab === SidebarTab.LEADERBOARD ? SidebarTab.HOME : SidebarTab.LEADERBOARD)} label="榜单"/>
+          <SidebarBtn icon={<Home size={24} />} isActive={activeTab === 'HOME'} onClick={() => setActiveTab('HOME')} label="首页"/>
+          <SidebarBtn icon={<Search size={24} />} isActive={activeTab === 'SEARCH'} onClick={() => setActiveTab(activeTab === 'SEARCH' ? 'HOME' : 'SEARCH')} label="搜索"/>
+          <SidebarBtn icon={<Trophy size={24} />} isActive={activeTab === 'LEADERBOARD'} onClick={() => setActiveTab(activeTab === 'LEADERBOARD' ? 'HOME' : 'LEADERBOARD')} label="榜单"/>
         </div>
         <div className="mt-auto">
-          <SidebarBtn icon={<User size={24} />} isActive={activeTab === SidebarTab.PROFILE} onClick={() => setActiveTab(SidebarTab.PROFILE)} label="我的"/>
+          <SidebarBtn icon={<User size={24} />} isActive={activeTab === 'PROFILE'} onClick={() => setActiveTab('PROFILE')} label="我的"/>
         </div>
       </nav>
 
       {/* Panels */}
-      <SidebarPanel activeTab={activeTab} onClose={() => setActiveTab(SidebarTab.HOME)} />
+      <SidebarPanel activeTab={activeTab} onClose={() => setActiveTab('HOME')} />
 
       {/* Main Feed Content Area */}
       <main className="flex-1 relative overflow-y-auto scroll-smooth">
         
+        {/* Sticky Header */}
         <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-[#05050a]/80 backdrop-blur-md border-b border-white/5">
            <div className="flex gap-2">
              <TabButton 
@@ -155,10 +164,10 @@ const CommunityPage = () => {
            </div>
         </div>
 
-        {/* Masonry Grid Feed */}
+        {/* Masonry Grid Feed - Modified for New Data Structure */}
         <div className="p-4 md:p-6 lg:p-8 pb-32">
           
-          {isFeedLoading && displayPosts.length === 0 ? (
+          {isFeedLoading ? (
              <div className="flex items-center justify-center h-64 w-full">
                 <Loader2 size={40} className="text-purple-500 animate-spin" />
              </div>
@@ -168,35 +177,63 @@ const CommunityPage = () => {
                   <div 
                     key={post.id} 
                     onClick={() => setViewingImage(post)}
-                    className="break-inside-avoid relative group rounded-2xl overflow-hidden bg-[#1a1a1a] cursor-pointer border border-transparent hover:border-white/20 transition-all"
+                    className="break-inside-avoid relative group rounded-xl overflow-hidden bg-[#1a1a1a] cursor-pointer border border-white/5 hover:border-white/20 transition-all shadow-lg hover:shadow-purple-900/20"
                   >
-                    <div className="relative aspect-[3/4] overflow-hidden">
+                    {/* Image Area */}
+                    <div className="relative w-full">
                        <img 
-                        src={post.thumbnailUrl} 
-                        alt={post.caption}
-                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                        src={post.imageUrl} 
+                        alt={post.title || '用户作品'}
+                        className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                        loading="lazy"
                        />
-                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-opacity" />
+                       {/* Enhanced Gradient Overlay for Readability */}
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-60 group-hover:opacity-85 transition-opacity duration-300" />
                     </div>
 
+                    {/* Content Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                      <div className="flex items-center gap-2 mb-3">
-                         <img src={post.author.avatar} className="w-6 h-6 rounded-full border border-white/50" />
-                         <span className="text-xs font-semibold drop-shadow-md">{post.author.handle}</span>
-                      </div>
-                      <p className="text-sm text-gray-200 line-clamp-2 mb-4 drop-shadow-sm">{post.caption}</p>
-                      <div className="flex items-center justify-between text-white/80">
-                         <div className="flex gap-4">
-                            <button className="flex items-center gap-1 hover:text-red-400 transition-colors">
-                               <Heart size={18} />
-                               <span className="text-xs">{post.likes}</span>
+                      
+                      {/* Title (Optional) */}
+                      {post.title && (
+                        <h3 className="text-base font-bold text-white mb-1 leading-snug drop-shadow-md line-clamp-1">
+                          {post.title}
+                        </h3>
+                      )}
+
+                      {/* Content / Description */}
+                      {post.content && (
+                        <p className={`text-sm text-gray-300 mb-3 drop-shadow-sm line-clamp-2 ${!post.title ? 'text-white font-medium' : ''}`}>
+                          {post.content}
+                        </p>
+                      )}
+
+                      {/* Footer: Author & Metrics */}
+                      <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-2">
+                         {/* Author Info */}
+                         <div className="flex items-center gap-2">
+                           <div className="w-6 h-6 rounded-full overflow-hidden border border-white/30 shrink-0">
+                              <img src={post.author?.avatar} alt={post.author?.name} className="w-full h-full object-cover" />
+                           </div>
+                           <span className="text-xs text-gray-300 font-medium truncate max-w-[80px]">
+                             {post.author?.name}
+                           </span>
+                         </div>
+
+                         {/* Interactions */}
+                         <div className="flex items-center gap-3 text-gray-300">
+                            <button className="flex items-center gap-1 hover:text-red-400 transition-colors group/btn">
+                               <Heart size={16} className="group-hover/btn:scale-110 transition-transform"/>
+                               <span className="text-xs font-medium">{formatNumber(post.likesCount)}</span>
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); setSelectedPost(post); }} className="flex items-center gap-1 hover:text-blue-400 transition-colors">
-                               <MessageSquare size={18} />
-                               <span className="text-xs">{post.commentsCount}</span>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setSelectedPost(post); }} 
+                              className="flex items-center gap-1 hover:text-blue-400 transition-colors group/btn"
+                            >
+                               <MessageSquare size={16} className="group-hover/btn:scale-110 transition-transform"/>
+                               <span className="text-xs font-medium">{formatNumber(post.commentsCount)}</span>
                             </button>
                          </div>
-                         <button className="hover:text-green-400 transition-colors"><Share2 size={18}/></button>
                       </div>
                     </div>
                   </div>
@@ -204,9 +241,11 @@ const CommunityPage = () => {
              </div>
           )}
           
+          {/* Empty State */}
           {!isFeedLoading && displayPosts.length === 0 && (
-              <div className="text-center py-20 text-gray-500">
-                 暂无内容
+              <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4">
+                 <ImageIcon size={48} className="opacity-20" />
+                 <p>暂无内容，去发布第一条作品吧</p>
               </div>
           )}
         </div>
@@ -227,7 +266,7 @@ const CommunityPage = () => {
     </div>
   );
 
-  return viewState === ViewState.LANDING ? <LandingPage /> : <MainApp />;
+  return viewState === 'LANDING' ? <LandingPage /> : <MainApp />;
 };
 
 // 辅助组件：Tab 按钮
