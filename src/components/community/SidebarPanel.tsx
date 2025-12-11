@@ -1,38 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { SidebarTab } from '../../types/community';
-import { MOCK_USERS, LEADERBOARD_DATA } from '../../data/constants_community';
+import type { User, LeaderboardItem } from '../../types/community';
+
 import {
-   Search, Trophy, X, ChevronRight, TrendingUp, Music, Film,
-   ArrowLeft, Loader2, Check, User, LogIn, LogOut,
+   Search, Trophy, X, ChevronRight, Music, Film,
+   ArrowLeft, Loader2, Check, User as UserIcon, LogOut,
    Settings, Image as ImageIcon, Heart, Zap, CreditCard, ChevronRight as ArrowRight
 } from 'lucide-react';
-import MockApiService from '../../services/MockApiService';
+import api from '../../utils/api'; // 1. 导入 API 实例
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-
 // ==========================================
-// 2. Follow Button Component
+// 1. Follow Button Component (API 改造版)
 // ==========================================
 interface FollowButtonProps {
    userId: string;
+   initialIsFollowed?: boolean; // 可选：如果后端返回了关注状态
    className?: string;
 }
 
-const FollowButton: React.FC<FollowButtonProps> = ({ userId, className }) => {
-
-   const [isFollowed, setIsFollowed] = useState(false);
+const FollowButton: React.FC<FollowButtonProps> = ({ userId, initialIsFollowed = false, className }) => {
+   const [isFollowed, setIsFollowed] = useState(initialIsFollowed);
    const [isLoading, setIsLoading] = useState(false);
 
    const handleFollowClick = async (e: React.MouseEvent) => {
       e.stopPropagation();
       if (isLoading) return;
       setIsLoading(true);
-      const success = await MockApiService.toggleFollow('my_current_id', userId, isFollowed);
-      if (success) {
+      
+      try {
+         // 调用后端关注接口
+         // 假设接口路径: POST /community/users/follow
+         // Body: { userId: string }
+         await api.post('/community/users/follow', { userId });
+         
+         // 成功后切换状态
          setIsFollowed(!isFollowed);
+      } catch (error) {
+         console.error('Follow action failed:', error);
+         // 可以在这里加个 Toast 提示失败
+      } finally {
+         setIsLoading(false);
       }
-      setIsLoading(false);
    };
 
    if (isFollowed) {
@@ -62,7 +72,9 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId, className }) => {
    );
 };
 
-
+// ==========================================
+// 2. Sidebar Panel Component
+// ==========================================
 
 interface SidebarPanelProps {
    activeTab: SidebarTab;
@@ -75,87 +87,134 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
    const navigate = useNavigate();
    const location = useLocation();
    const { isLoggedIn, user, logout } = useAuth(); 
-   console.log("sidebar user:", user)
+   
    const [lbView, setLbView] = useState<LeaderboardView>('SUMMARY');
 
-   // --- 搜索功能相关的状态 ---
+   // --- 搜索与推荐状态 ---
    const [searchQuery, setSearchQuery] = useState('');
+   const [displayUsers, setDisplayUsers] = useState<User[]>([]); // 展示的用户列表
+   const [isSearchLoading, setIsSearchLoading] = useState(false);
 
-   // ==========================================
-   //登录状态管理
-   // ==========================================
-
-
-
-   const [displayUsers, setDisplayUsers] = useState(MOCK_USERS); // 默认显示推荐用户
-   const [isSearching, setIsSearching] = useState(false);
+   // --- 排行榜状态 ---
+   const [creatorsRanking, setCreatorsRanking] = useState<LeaderboardItem[]>([]);
+   const [remixesRanking, setRemixesRanking] = useState<LeaderboardItem[]>([]);
+   const [isLbLoading, setIsLbLoading] = useState(false);
 
    // 模拟登录动作
    const handleLogin = () => {
       navigate('/login', {
          state: {
-            from: location.pathname, // 记录当前路径 (比如 /community)
-            returnTab: SidebarTab.PROFILE // 记录希望回来时打开的 Tab
+            from: location.pathname,
+            returnTab: SidebarTab.PROFILE
          }
       });
    };
 
-   // 模拟退出登录
    const handleLogout = () => {
-      // 可以加个确认弹窗，这里直接退出
       logout();
    };
 
-   // 当 Tab 切换时重置状态
-   useEffect(() => {
-      if (activeTab !== SidebarTab.LEADERBOARD) setLbView('SUMMARY');
-      if (activeTab === SidebarTab.SEARCH) {
-         setSearchQuery('');
-         setDisplayUsers(MOCK_USERS);
+   // ==========================================
+   // 核心逻辑：获取推荐用户 (当 Search Query 为空时)
+   // ==========================================
+   const fetchRecommendedUsers = useCallback(async () => {
+      setIsSearchLoading(true);
+      try {
+         // 接口：获取推荐关注列表
+         const data = await api.get<any, User[]>('/community/users/recommend');
+         setDisplayUsers(data || []);
+      } catch (error) {
+         console.error("Failed to fetch recommended users", error);
+         setDisplayUsers([]);
+      } finally {
+         setIsSearchLoading(false);
       }
-   }, [activeTab]);
+   }, []);
 
-   // --- 监听搜索输入 ---
+   // ==========================================
+   // 核心逻辑：获取排行榜数据
+   // ==========================================
+   const fetchLeaderboards = useCallback(async (type: 'creators' | 'remixes' | 'all') => {
+      setIsLbLoading(true);
+      try {
+         if (type === 'creators' || type === 'all') {
+            // 接口：创作者榜单
+            const data = await api.get<any, LeaderboardItem[]>('/community/leaderboard/creators');
+            setCreatorsRanking(data || []);
+         }
+         if (type === 'remixes' || type === 'all') {
+            // 接口：二创榜单
+            const data = await api.get<any, LeaderboardItem[]>('/community/leaderboard/remixes');
+            setRemixesRanking(data || []);
+         }
+      } catch (error) {
+         console.error("Failed to fetch leaderboards", error);
+      } finally {
+         setIsLbLoading(false);
+      }
+   }, []);
+
+   // --- Effect: 切换到 SEARCH Tab 时加载推荐 ---
    useEffect(() => {
-      // 简单的防抖逻辑：利用 setTimeout 和 clearTimeout
-      // 只有当用户停止输入 300ms 后才触发搜索
+      if (activeTab === SidebarTab.SEARCH && !searchQuery) {
+         fetchRecommendedUsers();
+      }
+   }, [activeTab, searchQuery, fetchRecommendedUsers]);
+
+   // --- Effect: 切换到 LEADERBOARD Tab 时加载榜单 ---
+   useEffect(() => {
+      if (activeTab === SidebarTab.LEADERBOARD) {
+         setLbView('SUMMARY');
+         // 默认加载两个榜单的前几名数据
+         fetchLeaderboards('all');
+      }
+   }, [activeTab, fetchLeaderboards]);
+
+   // --- Effect: 搜索防抖 ---
+   useEffect(() => {
       const timer = setTimeout(async () => {
          if (activeTab === SidebarTab.SEARCH) {
             if (searchQuery.trim() === '') {
-               setDisplayUsers(MOCK_USERS); // 如果清空了，恢复显示推荐列表
-               setIsSearching(false);
+               // 如果清空，重新获取推荐（或者直接使用缓存的推荐列表）
+               if (displayUsers.length === 0) fetchRecommendedUsers();
                return;
             }
 
-            setIsSearching(true);
-            const results = await MockApiService.searchUsers(searchQuery);
-            setDisplayUsers(results);
-            setIsSearching(false);
+            setIsSearchLoading(true);
+            try {
+               // 接口：搜索用户
+               // 路径：/community/users/search?q=xxx
+               const results = await api.get<any, User[]>('/community/users/search', {
+                  params: { q: searchQuery }
+               });
+               setDisplayUsers(results || []);
+            } catch (error) {
+               console.error("Search failed", error);
+            } finally {
+               setIsSearchLoading(false);
+            }
          }
-      }, 300);
+      }, 500); // 500ms 防抖
 
       return () => clearTimeout(timer);
-   }, [searchQuery, activeTab]);
+   }, [searchQuery, activeTab, fetchRecommendedUsers]);
 
 
    if (activeTab === SidebarTab.HOME) return null;
 
-   // 模拟排行榜长列表数据
-   const FULL_CREATORS_LIST = [...LEADERBOARD_DATA.creators, ...LEADERBOARD_DATA.creators].map((item, i) => ({ ...item, rank: i + 1 }));
-   const FULL_REMIXES_LIST = [...LEADERBOARD_DATA.remixes, ...LEADERBOARD_DATA.remixes].map((item, i) => ({ ...item, rank: i + 1 }));
-
    return (
-      <div className="absolute left-16 top-0 bottom-0 w-[320px] glass-panel z-40 flex flex-col animate-in slide-in-from-left duration-300 border-r border-white/10">
+      <div className="absolute left-16 top-0 bottom-0 w-[320px] glass-panel z-40 flex flex-col animate-in slide-in-from-left duration-300 border-r border-white/10 bg-black/80 backdrop-blur-xl">
 
-         {/* Search Panel Content */}
+         {/* ========================================================================= */}
+         {/* 1. 搜索面板 */}
+         {/* ========================================================================= */}
          {activeTab === SidebarTab.SEARCH && (
             <>
                <div className="p-5 border-b border-white/10">
                   <h2 className="text-xl font-bold mb-4">发现用户</h2>
                   <div className="relative">
-                     {/* 搜索图标：如果是搜索状态，显示 Loading */}
                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                        {isSearching ? <Loader2 size={18} className="animate-spin text-purple-400" /> : <Search size={18} />}
+                        {isSearchLoading ? <Loader2 size={18} className="animate-spin text-purple-400" /> : <Search size={18} />}
                      </div>
 
                      <input
@@ -166,7 +225,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                         className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
                      />
 
-                     {/* 清空按钮 (仅当有输入时显示) */}
                      {searchQuery && (
                         <button
                            onClick={() => setSearchQuery('')}
@@ -178,32 +236,29 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                   </div>
                </div>
 
-               <div className="flex-1 overflow-y-auto p-2">
+               <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-white/10">
                   <h3 className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
                      {searchQuery ? '搜索结果' : '推荐关注'}
-                     {isSearching && <span className="text-[10px] text-purple-400">搜索中...</span>}
+                     {isSearchLoading && <span className="text-[10px] text-purple-400">加载中...</span>}
                   </h3>
 
                   <div className="space-y-1">
-                     {/* 如果没有结果 */}
-                     {!isSearching && displayUsers.length === 0 && (
-                        <div className="text-center py-10 text-gray-500">
-                           <p>未找到相关用户</p>
+                     {!isSearchLoading && displayUsers.length === 0 && (
+                        <div className="text-center py-10 text-gray-500 text-sm">
+                           {searchQuery ? '未找到相关用户' : '暂无推荐'}
                         </div>
                      )}
 
-                     {/* 渲染用户列表 (推荐 或 搜索结果) */}
                      {displayUsers.map(user => (
                         <div key={user.id} className="flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors cursor-pointer group animate-in fade-in duration-300">
                            <div className="flex items-center gap-3">
-                              <img src={user.avatar} className="w-10 h-10 rounded-full" />
+                              <img src={user.avatar || 'https://github.com/shadcn.png'} className="w-10 h-10 rounded-full object-cover" />
                               <div>
                                  <div className="text-sm font-semibold flex items-center gap-1">
-                                    {/* 高亮匹配文字逻辑可选，这里暂不做复杂的高亮 */}
                                     {user.name}
-                                    {user.isVerified && <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center text-[8px]">✓</div>}
+                                    {user.isVerified && <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center text-[8px] text-white">✓</div>}
                                  </div>
-                                 <div className="text-xs text-gray-400">{user.handle}</div>
+                                 <div className="text-xs text-gray-400 truncate max-w-[120px]">{user.handle}</div>
                               </div>
                            </div>
                            <FollowButton userId={user.id} />
@@ -214,105 +269,127 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
             </>
          )}
 
-         {/* Leaderboard Panel Content*/}
+         {/* ========================================================================= */}
+         {/* 2. 排行榜面板 */}
+         {/* ========================================================================= */}
          {activeTab === SidebarTab.LEADERBOARD && (
             <>
-               {lbView === 'SUMMARY' && (
+               {isLbLoading && lbView === 'SUMMARY' && creatorsRanking.length === 0 ? (
+                  <div className="flex items-center justify-center h-full">
+                     <Loader2 size={32} className="animate-spin text-purple-500" />
+                  </div>
+               ) : (
                   <>
-                     <div className="p-5 border-b border-white/10 flex items-center justify-between">
-                        <h2 className="text-xl font-bold flex items-center gap-2">排行榜</h2>
-                        <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full"><X size={16} /></button>
-                     </div>
-
-                     <div className="flex-1 overflow-y-auto hide-scrollbar">
-                        <div className="p-4">
-                           <div className="flex items-center justify-between mb-3 px-1">
-                              <span className="text-sm font-bold text-purple-400 flex items-center gap-2"><Film size={14} /> 热门创作者</span>
-                              <span onClick={() => setLbView('ALL_CREATORS')} className="text-xs text-gray-500 hover:text-white cursor-pointer flex items-center transition-colors">查看全部 <ChevronRight size={12} /></span>
+                     {/* Summary View (默认视图) */}
+                     {lbView === 'SUMMARY' && (
+                        <>
+                           <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                              <h2 className="text-xl font-bold flex items-center gap-2">排行榜</h2>
+                              <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full"><X size={16} /></button>
                            </div>
-                           <div className="space-y-3">
-                              {LEADERBOARD_DATA.creators.map((item, idx) => (
-                                 <div key={item.user.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+
+                           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+                              {/* 创作者榜单摘要 (Top 3) */}
+                              <div className="p-4">
+                                 <div className="flex items-center justify-between mb-3 px-1">
+                                    <span className="text-sm font-bold text-purple-400 flex items-center gap-2"><Film size={14} /> 热门创作者</span>
+                                    <span onClick={() => setLbView('ALL_CREATORS')} className="text-xs text-gray-500 hover:text-white cursor-pointer flex items-center transition-colors">查看全部 <ChevronRight size={12} /></span>
+                                 </div>
+                                 <div className="space-y-3">
+                                    {creatorsRanking.slice(0, 3).map((item, idx) => (
+                                       <div key={item.user.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                                          <div className="flex items-center gap-3">
+                                             <div className={`w-6 text-center font-bold text-lg ${idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-orange-400' : 'text-gray-600'}`}>
+                                                {item.rank || idx + 1}
+                                             </div>
+                                             <img src={item.user.avatar || 'https://github.com/shadcn.png'} className="w-10 h-10 rounded-full object-cover" />
+                                             <div className="flex flex-col">
+                                                <span className="text-sm font-bold truncate max-w-[90px]">{item.user.name}</span>
+                                                <span className="text-xs text-gray-500 truncate max-w-[90px]">{item.user.handle}</span>
+                                             </div>
+                                          </div>
+                                          <FollowButton userId={item.user.id} />
+                                       </div>
+                                    ))}
+                                    {creatorsRanking.length === 0 && <div className="text-xs text-gray-500 text-center py-4">暂无数据</div>}
+                                 </div>
+                              </div>
+
+                              {/* 二创榜单摘要 (Top 3) */}
+                              <div className="p-4 pt-0">
+                                 <div className="flex items-center justify-between mb-3 px-1">
+                                    <span className="text-sm font-bold text-blue-400 flex items-center gap-2"><Music size={14} /> 热门二创</span>
+                                    <span onClick={() => setLbView('ALL_REMIXES')} className="text-xs text-gray-500 hover:text-white cursor-pointer flex items-center transition-colors">查看全部 <ChevronRight size={12} /></span>
+                                 </div>
+                                 <div className="space-y-2">
+                                    {remixesRanking.slice(0, 3).map((item, idx) => (
+                                       <div key={(item.user.id) + 'remix'} className="relative overflow-hidden rounded-lg group cursor-pointer h-16 flex items-center px-4 border border-white/5 hover:border-white/20 transition-all bg-gradient-to-r from-white/5 to-transparent">
+                                          <img src={item.user.avatar} className="absolute left-0 top-0 w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity" />
+                                          <div className="relative z-10 flex items-center w-full justify-between">
+                                             <div className="flex items-center gap-3">
+                                                <div className="w-6 h-6 bg-black/50 rounded-full flex items-center justify-center text-xs font-bold border border-white/10">
+                                                   {item.rank || idx + 1}
+                                                </div>
+                                                <span className="font-semibold text-sm truncate max-w-[100px]">{item.user.name}</span>
+                                             </div>
+                                             {/* 假设 score 是热度值 */}
+                                             <div className="text-xs font-bold text-white/80">{item.score}k 热度</div>
+                                          </div>
+                                       </div>
+                                    ))}
+                                    {remixesRanking.length === 0 && <div className="text-xs text-gray-500 text-center py-4">暂无数据</div>}
+                                 </div>
+                              </div>
+                           </div>
+                        </>
+                     )}
+
+                     {/* Detail Views (全部榜单) */}
+                     {(lbView === 'ALL_CREATORS' || lbView === 'ALL_REMIXES') && (
+                        <div className="flex flex-col h-full animate-in slide-in-from-right duration-300">
+                           <div className="p-5 border-b border-white/10 flex items-center gap-3">
+                              <button onClick={() => setLbView('SUMMARY')} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"><ArrowLeft size={18} /></button>
+                              <h2 className="text-lg font-bold">{lbView === 'ALL_CREATORS' ? '热门创作者榜单' : '热门二创榜单'}</h2>
+                           </div>
+                           <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-white/10">
+                              
+                              {lbView === 'ALL_CREATORS' && creatorsRanking.map((item, idx) => (
+                                 <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
                                     <div className="flex items-center gap-3">
-                                       <div className={`w-6 text-center font-bold text-lg ${idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-orange-400' : 'text-gray-600'}`}>{item.rank}</div>
-                                       <img src={item.user.avatar} className="w-10 h-10 rounded-full" />
+                                       <div className={`w-8 text-center font-bold text-lg ${idx < 3 ? 'text-yellow-400' : 'text-gray-500'}`}>#{item.rank || idx + 1}</div>
+                                       <img src={item.user.avatar || 'https://github.com/shadcn.png'} className="w-10 h-10 rounded-full object-cover" />
                                        <div className="flex flex-col">
                                           <span className="text-sm font-bold">{item.user.name}</span>
-                                          <span className="text-xs text-gray-500">{item.user.handle}</span>
+                                          <span className="text-xs text-gray-500">粉丝数: {item.user.followers?.toLocaleString()}</span>
                                        </div>
                                     </div>
                                     <FollowButton userId={item.user.id} />
                                  </div>
                               ))}
-                           </div>
-                        </div>
 
-                        <div className="p-4 pt-0">
-                           <div className="flex items-center justify-between mb-3 px-1">
-                              <span className="text-sm font-bold text-blue-400 flex items-center gap-2"><Music size={14} /> 热门二创</span>
-                              <span onClick={() => setLbView('ALL_REMIXES')} className="text-xs text-gray-500 hover:text-white cursor-pointer flex items-center transition-colors">查看全部 <ChevronRight size={12} /></span>
-                           </div>
-                           <div className="space-y-2">
-                              {LEADERBOARD_DATA.remixes.map((item, idx) => (
-                                 <div key={item.user.id + 'remix'} className="relative overflow-hidden rounded-lg group cursor-pointer h-16 flex items-center px-4 border border-white/5 hover:border-white/20 transition-all bg-gradient-to-r from-white/5 to-transparent">
-                                    <img src={item.user.avatar} className="absolute left-0 top-0 w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity" />
-                                    <div className="relative z-10 flex items-center w-full justify-between">
-                                       <div className="flex items-center gap-3">
-                                          <div className="w-6 h-6 bg-black/50 rounded-full flex items-center justify-center text-xs font-bold border border-white/10">{item.rank}</div>
-                                          <span className="font-semibold text-sm truncate max-w-[100px]">{item.user.name}</span>
-                                       </div>
-                                       <img src={`https://picsum.photos/seed/${item.score}/50/50`} className="w-10 h-10 rounded bg-black/50" />
+                              {lbView === 'ALL_REMIXES' && remixesRanking.map((item, idx) => (
+                                 <div key={idx} className="flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-white/10">
+                                    <div className={`text-lg font-bold w-6 text-center ${idx < 3 ? 'text-blue-400' : 'text-gray-600'}`}>#{item.rank || idx + 1}</div>
+                                    <img src={item.user.avatar || 'https://github.com/shadcn.png'} className="w-12 h-12 rounded-lg bg-gray-800 object-cover" />
+                                    <div className="flex-1 min-w-0">
+                                       <div className="text-sm font-semibold truncate">Remix by {item.user.name}</div>
+                                       <div className="text-xs text-gray-400 mt-1 flex items-center gap-2"><span className="flex items-center gap-1"><Music size={10} /> 原声使用</span><span>•</span><span>{item.score}k 热度</span></div>
                                     </div>
                                  </div>
                               ))}
                            </div>
                         </div>
-                     </div>
+                     )}
                   </>
-               )}
-
-               {(lbView === 'ALL_CREATORS' || lbView === 'ALL_REMIXES') && (
-                  <div className="flex flex-col h-full animate-in slide-in-from-right duration-300">
-                     <div className="p-5 border-b border-white/10 flex items-center gap-3">
-                        <button onClick={() => setLbView('SUMMARY')} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white"><ArrowLeft size={18} /></button>
-                        <h2 className="text-lg font-bold">{lbView === 'ALL_CREATORS' ? '热门创作者榜单' : '热门二创榜单'}</h2>
-                     </div>
-                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {lbView === 'ALL_CREATORS' && FULL_CREATORS_LIST.map((item, idx) => (
-                           <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
-                              <div className="flex items-center gap-3">
-                                 <div className={`w-8 text-center font-bold text-lg ${idx < 3 ? 'text-yellow-400' : 'text-gray-500'}`}>#{item.rank}</div>
-                                 <img src={item.user.avatar} className="w-10 h-10 rounded-full" />
-                                 <div className="flex flex-col">
-                                    <span className="text-sm font-bold">{item.user.name}</span>
-                                    <span className="text-xs text-gray-500">粉丝数: {(1000 - idx * 10).toLocaleString()}</span>
-                                 </div>
-                              </div>
-                              <FollowButton userId={item.user.id} />
-                           </div>
-                        ))}
-                        {lbView === 'ALL_REMIXES' && FULL_REMIXES_LIST.map((item, idx) => (
-                           <div key={idx} className="flex items-center gap-4 p-3 hover:bg-white/5 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-white/10">
-                              <div className={`text-lg font-bold w-6 text-center ${idx < 3 ? 'text-blue-400' : 'text-gray-600'}`}>{item.rank}</div>
-                              <img src={`https://picsum.photos/seed/${item.score + idx}/60/60`} className="w-12 h-12 rounded-lg bg-gray-800" />
-                              <div className="flex-1 min-w-0">
-                                 <div className="text-sm font-semibold truncate">Remix by {item.user.name}</div>
-                                 <div className="text-xs text-gray-400 mt-1 flex items-center gap-2"><span className="flex items-center gap-1"><Music size={10} /> 原声使用</span><span>•</span><span>{item.score}k 热度</span></div>
-                              </div>
-                           </div>
-                        ))}
-                     </div>
-                  </div>
                )}
             </>
          )}
 
          {/* ========================================================================= */}
-         {/* 个人主页面板*/}
+         {/* 3. 个人主页面板 (保持原逻辑，无需 API 改造) */}
          {/* ========================================================================= */}
          {activeTab === SidebarTab.PROFILE && (
             <>
-               {/* Header Area */}
                <div className="p-5 border-b border-white/10 flex items-center justify-between">
                   <h2 className="text-xl font-bold">我的主页</h2>
                   <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors">
@@ -320,15 +397,11 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                   </button>
                </div>
 
-               {/* 根据登录状态切换 */}
                <div className="flex-1 overflow-y-auto">
-
-                  {/* 未登录 */}
                   {!isLoggedIn ? (
                      <div className="flex flex-col items-center justify-center p-8 text-center h-full animate-in fade-in duration-500">
                         <div className="w-24 h-24 bg-gradient-to-tr from-white/5 to-white/10 rounded-full flex items-center justify-center mb-6 ring-1 ring-white/10 shadow-2xl relative">
-                           <User size={48} className="text-gray-400" />
-                           {/* 装饰性光点 */}
+                           <UserIcon size={48} className="text-gray-400" />
                            <div className="absolute top-0 right-0 w-6 h-6 bg-purple-500 rounded-full blur-lg opacity-50"></div>
                         </div>
 
@@ -341,22 +414,15 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                            onClick={handleLogin}
                            className="w-full group relative flex items-center justify-center gap-2 py-3.5 bg-white text-black rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-white/10 disabled:opacity-70 disabled:cursor-wait"
                         >
-                           {/* { <Loader2 size={18} className="animate-spin"/> } */}
                            <span>立即登录</span>
                         </button>
-
-                        <div className="mt-6 text-xs text-gray-500">
-                           继续即代表同意 <span className="underline cursor-pointer">服务条款</span>
-                        </div>
                      </div>
                   ) : (
-                     // 已登录 
                      <div className="p-5 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-
-                        {/* 基本信息卡片 */}
+                        {/* 基本信息 */}
                         <div className="flex items-center gap-4 pb-2">
                            <div className="relative">
-                              <img src={user?.avatar || 'https://picsum.photos/seed/default/200/200'} className="w-16 h-16 rounded-full border-2 border-white/10" />
+                              <img src={user?.avatar || 'https://picsum.photos/seed/default/200/200'} className="w-16 h-16 rounded-full border-2 border-white/10 object-cover" />
                               {user?.isMember && (
                                  <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full border border-black">
                                     PRO
@@ -369,7 +435,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                            </div>
                         </div>
 
-                        {/* 数据统计栏 */}
+                        {/* 数据统计 */}
                         <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 border border-white/5">
                            <div className="text-center cursor-pointer hover:opacity-80">
                               <div className="text-lg font-bold">{user?.stats?.works || 0}</div>
@@ -387,7 +453,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                            </div>
                         </div>
 
-                       {/* 算力余额 */}
+                       {/* 算力卡片 */}
                         <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl p-4 border border-purple-500/20 relative overflow-hidden group cursor-pointer">
                            <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
                               <Zap size={48} />
@@ -399,14 +465,13 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                               <div className="text-2xl font-bold mb-2">
                                  {user?.computingPower || 0} <span className="text-sm text-gray-400 font-normal">/ {user?.maxcomputingPower || 1000}</span>
                               </div>
-                              {/* 进度条 */}
                               <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
                                  <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 w-[85%]"></div>
                               </div>
                            </div>
                         </div>
 
-                        {/* 4. 功能菜单列表 */}
+                        {/* 菜单 */}
                         <div className="space-y-1 pt-2">
                            <MenuItem icon={<ImageIcon size={18} />} label="我的作品" hasArrow />
                            <MenuItem icon={<Heart size={18} />} label="收藏夹" hasArrow />
@@ -417,7 +482,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose }) => {
                   )}
                </div>
 
-               {/* Footer - 仅在登录时显示退出按钮 */}
                {isLoggedIn && (
                   <div className="p-4 border-t border-white/5">
                      <button

@@ -14,6 +14,7 @@ export interface User {
   lotteryCounts?: number;
   streakDays: number;
 
+  
 
 
   checkedIn: boolean;
