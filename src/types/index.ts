@@ -16,6 +16,7 @@ export interface User {
 
   
 
+  retroCounts: number;
 
   checkedIn: boolean;
 

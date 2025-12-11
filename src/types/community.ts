@@ -1,4 +1,5 @@
-// 1. 用户接口保持不变
+// src/types/community.ts
+
 export interface User {
   id: string;
   name: string;
@@ -7,50 +8,50 @@ export interface User {
   followers: number;
   isVerified?: boolean;
   isFollowed?: boolean; 
+  // 个人中心统计数据 (可选，视后端返回情况)
+  stats?: {
+    works: number;
+    followers: number;
+    likes: number;
+  };
+  computingPower?: number;
+  maxcomputingPower?: number;
+  isMember?: boolean; // 是否是 PRO 会员
+  username?: string; // 兼容部分接口可能返回 username 而不是 name
 }
 
-// 2. 评论接口优化
 export interface Comment {
   id: string;
   userId: string;
-  user: User;        // 评论发布者信息
-  text: string;      // 评论内容
-  likes: number;     // 点赞数
-  createdAt: string; // 建议后端返回 ISO 时间字符串，前端计算 "timeAgo"
-  replies?: Comment[]; // 嵌套回复
+  user: User;
+  text: string;
+  likes: number;
+  createdAt: string; // ISO String
+  replies?: Comment[];
 }
 
-// 3. 帖子接口 (重点修改)
 export interface Post {
-  // --- 数据库直接对应字段 ---
-  id: string;          // bigint -> string
-  userId: string;      // user_id
-  title?: string;      // title (nullable)
-  content?: string;    // content (nullable) -> 修改为可选，因为后端允许 NULL
-  imageUrl: string;    // image_url
-  likesCount: number;  // likes_count
-  commentsCount: number; // comments_count
-  
-  // --- UI 展示需要的额外字段 (通常不存在于 Post 表，而是 Mock 或以后加的) ---
-  sharesCount?: number; // 详情页还在用 shares，建议加回来作为可选字段，防止报错
-
-  // --- 联表查询/聚合字段 ---
-  author: User;        // 后端 API 组装时必须把用户信息带回来
-  createdAt: string;   // created_at (ISO string)
-  
-  // --- 详情页专用 ---
-  // 修改 any[] 为具体的 Comment[]，获得更好的代码提示
-  comments?: Comment[]; 
+  id: string;
+  userId: string;
+  title?: string;
+  content?: string;
+  imageUrl: string;
+  likesCount: number;
+  commentsCount: number;
+  sharesCount?: number; // 可选
+  author: User;
+  createdAt: string;
+  comments?: Comment[]; // 详情页使用
 }
 
-// 视图状态保持不变
+// 视图状态
 export const ViewState = {
   LANDING: 'LANDING',
   APP: 'APP'
 } as const;
 export type ViewState = typeof ViewState[keyof typeof ViewState];
 
-// 侧边栏状态保持不变
+// 侧边栏 Tab 枚举
 export const SidebarTab = {
   HOME: 'HOME',
   SEARCH: 'SEARCH',
@@ -59,14 +60,9 @@ export const SidebarTab = {
 } as const;
 export type SidebarTab = typeof SidebarTab[keyof typeof SidebarTab];
 
+// 排行榜单项
 export interface LeaderboardItem {
   rank: number;
-  score: number; // 热度、分数或粉丝增量
-  author: User;    // 关联的用户信息
-}
-
-// 新增：排行榜聚合数据 (用于 Summary 视图)
-export interface LeaderboardSummary {
-  creators: LeaderboardItem[];
-  remixes: LeaderboardItem[];
+  score: number; // 热度值/分数
+  author: User;
 }

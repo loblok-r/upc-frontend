@@ -1,25 +1,14 @@
+// src/pages/CommunityPage.tsx
 import React, { useState, useEffect } from 'react';
 import type { Post, SidebarTab, ViewState } from '../types/community';
-// 移除 Mock 数据和服务
-// import { MOCK_POSTS } from '../data/constants_community'; 
-// import MockPostService from '../services/MockPostService';
 import api from '../utils/api'; 
 import SidebarPanel from '../components/community/SidebarPanel';
 import DetailView from '../components/community/DetailView';
 import ImageView from '../components/community/ImageView';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Home, 
-  Search, 
-  Trophy, 
-  User, 
-  MessageSquare, 
-  Heart, 
-  Share2, 
-  Play, 
-  Sparkles, 
-  Loader2,
-  Image as ImageIcon 
+  Home, Search, Trophy, User, MessageSquare, Heart, 
+  Play, Sparkles, Loader2, Image as ImageIcon 
 } from 'lucide-react';
 
 // 定义 Feed Tab 类型
@@ -54,21 +43,19 @@ const CommunityPage = () => {
   
   // Feed流状态管理
   const [activeFeedTab, setActiveFeedTab] = useState<FeedTabType>('RECOMMEND'); 
-  // 2. 初始状态改为空数组，等待接口加载
   const [displayPosts, setDisplayPosts] = useState<Post[]>([]); 
   const [isFeedLoading, setIsFeedLoading] = useState(false); 
 
-  // 3. 监听 Tab 切换，请求真实后端接口
+  // 监听 Tab 切换，请求真实后端接口
   useEffect(() => {
     if (viewState === 'APP') {
       const fetchPosts = async () => {
         setIsFeedLoading(true);
-        // 清空当前列表，提供更好的 Loading 体验（可选）
+        // 如果想切换tab时清空列表显示loading骨架屏，可以取消下面注释
         // setDisplayPosts([]); 
 
         try {
           let endpoint = '';
-          // 根据 Tab 映射 API 路径
           switch (activeFeedTab) {
             case 'RECOMMEND':
               endpoint = '/community/posts/recommend';
@@ -83,9 +70,6 @@ const CommunityPage = () => {
               endpoint = '/community/posts/recommend';
           }
 
-          // 发送 GET 请求
-          // api.ts 的拦截器会自动处理 Token 并在成功时解包返回 data 字段
-          // 这里我们需要断言返回的数据类型为 Post[]
           const data = await api.get<any, Post[]>(endpoint);
           
           if (Array.isArray(data)) {
@@ -97,7 +81,7 @@ const CommunityPage = () => {
 
         } catch (error) {
           console.error("Failed to fetch posts:", error);
-          // 可以在这里添加 Toast 提示错误
+          // 这里可以添加 Toast 提示
         } finally {
           setIsFeedLoading(false);
         }
@@ -110,7 +94,7 @@ const CommunityPage = () => {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [viewingImage, setViewingImage] = useState<Post | null>(null);
 
-  // Landing Page Component (保持不变)
+  // Landing Page Component
   const LandingPage = () => (
     <div className="min-h-screen bg-[#05050a] flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/30 rounded-full blur-[120px]" />
@@ -145,7 +129,7 @@ const CommunityPage = () => {
   const MainApp = () => (
     <div className="flex h-screen w-full bg-[#05050a] text-white overflow-hidden relative">
       
-      {/* Navigation (保持不变) */}
+      {/* Navigation */}
       <nav className="w-16 md:w-20 bg-black/40 border-r border-white/5 flex flex-col items-center py-8 z-50 backdrop-blur-xl shrink-0">
         <div className="mb-10 text-2xl font-bold tracking-tighter">U.</div>
         <div className="flex flex-col gap-8 w-full">
@@ -159,7 +143,11 @@ const CommunityPage = () => {
       </nav>
 
       {/* Panels */}
-      <SidebarPanel activeTab={activeTab} onClose={() => setActiveTab('HOME')} />
+      <SidebarPanel 
+      activeTab={activeTab} 
+      onClose={() => setActiveTab('HOME')}
+      onSelectPost={(post) => setSelectedPost(post)} 
+        />
 
       {/* Main Feed Content Area */}
       <main className="flex-1 relative overflow-y-auto scroll-smooth">
@@ -224,23 +212,19 @@ const CommunityPage = () => {
                     {/* Content Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                       
-                      {/* Title */}
                       {post.title && (
                         <h3 className="text-base font-bold text-white mb-1 leading-snug drop-shadow-md line-clamp-1">
                           {post.title}
                         </h3>
                       )}
 
-                      {/* Content */}
                       {post.content && (
                         <p className={`text-sm text-gray-300 mb-3 drop-shadow-sm line-clamp-2 ${!post.title ? 'text-white font-medium' : ''}`}>
                           {post.content}
                         </p>
                       )}
 
-                      {/* Footer */}
                       <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-2">
-                         {/* Author Info */}
                          <div className="flex items-center gap-2">
                            <div className="w-6 h-6 rounded-full overflow-hidden border border-white/30 shrink-0">
                               <img src={post.author?.avatar || 'https://github.com/shadcn.png'} alt={post.author?.name} className="w-full h-full object-cover" />
@@ -250,7 +234,6 @@ const CommunityPage = () => {
                            </span>
                          </div>
 
-                         {/* Interactions */}
                          <div className="flex items-center gap-3 text-gray-300">
                             <button className="flex items-center gap-1 hover:text-red-400 transition-colors group/btn">
                                <Heart size={16} className="group-hover/btn:scale-110 transition-transform"/>
@@ -303,7 +286,6 @@ const CommunityPage = () => {
   return viewState === 'LANDING' ? <LandingPage /> : <MainApp />;
 };
 
-// 辅助组件保持不变...
 const TabButton = ({ label, isActive, onClick }: { label: string, isActive: boolean, onClick: () => void }) => (
   <button 
     onClick={onClick}

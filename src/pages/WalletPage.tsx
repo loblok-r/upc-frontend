@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { SIDEBAR_ITEMS } from '../data/constants';
 import { WalletTabId } from '../types';
-import { LogIn, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation ,useSearchParams} from 'react-router-dom';
 import { WalletContent } from '../components/WalletContent';
-import { MockWalletService } from '../services/mockWalletService';
 
 export const WalletPage: React.FC = () => {
 

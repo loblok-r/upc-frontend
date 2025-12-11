@@ -174,6 +174,9 @@ const buildFullUser = (rawUserData: any): User => {
     token: rawUserData.token,
     avatar: rawUserData.avatar || '',
 
+    // 补签次数
+    retroCounts: rawUserData.retroCounts || 0,
+
     // 数值字段
     exp: rawUserData.exp || 0,
     points: rawUserData.points || 0,

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import type { CheckInDay } from '../types/checkIn';
 import generateWeekData from '../components/chickIn/generateWeekData';
 import api from '../utils/api';
 import { format } from 'date-fns';
@@ -27,12 +26,22 @@ export const DailyCheckInPage: React.FC = () => {
     return generateWeekData(checkInSet, todayISO);
   }, [checkInHistory, todayISO]);
 
+
   // 获取签到历史
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await api.get('/checkin/history');
-        setCheckInHistory(res.data);
+        // api.get() 直接返回数据，不是完整的响应对象
+        const data = await api.get('/checkin/history');
+      
+
+        // data 是 {checkInHistory: [...]}
+        if (data && data.checkInHistory) {
+          setCheckInHistory(data.checkInHistory);
+        } else {
+          console.error('数据格式错误，期望 checkInHistory 字段:', data);
+          setCheckInHistory([]);
+        }
       } catch (err) {
         console.error('Failed to load check-in history', err);
       } finally {
@@ -50,7 +59,7 @@ export const DailyCheckInPage: React.FC = () => {
   const [rewardMessage, setRewardMessage] = useState({ points: 0, exp: 0, extra: '' });
 
   // 补签卡（模拟）
-  const [retroCards, setRetroCards] = useState(2);
+  const retroCards = user?.retroCounts || 0;
 
   // ====== 签到逻辑 ======
   const handleCheckIn = async () => {
@@ -65,10 +74,16 @@ export const DailyCheckInPage: React.FC = () => {
 
     try {
       await api.post('/checkin/checkin', {});
-
-      // 刷新签到历史 → 自动触发 weekData 更新
-      const res = await api.get('/checkin/history');
-      setCheckInHistory(res.data);
+       // api.get() 直接返回数据，不是完整的响应对象
+        const data = await api.get('/checkin/history');
+    
+        // data 是 {checkInHistory: [...]}
+        if (data && data.checkInHistory) {
+          setCheckInHistory(data.checkInHistory);
+        } else {
+          console.error('数据格式错误，期望 checkInHistory 字段:', data);
+          setCheckInHistory([]);
+        }
 
       // 刷新用户基础状态（checkedIn, streakDays）
       await refreshUser();
@@ -86,40 +101,81 @@ export const DailyCheckInPage: React.FC = () => {
     }
   };
 
-  // ====== 补签逻辑（前端模拟）======
-  // ⚠️ 实际项目应调用 /checkin/retro 接口并刷新 checkInHistory
+  // ====== 补签逻辑 ======
+  // ====== 补签逻辑 ======
   const handleRetroCheckIn = async (index: number) => {
-  if (retroCards <= 0) return;
+    // 使用 user 中的 retroCounts
+    if (!user || user.retroCounts <= 0) return;
 
-  const targetDay = weekData[index];
-  if (targetDay.status !== 'missed') return;
+    const targetDay = weekData[index];
+    if (targetDay.status !== 'missed') return;
 
-  // 构造要补签的日期（基于当前周和该格子的日期）
-  const retroDate = `${todayISO.substring(0, 8)}${String(targetDay.date).padStart(2, '0')}`;
+    // 提取日期数字
+    const extractDayFromDateStr = (dateStr: string | number): number => {
+      const str = String(dateStr);
+      // 从 "12.10" 中提取 "10"
+      const match = str.match(/\.(\d+)$/);
+      if (match) {
+        return parseInt(match[1]);
+      }
+      return parseInt(str);
+    };
 
-  try {
-    // 调用真实补签接口
-    await api.post('/checkin/retro', { date: retroDate });
+    const dayNumber = extractDayFromDateStr(targetDay.date);
 
-    // 刷新签到历史，触发 UI 自动更新
-    const res = await api.get('/checkin/history');
-    setCheckInHistory(res.data);
+    // 验证日期
+    if (isNaN(dayNumber) || dayNumber < 1 || dayNumber > 31) {
+      alert('日期格式错误');
+      return;
+    }
 
-    // 更新补签卡数量（也可从用户接口同步）
-    setRetroCards(prev => prev - 1);
+    // 构造补签日期
+    const yearMonth = todayISO.substring(0, 7);
+    const dayStr = dayNumber.toString().padStart(2, '0');
+    const retroDate = `${yearMonth}-${dayStr}`;
 
-    // 弹窗提示
-    setRewardMessage({
-      points: targetDay.points,
-      exp: targetDay.exp,
-      extra: '补签成功',
+    console.log('补签请求:', {
+      显示日期: targetDay.date,  // "12.10"
+      实际日期: dayNumber,        // 10
+      发送日期: retroDate         // "2025-12-10"
     });
-    setShowSuccessModal(true);
-  } catch (error) {
-    console.error('补签失败:', error);
-    alert('补签失败，请检查网络或补签卡数量');
-  }
-};
+
+    try {
+      // 1. 发送补签请求
+      const response = await api.post('/checkin/retro', { retroDate: retroDate });
+      console.log('补签成功响应:', response.data);
+
+      // 2. 刷新签到历史
+      // api.get() 直接返回数据，不是完整的响应对象
+        const data = await api.get('/checkin/history');
+      
+
+        // data 是 {checkInHistory: [...]}
+        if (data && data.checkInHistory) {
+          setCheckInHistory(data.checkInHistory);
+        } else {
+          console.error('数据格式错误，期望 checkInHistory 字段:', data);
+          setCheckInHistory([]);
+        }
+
+
+
+      // 3. 刷新用户数据（包含积分、连续签到天数、补签卡数量）
+      await refreshUser();
+
+      // 4. 显示成功弹窗
+      setRewardMessage({
+        points: targetDay.points,
+        exp: targetDay.exp,
+        extra: '补签成功',
+      });
+      setShowSuccessModal(true);
+
+    } catch (error: any) {
+      console.error('补签失败:', error);
+      alert(`补签失败: ${error.response?.data?.message || error.message}`);
+    }
+  };
 
   // 跳转兑换页
   const handleExchange = () => {
@@ -199,7 +255,7 @@ export const DailyCheckInPage: React.FC = () => {
 
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 border border-white/10 text-xs text-slate-400">
                   <RotateCcw size={12} />
-                  补签卡: <span className="text-white font-bold">{retroCards}</span> 张
+                  补签卡: <span className="text-white font-bold">{user?.retroCounts || 0}</span> 张
                 </div>
               </div>
             </div>
@@ -386,11 +442,10 @@ const TaskItem = ({ title, reward, status }: { title: string; reward: string; st
     </div>
     <button
       disabled={status === 'completed'}
-      className={`px-3 py-1.5 text-xs font-bold rounded-full border transition-all ${
-        status === 'completed'
-          ? 'bg-green-500/20 text-green-400 border-green-500/30'
-          : 'bg-white text-black hover:bg-slate-200 border-transparent'
-      }`}
+      className={`px-3 py-1.5 text-xs font-bold rounded-full border transition-all ${status === 'completed'
+        ? 'bg-green-500/20 text-green-400 border-green-500/30'
+        : 'bg-white text-black hover:bg-slate-200 border-transparent'
+        }`}
     >
       {status === 'completed' ? '已领取' : '去完成'}
     </button>
