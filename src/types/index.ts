@@ -141,6 +141,7 @@ export interface ProductCard {
   badge?: string;
 }
 
+
 export interface Winner {
   username: string;
   prize: string;
@@ -326,7 +327,6 @@ export interface PointTransaction {
   amount: number;
   source: string;
   date: string;
-  type: 'earn' | 'spend' | 'expire';
 }
 /**
  * wallet
@@ -404,3 +404,4 @@ export interface AiGenerationResponse {
   data?: any;
   result?: any;
 }
+
