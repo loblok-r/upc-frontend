@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import type { Post, SidebarTab, ViewState } from '../types/community';
-import { MOCK_POSTS } from '../data/constants_community'; 
-import MockPostService from '../services/MockPostService';
+// 移除 Mock 数据和服务
+// import { MOCK_POSTS } from '../data/constants_community'; 
+// import MockPostService from '../services/MockPostService';
+import api from '../utils/api'; 
 import SidebarPanel from '../components/community/SidebarPanel';
 import DetailView from '../components/community/DetailView';
 import ImageView from '../components/community/ImageView';
@@ -23,7 +25,7 @@ import {
 // 定义 Feed Tab 类型
 type FeedTabType = 'RECOMMEND' | 'FOLLOWING' | 'LATEST';
 
-// 辅助函数：格式化数字 (如 1200 -> 1.2k)
+// 辅助函数：格式化数字
 const formatNumber = (num: number) => {
   if (!num) return '0';
   if (num >= 1000) {
@@ -40,7 +42,6 @@ const CommunityPage = () => {
     navigate('/work');
   };
   
-  // 仅保留基础的路由状态判断
   const shouldOpenAppDirectly = location.state?.activeTab !== undefined;
 
   const [viewState, setViewState] = useState<ViewState>(
@@ -53,33 +54,63 @@ const CommunityPage = () => {
   
   // Feed流状态管理
   const [activeFeedTab, setActiveFeedTab] = useState<FeedTabType>('RECOMMEND'); 
-  const [displayPosts, setDisplayPosts] = useState<Post[]>(MOCK_POSTS); 
+  // 2. 初始状态改为空数组，等待接口加载
+  const [displayPosts, setDisplayPosts] = useState<Post[]>([]); 
   const [isFeedLoading, setIsFeedLoading] = useState(false); 
 
-  // 监听 Tab 切换，请求接口
+  // 3. 监听 Tab 切换，请求真实后端接口
   useEffect(() => {
     if (viewState === 'APP') {
-      const fetchData = async () => {
+      const fetchPosts = async () => {
         setIsFeedLoading(true);
+        // 清空当前列表，提供更好的 Loading 体验（可选）
+        // setDisplayPosts([]); 
+
         try {
-          // 调用模拟接口 (确保 Service 返回的数据已适配新的 Post 结构)
-          const data = await MockPostService.getPosts(activeFeedTab);
-          setDisplayPosts(data);
+          let endpoint = '';
+          // 根据 Tab 映射 API 路径
+          switch (activeFeedTab) {
+            case 'RECOMMEND':
+              endpoint = '/community/posts/recommend';
+              break;
+            case 'LATEST':
+              endpoint = '/community/posts/latest';
+              break;
+            case 'FOLLOWING':
+              endpoint = '/community/posts/following';
+              break;
+            default:
+              endpoint = '/community/posts/recommend';
+          }
+
+          // 发送 GET 请求
+          // api.ts 的拦截器会自动处理 Token 并在成功时解包返回 data 字段
+          // 这里我们需要断言返回的数据类型为 Post[]
+          const data = await api.get<any, Post[]>(endpoint);
+          
+          if (Array.isArray(data)) {
+            setDisplayPosts(data);
+          } else {
+            console.warn('API returned non-array data:', data);
+            setDisplayPosts([]);
+          }
+
         } catch (error) {
-          console.error("Failed to fetch posts", error);
+          console.error("Failed to fetch posts:", error);
+          // 可以在这里添加 Toast 提示错误
         } finally {
           setIsFeedLoading(false);
         }
       };
 
-      fetchData();
+      fetchPosts();
     }
   }, [activeFeedTab, viewState]); 
 
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [viewingImage, setViewingImage] = useState<Post | null>(null);
 
-  // Landing Page Component
+  // Landing Page Component (保持不变)
   const LandingPage = () => (
     <div className="min-h-screen bg-[#05050a] flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/30 rounded-full blur-[120px]" />
@@ -114,7 +145,7 @@ const CommunityPage = () => {
   const MainApp = () => (
     <div className="flex h-screen w-full bg-[#05050a] text-white overflow-hidden relative">
       
-      {/* Navigation */}
+      {/* Navigation (保持不变) */}
       <nav className="w-16 md:w-20 bg-black/40 border-r border-white/5 flex flex-col items-center py-8 z-50 backdrop-blur-xl shrink-0">
         <div className="mb-10 text-2xl font-bold tracking-tighter">U.</div>
         <div className="flex flex-col gap-8 w-full">
@@ -164,10 +195,10 @@ const CommunityPage = () => {
            </div>
         </div>
 
-        {/* Masonry Grid Feed - Modified for New Data Structure */}
+        {/* Masonry Grid Feed */}
         <div className="p-4 md:p-6 lg:p-8 pb-32">
           
-          {isFeedLoading ? (
+          {isFeedLoading && displayPosts.length === 0 ? (
              <div className="flex items-center justify-center h-64 w-full">
                 <Loader2 size={40} className="text-purple-500 animate-spin" />
              </div>
@@ -187,36 +218,35 @@ const CommunityPage = () => {
                         className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
                         loading="lazy"
                        />
-                       {/* Enhanced Gradient Overlay for Readability */}
                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-60 group-hover:opacity-85 transition-opacity duration-300" />
                     </div>
 
                     {/* Content Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                       
-                      {/* Title (Optional) */}
+                      {/* Title */}
                       {post.title && (
                         <h3 className="text-base font-bold text-white mb-1 leading-snug drop-shadow-md line-clamp-1">
                           {post.title}
                         </h3>
                       )}
 
-                      {/* Content / Description */}
+                      {/* Content */}
                       {post.content && (
                         <p className={`text-sm text-gray-300 mb-3 drop-shadow-sm line-clamp-2 ${!post.title ? 'text-white font-medium' : ''}`}>
                           {post.content}
                         </p>
                       )}
 
-                      {/* Footer: Author & Metrics */}
+                      {/* Footer */}
                       <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-2">
                          {/* Author Info */}
                          <div className="flex items-center gap-2">
                            <div className="w-6 h-6 rounded-full overflow-hidden border border-white/30 shrink-0">
-                              <img src={post.author?.avatar} alt={post.author?.name} className="w-full h-full object-cover" />
+                              <img src={post.author?.avatar || 'https://github.com/shadcn.png'} alt={post.author?.name} className="w-full h-full object-cover" />
                            </div>
                            <span className="text-xs text-gray-300 font-medium truncate max-w-[80px]">
-                             {post.author?.name}
+                             {post.author?.name || 'Unknown'}
                            </span>
                          </div>
 
@@ -245,7 +275,11 @@ const CommunityPage = () => {
           {!isFeedLoading && displayPosts.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4">
                  <ImageIcon size={48} className="opacity-20" />
-                 <p>暂无内容，去发布第一条作品吧</p>
+                 <p>
+                   {activeFeedTab === 'FOLLOWING' 
+                     ? '你还没有关注任何人，去“推荐”看看吧' 
+                     : '暂无内容，去发布第一条作品吧'}
+                 </p>
               </div>
           )}
         </div>
@@ -269,7 +303,7 @@ const CommunityPage = () => {
   return viewState === 'LANDING' ? <LandingPage /> : <MainApp />;
 };
 
-// 辅助组件：Tab 按钮
+// 辅助组件保持不变...
 const TabButton = ({ label, isActive, onClick }: { label: string, isActive: boolean, onClick: () => void }) => (
   <button 
     onClick={onClick}
@@ -283,7 +317,6 @@ const TabButton = ({ label, isActive, onClick }: { label: string, isActive: bool
   </button>
 );
 
-// 辅助组件：侧边栏按钮
 const SidebarBtn = ({ icon, isActive, onClick, label }: { icon: React.ReactNode, isActive: boolean, onClick: () => void, label: string }) => (
   <button onClick={onClick} className="relative group flex flex-col items-center gap-1">
     <div className={`p-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-white text-black' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}>
