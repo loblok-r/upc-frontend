@@ -1,8 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, Chat } from "@google/genai";
-import { MessageSquare, X, Send, User, Bot, Minus, Smile, Paperclip } from 'lucide-react';
+import { MessageSquare, X, Send,  Minus, Bot } from 'lucide-react';
 import type { ChatMessage } from '../types';
-import { AI_SYSTEM_INSTRUCTION } from '../data/constants';
+import api from '../utils/api'; // 引入封装好的API
+
+// 定义后端返回的接口类型
+interface ChatResponse {
+  reply: string; // AI回复的内容
+  references?: string[]; // (可选) AI参考了哪些文档
+}
 
 const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,36 +17,21 @@ const ChatWidget: React.FC = () => {
     {
       id: 'welcome',
       role: 'model',
-      text: '欢迎回来，如果您有任何问题，请告诉我们。',
+      text: '欢迎回来！我是Mitce智能助手。关于会员订阅、积分规则或功能使用，随时问我。',
       timestamp: new Date()
     }
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatRef = useRef<Chat | null>(null);
 
-
+  // 滚动到底部
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
-  
-  useEffect(() => {
-    if (!import.meta.env.VITE_API_KEY) {
-        console.warn("API_KEY not found in environment variables.");
-        return;
-    }
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
-    chatRef.current = ai.chats.create({
-      model: 'gemini-2.5-flash',
-      config: {
-        systemInstruction: AI_SYSTEM_INSTRUCTION,
-      }
-    });
-  }, []);
-
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
+    // 1. 构建用户消息
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -54,26 +44,27 @@ const ChatWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-      if (!chatRef.current) {
-         setTimeout(() => {
-            setMessages(prev => [...prev, {
-                id: Date.now().toString(),
-                role: 'model',
-                text: 'System: API Key missing or Chat not initialized. Please check configuration.',
-                timestamp: new Date()
-            }]);
-            setIsLoading(false);
-         }, 500);
-         return;
-      }
+      // 2. 发送请求给后端 API (这里假设后端路径为 /chat/completions)
+      // 注意：我们将历史消息的最后几条发给后端，以便保持对话上下文
+      const historyPayload = messages.slice(-5).map(m => ({
+        role: m.role === 'model' ? 'assistant' : 'user',
+        content: m.text
+      }));
 
-      const result = await chatRef.current.sendMessage({ message: userMsg.text });
-      const responseText = result.text;
+      // 使用项目中封装的 api，它会自动处理 Token 和拦截器
+      const response = await api.post<ChatResponse>('/chat/completions', {
+        message: userMsg.text,
+        history: historyPayload
+      });
+
+      // 3. 处理后端返回 (api.ts 的拦截器返回的是 data 部分)
+      // 假设后端返回结构是 { reply: "..." }
+      const responseText = (response as any).reply || (response as any).text || "抱歉，我没有理解您的意思。";
 
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        text: responseText || "Sorry, I couldn't generate a response.",
+        text: responseText,
         timestamp: new Date()
       };
 
@@ -83,7 +74,7 @@ const ChatWidget: React.FC = () => {
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'model',
-        text: "抱歉，我现在遇到了一些连接问题。请稍后再试。",
+        text: "网络连接异常，请稍后再试或联系人工客服。",
         timestamp: new Date()
       }]);
     } finally {
@@ -100,7 +91,6 @@ const ChatWidget: React.FC = () => {
 
   return (
     <>
- 
       <button
         onClick={() => setIsOpen(true)}
         className={`fixed bottom-6 right-6 z-50 p-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-transform duration-300 ${isOpen ? 'scale-0' : 'scale-100'}`}
@@ -115,10 +105,8 @@ const ChatWidget: React.FC = () => {
         {/* Header */}
         <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
            <div className="flex items-center space-x-3">
-             <button className="text-gray-500 hover:text-gray-700">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-             </button>
-             <div className="font-bold text-gray-700">...</div>
+             <div className="w-2 h-2 rounded-full bg-green-500"></div>
+             <div className="font-bold text-gray-700">Mitce 智能客服</div>
            </div>
            <div className="flex items-center space-x-3">
              <button className="text-gray-400 hover:text-gray-600">
@@ -130,15 +118,15 @@ const ChatWidget: React.FC = () => {
            </div>
         </div>
 
-        {/* System Alert/Notice */}
+        {/* System Alert/Notice - 保持原样，这对于减少AI压力很有用 */}
         <div className="bg-gray-100 p-4">
              <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-3">
                 <div className="bg-blue-500 p-1.5 rounded-full mt-1 shrink-0">
                     <MessageSquare className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-xs text-gray-600">
-                    <p className="mb-1">客服暂不在线，工作时间9:00-18:00,您当前可以附带问题截图，点击此链接说明您的问题</p>
-                    <a href="#" className="text-blue-600 hover:underline break-all">https://upc.net/submitticket?step=2&deptid=1</a>
+                    <p className="mb-1">客服工作时间9:00-18:00。如遇复杂问题，请点击下方链接提交工单。</p>
+                    <a href="https://upc.net/submitticket?step=2&deptid=1" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all">提交工单/Submit Ticket</a>
                 </div>
              </div>
         </div>
@@ -149,20 +137,14 @@ const ChatWidget: React.FC = () => {
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                {msg.role === 'model' && (
                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 shrink-0">
-                    <User className="w-4 h-4 text-white" />
+                    <Bot className="w-5 h-5 text-white" />
                  </div>
                )}
-               <div className={`max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed ${
+               <div className={`max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed ${
                  msg.role === 'user' 
-                   ? 'bg-white text-gray-800 rounded-tr-sm shadow-sm' 
-                   : 'bg-white text-gray-800 rounded-tl-sm shadow-sm'
+                   ? 'bg-white text-gray-800 rounded-tr-sm shadow-sm border border-gray-100' 
+                   : 'bg-white text-gray-800 rounded-tl-sm shadow-sm border border-gray-100'
                }`}>
-                  {msg.role === 'user' && (
-                      <div className="text-xs text-gray-400 mb-1">
-                          <div>名字: wr</div>
-                          <div>邮箱: abc2865790228@gmail.com</div>
-                      </div>
-                  )}
                   {msg.text}
                </div>
             </div>
@@ -170,7 +152,7 @@ const ChatWidget: React.FC = () => {
           {isLoading && (
             <div className="flex justify-start">
                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2 shrink-0">
-                    <User className="w-4 h-4 text-white" />
+                    <Bot className="w-5 h-5 text-white" />
                </div>
                <div className="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center space-x-1">
                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
@@ -185,21 +167,15 @@ const ChatWidget: React.FC = () => {
         {/* Input Area */}
         <div className="bg-white p-4 border-t border-gray-200">
            <div className="relative flex items-center bg-gray-50 rounded-full px-4 py-2 border border-gray-200 focus-within:border-blue-400 transition-colors">
-              <button className="mr-2 text-gray-400 hover:text-gray-600">
-                 <div className="text-xl leading-none">+</div>
-              </button>
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="输入一条消息......"
+                placeholder="询问关于会员、积分或功能的问题..."
                 className="flex-1 bg-transparent outline-none text-sm text-gray-700 placeholder-gray-400"
               />
               <div className="flex items-center space-x-2 ml-2">
-                <button className="text-gray-400 hover:text-gray-600">
-                    <Smile className="w-5 h-5" />
-                </button>
                 <button 
                   onClick={handleSendMessage}
                   disabled={isLoading || !input.trim()}
@@ -208,11 +184,6 @@ const ChatWidget: React.FC = () => {
                     <Send className="w-4 h-4" />
                 </button>
               </div>
-           </div>
-           <div className="text-center mt-2">
-              <a href="https://www.livechat.com" target="_blank" rel="noopener noreferrer" className="text-[10px] text-gray-400 hover:text-gray-500 flex items-center justify-center">
-                 Powered by <span className="font-bold text-orange-500 mx-1">LiveChat</span>
-              </a>
            </div>
         </div>
       </div>

@@ -15,6 +15,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({
 }) => {
   // ✅ 状态管理：控制哪个菜单被打开
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  // ✅ 新增：搜索状态
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const formatDate = (timestamp: number | string) => {
     const date = new Date(timestamp);
@@ -34,6 +36,15 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     return () => window.removeEventListener('click', handleClickOutside);
   }, []);
 
+  // ✅ 新增：过滤函数
+  const filteredItems = historyItems.filter(item => {
+    if (!searchQuery.trim()) return true;
+    
+    // 搜索第一条消息的内容
+    const firstMessage = item.messages?.[0]?.content || '';
+    return firstMessage.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   return (
     <div className="animate-fade-in px-8 py-8 w-full h-full">
       
@@ -51,23 +62,36 @@ const HistoryView: React.FC<HistoryViewProps> = ({
         </div>
       </div>
 
-      {/* 搜索栏 */}
+      {/* 搜索栏 - 已修改：添加搜索功能和清除按钮 */}
       <div className="relative mb-10">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <Search className="h-5 w-5 text-gray-500" />
         </div>
         <input
           type="text"
-          className="block w-full pl-11 pr-4 py-3 bg-[#131522] border border-white/5 rounded-xl text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="block w-full pl-11 pr-12 py-3 bg-[#131522] border border-white/5 rounded-xl text-gray-300 placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
           placeholder="搜索历史记录..."
         />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+            aria-label="清除搜索"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className="space-y-4 pb-20">
-        {historyItems.map((item) => (
+        {/* ✅ 修改：使用 filteredItems 代替 historyItems */}
+        {filteredItems.map((item) => (
           <div 
             key={item.id} 
-            // ✅ 点击整个卡片恢复对话
             onClick={() => onSelectHistory(item)}
             className="group bg-[#151725] border border-white/5 hover:border-indigo-500/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-900/10 cursor-pointer relative"
           >
@@ -136,16 +160,38 @@ const HistoryView: React.FC<HistoryViewProps> = ({
           </div>
         ))}
 
-        {historyItems.length === 0 && (
+        {/* ✅ 修改：优化空状态显示 */}
+        {filteredItems.length === 0 && (
             <div className="h-[40vh] flex flex-col items-center justify-center text-center">
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-600">
-                    <MessageSquare size={24} />
-                </div>
-                <p className="text-gray-500">暂无历史记录</p>
+                {searchQuery ? (
+                  <>
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-600">
+                        <Search size={24} />
+                    </div>
+                    <p className="text-gray-500">未找到匹配的记录</p>
+                    <p className="text-gray-600 text-sm mt-2">尝试使用不同的关键词搜索</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-600">
+                        <MessageSquare size={24} />
+                    </div>
+                    <p className="text-gray-500">暂无历史记录</p>
+                  </>
+                )}
             </div>
         )}
         
-        {historyItems.length > 0 && (
+        {/* ✅ 修改：添加搜索结果统计信息 */}
+        {filteredItems.length > 0 && filteredItems.length < historyItems.length && (
+          <div className="text-center mt-8">
+            <p className="text-gray-600 text-sm">
+              找到 {filteredItems.length} 条记录（共 {historyItems.length} 条）
+            </p>
+          </div>
+        )}
+        
+        {filteredItems.length > 0 && filteredItems.length === historyItems.length && (
           <div className="text-center mt-8">
               <p className="text-gray-600 text-sm">已加载全部记录</p>
           </div>
