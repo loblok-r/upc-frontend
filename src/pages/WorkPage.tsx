@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Sidebar from '../components/workPage/Sidebar';
 import MainView from '../components/workPage/MainView';
 import { Modal } from '../components/pay/Modal';
@@ -11,30 +11,33 @@ import { DocumentView } from '../components/workPage/DocumentView';
 import { UserMenu } from '../components/workPage/UserMenu';
 import { Sender, AppMode } from '../types';
 import type { HistoryItem, Message } from '../types';
-
-
 import { useAuth } from '../contexts/AuthContext';
-
 import api from '../utils/api';
 
-
+const PAGE_SIZE = 10; // 每页加载数量
 
 const WorkPage: React.FC = () => {
   const navigate = useNavigate();
-
   const location = useLocation();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
+  // 视图状态
   const [viewState, setViewState] = useState<'landing' | 'chat' | 'document' | 'history'>('landing');
+  
+  // 聊天相关状态
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>(AppMode.TEXT_CHAT);
 
+  // 历史记录相关状态 (分页)
   const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -46,30 +49,22 @@ const WorkPage: React.FC = () => {
     isLoading
   } = useAuth();
 
-
-  // LoginForm 登录成功后会执行: navigate(from, { state: { activeTab: returnTab } });
+  // 初始化：处理路由跳转带来的状态
   useEffect(() => {
     if (location.state && location.state.activeTab) {
       setViewState(location.state.activeTab);
-
-      // 如果是为了防止刷新后仍然读取旧状态，可以在这里清除 location.state
-      // 但 React Router 默认行为通常是可以接受的
-      window.history.replaceState({}, document.title)
+      window.history.replaceState({}, document.title);
     }
   }, [location]);
 
-  // 更新跳转逻辑，传递当前路径和视图状态
   const handleLoginClick = () => {
     if (!isLoggedIn) {
-      // 传递当前路径 (from) 和当前视图 (returnTab)
       navigate('/login', {
         state: {
-          from: location.pathname, // 例如 "/" 或 "/work"
-          returnTab: viewState     // 例如 "chat", "history", "landing"
+          from: location.pathname,
+          returnTab: viewState
         }
       });
-    } else {
-      console.log('用户已登录，显示下拉菜单');
     }
   };
 
@@ -97,51 +92,73 @@ const WorkPage: React.FC = () => {
     scrollToBottom();
   }, [messages, isGenerating]);
 
+  // ==========================================
+  // 核心逻辑：分页获取历史记录
+  // ==========================================
+  const fetchHistory = useCallback(async (isRefresh = false) => {
+    if (!isLoggedIn) return;
+    // 如果不是刷新且没有更多数据，或者是正在加载中，则不执行
+    if (!isRefresh && (!hasMore || isHistoryLoading)) return;
+
+    setIsHistoryLoading(true);
+    
+    try {
+      const currentPage = isRefresh ? 1 : page;
+      
+      // 调用后端接口，传递分页参数
+      const response: any = await api.get('/history/list', {
+        params: {
+          page: currentPage,
+          pageSize: PAGE_SIZE
+        }
+      });
+
+      // 兼容后端返回结构：可能是数组，也可能是 { list: [], total: 100 }
+      const newItems = Array.isArray(response) ? response : (response.list || []);
+
+      if (isRefresh) {
+        //如果是刷新，覆盖列表
+        setHistoryList(newItems);
+        setPage(2); // 下次加载第2页
+        setHasMore(newItems.length >= PAGE_SIZE);
+      } else {
+        // 如果是加载更多，追加列表 (通过Map去重，防止并发重复)
+        setHistoryList(prev => {
+          const combined = [...prev, ...newItems];
+          const uniqueMap = new Map(combined.map(item => [item.id, item]));
+          return Array.from(uniqueMap.values());
+        });
+        setPage(prev => prev + 1);
+        setHasMore(newItems.length >= PAGE_SIZE);
+      }
+
+    } catch (error) {
+      console.error('获取历史记录失败:', error);
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  }, [isLoggedIn, page, hasMore, isHistoryLoading]);
+
+  // 监听视图切换，进入 history 时加载第一页
+  useEffect(() => {
+    if (viewState === 'history' && isLoggedIn && historyList.length === 0) {
+      fetchHistory(true);
+    }
+  }, [viewState, isLoggedIn]);
+
   const saveCurrentChatToHistory = () => {
     if (messages.length === 0) return;
-
-    const currentMessages = [...messages];
-    const firstUserMsg = currentMessages.find(m => m.sender === Sender.USER);
-    const title = firstUserMsg
-      ? (firstUserMsg.content.slice(0, 20) + (firstUserMsg.content.length > 20 ? '...' : ''))
-      : '新的对话';
-
-    if (currentSessionId) {
-      setHistoryList(prevList => {
-        const otherItems = prevList.filter(item => item.id !== currentSessionId);
-        const updatedItem: HistoryItem = {
-          id: currentSessionId,
-          title: title,
-          timestamp: Date.now().toString(),
-          messages: currentMessages,
-          type: currentMode === AppMode.AI_DRAWING ? 'IMAGE' : 'TEXT',
-        };
-        return [updatedItem, ...otherItems];
-      });
-    } else {
-      const newId = Date.now().toString();
-      const newItem: HistoryItem = {
-        id: newId,
-        title: title,
-        timestamp: Date.now().toString(),
-        messages: currentMessages,
-        type: currentMode === AppMode.AI_DRAWING ? 'IMAGE' : 'TEXT',
-      };
-      setHistoryList(prev => [newItem, ...prev]);
-      setCurrentSessionId(newId);
-    }
+    // 这里如果后端已经实时保存，则不需要前端手动添加
+    // 如果需要前端即时反馈，可以保留原有逻辑，但要注意和分页数据的合并
   };
 
   const handleSendMessage = async (prompt: string, base64?: string) => {
-
-    // 1. 检查权限
     const permission = checkGenerationPermission(currentMode, {
-      requireHD: false, // 根据实际需求调整
-      estimatedCost: undefined // 可以计算或传值
+      requireHD: false,
+      estimatedCost: undefined
     });
 
     if (!permission.allowed) {
-      // 显示权限不足的提示
       alert(permission.reason || "您没有权限进行此操作");
       return;
     }
@@ -183,7 +200,8 @@ const WorkPage: React.FC = () => {
       const response = await api.post('/ai/generate', {
         mode: currentMode,
         prompt,
-        referenceImage: base64
+        referenceImage: base64,
+        sessionId: currentSessionId // 传递 sessionId 保持上下文
       });
 
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
@@ -198,24 +216,24 @@ const WorkPage: React.FC = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-      await refreshResources(); // 刷新算力等状态
+      
+      // 更新当前会话ID
+      if (response?.sessionId) {
+        setCurrentSessionId(response.sessionId);
+      }
+      
+      await refreshResources();
 
     } catch (error: any) {
-      // 关键：不再手动回滚算力！
-      await refreshResources(); // 直接拉取最新状态，覆盖本地可能的错误乐观更新
-
+      await refreshResources();
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
 
-      // 可选：根据错误类型提示不同信息
       let errorMsg = "抱歉，生成失败，请重试。";
-    
-      console.log('错误响应:', error);
       if (error.response?.data?.code === 1008) {
         errorMsg = "算力不足，请获取后重试。";
       } else if (error.response?.data?.code === 1009) {
         errorMsg = "今日使用次数已达上限。";
       }
-
 
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
@@ -258,25 +276,69 @@ const WorkPage: React.FC = () => {
       setViewState('document');
     } else if (viewId === 'history') {
       setViewState('history');
+      // 切换回来时，如果列表为空则加载
+      if (isLoggedIn && historyList.length === 0) {
+        fetchHistory(true);
+      }
     } else if (viewId === 'chat') {
       setViewState('chat');
+    } else if (viewId === 'new') {
+        setMessages([]);
+        setCurrentSessionId(null);
+        setViewState('landing');
     }
   };
 
-  const handleDeleteHistory = (id: string) => {
-    setHistoryList(prev => prev.filter(item => item.id !== id));
-    if (currentSessionId === id) {
-      setCurrentSessionId(null);
-      setMessages([]);
+  const handleDeleteHistory = async (id: string) => {
+    if (!confirm('确定删除此记录吗？')) return;
+    
+    try {
+      await api.delete(`/history/${id}`);
+      // 乐观更新 UI
+      setHistoryList(prev => prev.filter(item => item.id !== id));
+      if (currentSessionId === id) {
+        setCurrentSessionId(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('删除失败', error);
+      alert('删除失败，请重试');
     }
   };
 
-  const handleRestoreHistory = (item: HistoryItem) => {
-    setMessages(item.messages);
+ const handleRestoreHistory = (item: HistoryItem) => {
+    // 数据清洗逻辑升级
+    const normalizedMessages: Message[] = (item.messages || []).map((msg: any) => {
+      // 先获取后端原始类型的大写形式
+      const rawType = msg.type ? msg.type.toUpperCase() : 'TEXT';
+      
+      // 智能判断前端类型
+      // 规则：如果 imageUrl 存在，那就是 'image'；
+      //       否则，不管后端说是 IMAGE 还是 TEXT，只要没图，前端就当 'text' 处理（显示 content）
+      let frontendType = 'text';
+      
+      if (msg.imageUrl) {
+        frontendType = 'image';
+      } else if (rawType === 'IMAGE' && !msg.imageUrl) {
+        // 特殊情况：这是绘图模式下的用户提示词，后端标为 IMAGE 但实际是文本
+        frontendType = 'text';
+      } else {
+        frontendType = rawType.toLowerCase();
+      }
+
+      return {
+        ...msg,
+        type: frontendType, 
+        imageUrl: msg.imageUrl || undefined
+      };
+    });
+
+    setMessages(normalizedMessages);
     setCurrentSessionId(item.id);
     setViewState('chat');
 
-    if (item.type === 'IMAGE') {
+    // 恢复当前的模式状态（这部分保持不变）
+    if (item.type && item.type.toUpperCase() === 'IMAGE') {
       setCurrentMode(AppMode.AI_DRAWING);
     } else {
       setCurrentMode(AppMode.TEXT_CHAT);
@@ -290,7 +352,6 @@ const WorkPage: React.FC = () => {
       </div>
     );
   }
-
 
   return (
     <div className="flex h-screen w-full bg-[#0f0c29] text-white font-sans overflow-hidden">
@@ -321,48 +382,7 @@ const WorkPage: React.FC = () => {
             </div>
           )}
 
-
-
           <div className="flex items-center gap-6 pr-4">
-
-            {/* 显示用户资源状态 */}
-            {/* {isLoggedIn && userResources && (
-              <div className="hidden md:flex items-center gap-3 text-sm">
-                {/* 算力显示 */}
-            {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
-                  <i className="fa-solid fa-bolt text-yellow-400"></i>
-                  <span className="text-white font-medium">{userResources.computingPower}</span>
-                  <span className="text-gray-400">/</span>
-                  <span className="text-gray-400">{userResources.maxComputingPower}</span>
-                </div> */}
-
-            {/* 当日使用情况 - 根据会员状态显示不同 */}
-            {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
-                  <i className="fa-solid fa-message text-blue-400"></i>
-                  <span className="text-white font-medium">{userResources.dailyUsage.textChat}</span>
-                  {!user?.isMember ? (
-                    // 非会员：显示日限
-                    <span className="text-gray-400 text-xs">/20</span>
-                  ) : (
-                    // 会员：显示无限或隐藏限制
-                    <span className="text-green-400 text-xs">/~</span>
-                  )}
-                </div> */}
-
-            {/* AI绘图使用情况 - 根据会员状态显示不同 */}
-            {/* <div className="flex items-center gap-1 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
-                  <i className="fa-solid fa-image text-green-400"></i>
-                  <span className="text-white font-medium">{userResources.dailyUsage.aiDrawing}</span>
-                  {!user?.isMember ? (
-                    // 非会员：显示日限
-                    <span className="text-gray-400 text-xs">/5</span>
-                  ) : (
-                    // 会员：显示无限或隐藏限制
-                    <span className="text-green-400 text-xs">/~</span>
-                  )}
-                </div>
-              </div> */}
-            {/* )} */}
             <button className="hidden md:flex items-center gap-2 text-gray-400 hover:text-white text-sm transition-colors">
               <i className="fa-solid fa-globe"></i> 中文
             </button>
@@ -377,10 +397,7 @@ const WorkPage: React.FC = () => {
             ) : (
               <UserMenu onLogout={handleLogout} user={user!} />
             )}
-
-
           </div>
-
         </header>
 
         <div className="flex-1 overflow-hidden relative">
@@ -399,6 +416,9 @@ const WorkPage: React.FC = () => {
             <div className="h-full overflow-y-auto">
               <HistoryView
                 historyItems={historyList}
+                isLoading={isHistoryLoading} // 传递加载状态
+                hasMore={hasMore} // 传递是否还有更多
+                onLoadMore={() => fetchHistory(false)} // 传递加载下一页的回调
                 onSelectHistory={handleRestoreHistory}
                 onDeleteHistory={handleDeleteHistory}
               />

@@ -269,7 +269,7 @@ export interface HistoryItem {
   type: 'IMAGE' | 'TEXT' | 'VIDEO';
   timestamp: string;
   thumbnail?: string; 
-  messages: Message[]; // 保存完整的对话记录以便后续恢复
+  messages: Message[]; 
 }
 
 export interface DocumentItem {

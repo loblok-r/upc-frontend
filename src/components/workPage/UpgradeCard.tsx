@@ -110,7 +110,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({
                   </span>
                 </div>
                 <div className="text-xs text-gray-500 pl-5">
-                  保存 3 天
+                  保存 7 天
                 </div>
               </li>
             </ul>
