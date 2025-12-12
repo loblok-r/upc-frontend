@@ -98,9 +98,6 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
         }))
         : [];
 
-      console.log('Formatted data length:', formattedData.length);
-      console.log('Formatted data:', formattedData);
-
       setData(formattedData);
     } catch (err: any) {
       console.error("Failed to fetch points from backend", err);
@@ -154,23 +151,24 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
     }
   };
 
-  // 获取优惠券数据（带分页）
+  // 获取优惠券数据
   const fetchCouponsFromBackend = async (params: PaginationParams) => {
     try {
-      const response = await api.get('/coupons', { params });
+      const response = await api.get('/coupons/list', { params });
       const { data: couponsData, total, page, pageSize, totalPages } = response;
 
-      setTotal(total || couponsData.length);
-      setTotalPages(totalPages || Math.ceil((total || couponsData.length) / pageSize));
+      setTotal(total);
+      setTotalPages(totalPages);
 
-      const formattedData: Coupon[] = couponsData.map((item: any) => ({
-        id: item.id,
-        title: item.name || item.title,
-        type: item.type || 'discount',
-        discount: item.value || item.discount,
-        expiry: item.expiryDate || item.validUntil,
-        status: item.status || 'active',
-      }));
+       const formattedData = Array.isArray(couponsData)
+        ? couponsData.map((item: any) => ({
+          id: item.id?.toString() || `tx-${Date.now()}-${Math.random()}`,
+          title: item.name || item.title,
+          discount: item.value || item.discount,
+          expiry: item.expiryDate || item.validUntil,
+          status: item.status || 'active',
+        }))
+        : [];
       setData(formattedData);
     } catch (err) {
       console.error("Failed to fetch coupons", err);
@@ -189,7 +187,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   // 获取实物订单数据（带分页）
   const fetchOrdersFromBackend = async (params: PaginationParams) => {
     try {
-      const response = await api.get('/orders', { params });
+      // const response = await api.get('/orders', { params });
       const { data: ordersData, total, page, pageSize, totalPages } = response;
 
       setTotal(total || ordersData.length);
@@ -220,7 +218,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   // 获取权益数据（带分页）
   const fetchBenefitsFromBackend = async (params: PaginationParams) => {
     try {
-      const response = await api.get('/benefits', { params });
+      // const response = await api.get('/benefits', { params });
       const { data: benefitsData, total, page, pageSize, totalPages } = response;
 
       setTotal(total || benefitsData.length);

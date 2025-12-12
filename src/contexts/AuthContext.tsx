@@ -422,17 +422,13 @@ useEffect(() => {
     }
   };
 
-  // 刷新资源状态（从后端）
-  // 刷新资源状态（从后端）
 const refreshResources = async () => {
   if (!isLoggedIn) return;
   
   try {
-    // 添加类型断言
     const resourcesData = await api.get('/user/resources') as ApiUserResources;
     
     if (resourcesData) {
-      // 构建完整的资源对象
       const updatedResources: UserResources = {
         dailyUsage: resourcesData.dailyUsage || {
           textChat: 0,
@@ -445,19 +441,14 @@ const refreshResources = async () => {
       
       setUserResources(updatedResources);
       localStorage.setItem('user_resources', JSON.stringify(updatedResources));
-      
-      // 同时更新 user 对象的算力
-      if (user && resourcesData.computingPower !== undefined) {
-        setUser({
-          ...user,
-          computingPower: resourcesData.computingPower
-        });
-      }
+
+      // ✅ 删除下面这段！不要手动更新 user.computingPower
+      // if (user && resourcesData.computingPower !== undefined) {
+      //   setUser({ ...user, computingPower: resourcesData.computingPower });
+      // }
     }
   } catch (error) {
     console.error('刷新资源状态失败:', error);
-    // 如果后端没有这个接口，可以优雅降级
-    console.log('使用本地资源状态');
   }
 };
 

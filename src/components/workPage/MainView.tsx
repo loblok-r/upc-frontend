@@ -76,7 +76,6 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
       alert(permission.reason);
       // 如果是算力不足，可以跳转到充值页面
       if (permission.insufficientComputingPower) {
-        // 可以在这里打开充值模态框
         console.log("需要充值算力");
       }
       return;

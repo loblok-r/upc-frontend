@@ -10,7 +10,7 @@ interface Product {
     id: string;
     name: string;
     description?: string;
-    category: string; // virtual/physical/service
+    category: string; // virtual/physical/voucher
     pointsRequired: number;
     originalPrice?: number;
     stock: number;
@@ -18,7 +18,6 @@ interface Product {
     tag?: string;
     imageUrl: string;
     status: string; // active/inactive/sold_out
-    isVirtual: boolean;
     sortOrder: number;
     createdAt: string;
 }
@@ -97,6 +96,20 @@ const formatDate = (date: Date): string => {
     return `${month}月${day}日`;
 };
 
+
+const getCategoryLabel = (category: string): string => {
+    switch (category) {
+        case 'physical':
+            return '实物商品';
+        case 'virtual':
+            return '虚拟权益';
+        case 'voucher':
+            return '道具';
+        default:
+            return '未知类型';
+    }
+};
+
 const Mall: React.FC = () => {
     const { user, isLoggedIn, refreshUser } = useAuth();
     const navigate = useNavigate();
@@ -146,8 +159,6 @@ const Mall: React.FC = () => {
                 }
             }) as unknown as any;
 
-            // console.log("API Response structure:", response);
-            // console.log("Response keys:", Object.keys(response));
             // 根据实际结构提取数据
             let productsList = [];
 
@@ -213,11 +224,7 @@ const Mall: React.FC = () => {
                 }
             }
 
-            const response = await api.get('/mall/flash-sales', { params });
-
-            console.log("flash-sales Response structure:", response);
-            console.log("Response list:", response.list);
-            console.log("Response data:", response.data);
+            const response = await api.get('/mall/flash/list', { params });
 
             let flashSalesData: FlashSaleItem[] = [];
 
@@ -242,7 +249,6 @@ const Mall: React.FC = () => {
                 }));
             }
 
-            console.log("处理后的秒杀数据:", flashSalesData);
             setCurrentFlashList(flashSalesData);
 
             // 生成可选的日期列表
@@ -274,7 +280,6 @@ const Mall: React.FC = () => {
             // 直接获取UserPointsResponse
             const response = await api.get<UserPointsResponse>('/mall/user/points');
 
-            console.log("point Response structure:", response);
             const data = response as unknown as UserPointsResponse;
             setUserPoints(data);
 
@@ -386,7 +391,6 @@ const Mall: React.FC = () => {
                 quantity: 1 // 默认抢购1件
             };
 
-            console.log('发送秒杀请求:', requestData);
 
             // 6. 发送请求
             const response = await api.post<GrabFlashResponse>(
@@ -513,38 +517,38 @@ const Mall: React.FC = () => {
     };
 
     // 在秒杀商品渲染中的按钮点击处理
-   const onGrabClick = async (item: FlashSaleItem) => {
-    // 检查登录
-    if (!requireLogin('参与秒杀')) return;
-    
-    // 获取当前状态
-    const currentStatus = checkFlashSaleStatus(item);
-    
-    // 状态检查
-    if (currentStatus !== 'active') {
-        alert(`活动${currentStatus === 'upcoming' ? '尚未开始' : '已结束'}`);
-        return;
-    }
-    
-    if (item.remainingStock <= 0) {
-        alert('商品已抢光');
-        return;
-    }
-    
-    // 积分检查
-    if (userPoints && userPoints.balance < item.salePrice) {
-        alert(`积分不足，需要${item.salePrice}积分，当前只有${userPoints.balance}积分`);
-        return;
-    }
-    
-    // 确认弹窗
-    if (!confirm(`确定要抢购【${item.productName}】吗？\n需要消耗 ${item.salePrice} 积分`)) {
-        return;
-    }
-    
-    // 执行抢购逻辑
-    await handleGrabClick(item);
-};
+    const onGrabClick = async (item: FlashSaleItem) => {
+        // 检查登录
+        if (!requireLogin('参与秒杀')) return;
+
+        // 获取当前状态
+        const currentStatus = checkFlashSaleStatus(item);
+
+        // 状态检查
+        if (currentStatus !== 'active') {
+            alert(`活动${currentStatus === 'upcoming' ? '尚未开始' : '已结束'}`);
+            return;
+        }
+
+        if (item.remainingStock <= 0) {
+            alert('商品已抢光');
+            return;
+        }
+
+        // 积分检查
+        if (userPoints && userPoints.balance < item.salePrice) {
+            alert(`积分不足，需要${item.salePrice}积分，当前只有${userPoints.balance}积分`);
+            return;
+        }
+
+        // 确认弹窗
+        if (!confirm(`确定要抢购【${item.productName}】吗？\n需要消耗 ${item.salePrice} 积分`)) {
+            return;
+        }
+
+        // 执行抢购逻辑
+        await handleGrabClick(item);
+    };
 
 
 
@@ -607,6 +611,13 @@ const Mall: React.FC = () => {
             return;
         }
 
+
+        const confirmMsg = `确定要兑换【${product.name}】吗？\n需要消耗 ${product.pointsRequired} 积分`;
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+
         setLoadingIds(prev => ({ ...prev, [product.id]: true }));
 
         try {
@@ -615,46 +626,57 @@ const Mall: React.FC = () => {
                 quantity: 1
             };
 
-            // 如果是实物商品，需要获取收货信息
-            if (!product.isVirtual) {
-                const name = prompt('请输入收货人姓名：');
-                const phone = prompt('请输入收货人电话：');
-                const address = prompt('请输入收货地址：');
 
-                if (!name || !phone || !address) {
-                    alert('请填写完整的收货信息');
-                    return;
-                }
-
-                request.shippingInfo = { name, phone, address };
-            }
-
-            // 直接获取ExchangeResponse，不需要处理Result包装
             const response = await api.post<ExchangeResponse>('/mall/exchange', request);
             const data = response as unknown as ExchangeResponse;
 
-            if (data.success) {
-                alert(`${product.name}: ${data.message}`);
-
-                // 重新加载数据
-                await Promise.all([
-                    loadProducts(),
-                    loadUserPoints()
-                ]);
-
-                // 如果是虚拟商品且有卡密，显示卡密
-                if (product.isVirtual && data.virtualContent) {
-                    alert(`卡密：${data.virtualContent}\n请妥善保存！`);
-                }
+            alert(`${product.name}: ${data.message || '兑换成功！'}`);
+            // 兑换成功
+            if (product.category === 'virtual' && data.virtualContent) {
+                alert('权益已经发放到账户');
+            } else if (product.category === 'physical') {
+                //实物商品：显示成功消息
+                alert('请留意发货通知');
+            } else if (product.category === 'voucher') {
+                alert('道具已经发放到账户');
             } else {
-                alert(`${product.name}: ${data.message}`);
+                alert('未知错误，请稍后重试');
             }
-
+            await refreshUser();
+            // 重新加载数据
+            await Promise.all([
+                loadProducts(),
+                loadUserPoints()
+            ]);
         } catch (error: any) {
-            // 拦截器已经alert了错误，这里处理业务逻辑
             console.error('兑换商品失败:', error);
-            // 如果是业务逻辑错误（如库存不足），error.message已经是业务信息
-            // 不需要再额外alert
+
+            // 根据错误类型显示不同提示
+            if (error.response) {
+                const errorData = error.response.data;
+                switch (error.response.status) {
+                    case 400:
+                        alert(`请求参数错误: ${errorData.message}`);
+                        break;
+                    case 401:
+                        alert('登录已过期，请重新登录');
+                        navigate('/login', { state: { from: '/mall' } });
+                        break;
+                    case 403:
+                        alert(`兑换失败: ${errorData.message || '无权限'}`);
+                        break;
+                    case 409:
+                        // 库存冲突
+                        alert(`兑换失败: ${errorData.message || '库存不足'}`);
+                        break;
+                    default:
+                        alert(`兑换失败: ${errorData.message || '服务器错误'}`);
+                }
+            } else if (error.request) {
+                alert('网络异常，请检查网络连接');
+            } else {
+                alert('兑换失败，请稍后重试');
+            }
         } finally {
             setLoadingIds(prev => ({ ...prev, [product.id]: false }));
         }
@@ -1074,7 +1096,7 @@ const Mall: React.FC = () => {
                                             </div>
                                             <div className="flex justify-between items-center">
                                                 <span className="text-xs text-slate-600">
-                                                    {product.isVirtual ? '虚拟商品' : '实物商品'}
+                                                    {getCategoryLabel(product.category)}
                                                 </span>
                                                 <button
                                                     onClick={() => handleExchangeClick(product)}

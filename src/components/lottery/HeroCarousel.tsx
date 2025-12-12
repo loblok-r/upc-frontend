@@ -42,7 +42,6 @@ const HeroCarousel: React.FC = () => {
   useEffect(() => {
     const fetchPrizes = async () => {
       try {
-        console.log("Fetching prizes via axios...");
         const prizeList: LotteryPrize[] = await api.get('/mall/lotteryPrizes');
         setPrizes(prizeList);
       } catch (err) {

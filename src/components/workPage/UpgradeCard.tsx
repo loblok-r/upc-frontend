@@ -16,14 +16,15 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({
   const getCardContent = () => {
     if (userStatus === 'member') {
       // 会员用户看到的卡片
+      console.log(memberDaysLeft);
+      
       return {
         title: '会员专属权益',
-        buttonText: memberDaysLeft ? '续费会员' : '会员中心',
+        buttonText: memberDaysLeft ? `会员剩余${memberDaysLeft}天` : ``,
         showComparison: false,
       };
     }
 
-     // 非会员用户看到的卡片
     return {
       title: '升级专业版',
       buttonText: '立即升级 Pro',

@@ -185,7 +185,6 @@ const WorkPage: React.FC = () => {
         prompt,
         referenceImage: base64
       });
-      console.log('AI生成响应:', response);
 
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
 
@@ -217,7 +216,7 @@ const WorkPage: React.FC = () => {
         errorMsg = "今日使用次数已达上限。";
       }
 
-      
+
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         sender: Sender.AI,

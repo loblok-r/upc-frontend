@@ -22,7 +22,6 @@ const navItems: NavItemII[] = [
 const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgradeModal, currentView, onNavigate
 }) => {
   const { isLoggedIn, user } = useAuth();
-  console.log('sidebar user>>>>>>', user);
   const navigate = useNavigate();
 
 
@@ -31,10 +30,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
   };
 
   // 判断当前用户状态
-  const isMember = user?.isMember || false;
+  const isMember = user?.isMember === true;
   const memberStatus = user?.memberStatus || 'none';
   const memberDaysLeft = user?.memberDaysLeft;
-
   // 计算显示文本和样式
   const getUpgradeButtonInfo = () => {
     // 未登录用户
@@ -101,16 +99,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
 
    // 处理按钮点击
   const handleUpgradeClick = () => {
+    console.log('升级按钮被点击！开始处理...');
     if (!isLoggedIn) {
-      console.log('未登录，跳转到登录页面');
       navigate('/login', { state: { from: location.pathname } });
       return;
     }
-    
     if (isMember) {
-      // 会员用户点击，可以跳转到会员中心或什么都不做
-      console.log('已经是会员，跳转到会员中心');
-      // onNavigate('member-center'); // 如果添加了会员中心页面
+      console.log('会员用户点击');
+      // 如果添加了会员中心页面
+      // onNavigate('member-center'); 
       return;
     }
     
@@ -265,7 +262,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
         {/* Upgrade Popover Card - 条件显示 */}
         {upgradeButtonInfo.showCard && (
           <UpgradeCard 
-            openUpgradeModal={openUpgradeModal}
+            openUpgradeModal={handleUpgradeClick}
             userStatus={isMember ? 'member' : 'free'} // 新增参数
             memberDaysLeft={memberDaysLeft}
           />

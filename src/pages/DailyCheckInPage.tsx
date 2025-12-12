@@ -134,16 +134,9 @@ export const DailyCheckInPage: React.FC = () => {
     const dayStr = dayNumber.toString().padStart(2, '0');
     const retroDate = `${yearMonth}-${dayStr}`;
 
-    console.log('补签请求:', {
-      显示日期: targetDay.date,  // "12.10"
-      实际日期: dayNumber,        // 10
-      发送日期: retroDate         // "2025-12-10"
-    });
-
     try {
       // 1. 发送补签请求
       const response = await api.post('/checkin/retro', { retroDate: retroDate });
-      console.log('补签成功响应:', response.data);
 
       // 2. 刷新签到历史
       // api.get() 直接返回数据，不是完整的响应对象
