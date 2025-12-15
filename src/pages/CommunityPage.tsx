@@ -1,3 +1,4 @@
+// src/pages/CommunityPage.tsx
 import React, { useState, useEffect } from 'react';
 import type { Post, SidebarTab, ViewState } from '../types/community';
 import api from '../utils/api'; 
@@ -11,10 +12,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-// 定义 Feed Tab 类型
 type FeedTabType = 'RECOMMEND' | 'FOLLOWING' | 'LATEST';
 
-// 辅助函数：格式化数字
 const formatNumber = (num: number) => {
   if (!num) return '0';
   if (num >= 1000) {
@@ -42,29 +41,86 @@ const CommunityPage = () => {
     location.state?.activeTab || 'HOME'
   );
 
-  // 用于查看其他用户主页的状态
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
-  
-  // Feed流状态管理
   const [activeFeedTab, setActiveFeedTab] = useState<FeedTabType>('RECOMMEND'); 
   const [displayPosts, setDisplayPosts] = useState<Post[]>([]); 
   const [isFeedLoading, setIsFeedLoading] = useState(false); 
 
-   // 点击用户头像的处理函数
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [viewingImage, setViewingImage] = useState<Post | null>(null);
+
+  // ==========================================
+  // 核心修复逻辑开始：历史记录管理
+  // ==========================================
+
+  // 1. 打开帖子详情：推入历史记录
+  const openPostDetail = (post: Post) => {
+      setSelectedPost(post);
+      // 推入一个无实际跳转的 state，让浏览器觉得进入了新页面
+      window.history.pushState({ modal: 'postDetail' }, '', '');
+  };
+
+  // 2. 打开大图预览：推入历史记录
+  const openImageView = (post: Post) => {
+      setViewingImage(post);
+      window.history.pushState({ modal: 'imageView' }, '', '');
+  };
+
+  // 3. 关闭模态框：执行浏览器后退
+  // 这样既能关闭模态框，又能清除掉上面推入的历史记录，保证逻辑闭环
+  const handleCloseModal = () => {
+      navigate(-1);
+  };
+
+  // ==========================================
+  // 新增：处理帖子状态更新的回调函数
+  // ==========================================
+  const handlePostUpdate = (updatedPost: Post) => {
+    // 1. 更新 Feed 流列表中的数据
+    setDisplayPosts((prevPosts) => 
+      prevPosts.map((p) => (p.id === updatedPost.id ? updatedPost : p))
+    );
+
+    // 2. 如果当前选中的是这个帖子，也同步更新选中状态（防止状态回跳）
+    if (selectedPost && selectedPost.id === updatedPost.id) {
+      setSelectedPost(updatedPost);
+    }
+    if (viewingImage && viewingImage.id === updatedPost.id) {
+      setViewingImage(updatedPost);
+    }
+  };
+
+  // 4. 监听浏览器后退事件 (popstate)
+  useEffect(() => {
+      const handlePopState = () => {
+          // 当用户点击浏览器后退按钮时，强行关闭所有模态框
+          setSelectedPost(null);
+          setViewingImage(null);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // ==========================================
+  // 核心修复逻辑结束
+  // ==========================================
+
   const handleUserClick = (userId: string) => {
-      // 如果点击的是自己，跳转到我的主页
+      // 点击头像时，如果当前有模态框，需要先清理掉模态框的历史记录
+      // 但为了逻辑简单，我们直接关闭模态框显示，并让用户处于当前历史节点
+      // (更完美的做法是 replaceState，但这里直接关闭视觉效果即可满足需求)
+      
+      setSelectedPost(null);
+      setViewingImage(null);
+
       if (isLoggedIn && user?.id === userId) {
           setActiveTab('PROFILE');
           setTargetUserId(null);
       } else {
-          // 否则跳转到 USER_PROFILE 并设置目标ID
           setActiveTab('USER_PROFILE');
           setTargetUserId(userId);
       }
-      
-      // 关闭模态框（如果有）
-      setSelectedPost(null);
-      setViewingImage(null);
   };
 
   useEffect(() => {
@@ -74,41 +130,26 @@ const CommunityPage = () => {
         try {
           let endpoint = '';
           switch (activeFeedTab) {
-            case 'RECOMMEND':
-              endpoint = '/community/posts/recommend';
-              break;
-            case 'LATEST':
-              endpoint = '/community/posts/latest';
-              break;
-            case 'FOLLOWING':
-              endpoint = '/community/posts/following';
-              break;
-            default:
-              endpoint = '/community/posts/recommend';
+            case 'RECOMMEND': endpoint = '/community/posts/recommend'; break;
+            case 'LATEST': endpoint = '/community/posts/latest'; break;
+            case 'FOLLOWING': endpoint = '/community/posts/following'; break;
+            default: endpoint = '/community/posts/recommend';
           }
-
           const data = await api.get<any, Post[]>(endpoint);
-          
           if (Array.isArray(data)) {
             setDisplayPosts(data);
           } else {
-            console.warn('API returned non-array data:', data);
             setDisplayPosts([]);
           }
-
         } catch (error) {
           console.error("Failed to fetch posts:", error);
         } finally {
           setIsFeedLoading(false);
         }
       };
-
       fetchPosts();
     }
   }, [activeFeedTab, viewState]); 
-
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [viewingImage, setViewingImage] = useState<Post | null>(null);
 
   const LandingPage = () => (
     <div className="min-h-screen bg-[#05050a] flex flex-col items-center justify-center relative overflow-hidden">
@@ -140,7 +181,6 @@ const CommunityPage = () => {
     </div>
   );
 
-  // Main App Component
   const MainApp = () => (
     <div className="flex h-screen w-full bg-[#05050a] text-white overflow-hidden relative">
       
@@ -158,42 +198,30 @@ const CommunityPage = () => {
             isActive={activeTab === 'PROFILE'} 
             onClick={() => {
                 setActiveTab('PROFILE');
-                setTargetUserId(null); // 重置为显示自己
+                setTargetUserId(null); 
             }} 
             label="我的"
           />
         </div>
       </nav>
 
-        {/* Panels */}
+      {/* Panels */}
       <SidebarPanel 
         activeTab={activeTab} 
         onClose={() => setActiveTab('HOME')}
-        onSelectPost={(post) => setSelectedPost(post)} 
-        targetUserId={targetUserId} // 传递目标用户ID
+        onSelectPost={(post) => openPostDetail(post)} // 侧边栏点击也使用带历史记录的方法
+        targetUserId={targetUserId} 
       />
 
       {/* Main Feed Content Area */}
       <main className="flex-1 relative overflow-y-auto scroll-smooth">
         
-      {/* Sticky Header */}
+        {/* Sticky Header */}
         <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-[#05050a]/80 backdrop-blur-md border-b border-white/5">
            <div className="flex gap-2">
-             <TabButton 
-                label="推荐" 
-                isActive={activeFeedTab === 'RECOMMEND'} 
-                onClick={() => setActiveFeedTab('RECOMMEND')} 
-             />
-             <TabButton 
-                label="关注" 
-                isActive={activeFeedTab === 'FOLLOWING'} 
-                onClick={() => setActiveFeedTab('FOLLOWING')} 
-             />
-             <TabButton 
-                label="最新" 
-                isActive={activeFeedTab === 'LATEST'} 
-                onClick={() => setActiveFeedTab('LATEST')} 
-             />
+             <TabButton label="推荐" isActive={activeFeedTab === 'RECOMMEND'} onClick={() => setActiveFeedTab('RECOMMEND')} />
+             <TabButton label="关注" isActive={activeFeedTab === 'FOLLOWING'} onClick={() => setActiveFeedTab('FOLLOWING')} />
+             <TabButton label="最新" isActive={activeFeedTab === 'LATEST'} onClick={() => setActiveFeedTab('LATEST')} />
            </div>
            
            <div className="hidden md:flex items-center gap-4">
@@ -207,7 +235,7 @@ const CommunityPage = () => {
            </div>
         </div>
 
-        {/* Masonry Grid Feed */}
+        {/* Feed Grid */}
         <div className="p-4 md:p-6 lg:p-8 pb-32">
           
           {isFeedLoading && displayPosts.length === 0 ? (
@@ -219,7 +247,8 @@ const CommunityPage = () => {
                 {displayPosts.map((post) => (
                   <div 
                     key={post.id} 
-                    onClick={() => setViewingImage(post)}
+                    // 这里改为调用 openImageView
+                    onClick={() => openImageView(post)}
                     className="break-inside-avoid relative group rounded-xl overflow-hidden bg-[#1a1a1a] cursor-pointer border border-white/5 hover:border-white/20 transition-all shadow-lg hover:shadow-purple-900/20"
                   >
                     {/* Image Area */}
@@ -235,17 +264,11 @@ const CommunityPage = () => {
 
                     {/* Content Overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                      
                       {post.title && (
-                        <h3 className="text-base font-bold text-white mb-1 leading-snug drop-shadow-md line-clamp-1">
-                          {post.title}
-                        </h3>
+                        <h3 className="text-base font-bold text-white mb-1 leading-snug drop-shadow-md line-clamp-1">{post.title}</h3>
                       )}
-
                       {post.content && (
-                        <p className={`text-sm text-gray-300 mb-3 drop-shadow-sm line-clamp-2 ${!post.title ? 'text-white font-medium' : ''}`}>
-                          {post.content}
-                        </p>
+                        <p className={`text-sm text-gray-300 mb-3 drop-shadow-sm line-clamp-2 ${!post.title ? 'text-white font-medium' : ''}`}>{post.content}</p>
                       )}
 
                       <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-2">
@@ -269,8 +292,9 @@ const CommunityPage = () => {
                                <Heart size={16} className={`group-hover/btn:scale-110 transition-transform ${post.isLiked ? 'fill-red-400 text-red-400' : ''}`}/>
                                <span className="text-xs font-medium">{formatNumber(post.likesCount)}</span>
                             </button>
+                            {/* 这里改为调用 openPostDetail */}
                             <button 
-                              onClick={(e) => { e.stopPropagation(); setSelectedPost(post); }} 
+                              onClick={(e) => { e.stopPropagation(); openPostDetail(post); }} 
                               className="flex items-center gap-1 hover:text-blue-400 transition-colors group/btn"
                             >
                                <MessageSquare size={16} className="group-hover/btn:scale-110 transition-transform"/>
@@ -284,20 +308,14 @@ const CommunityPage = () => {
              </div>
           )}
           
-          {/* Empty State */}
           {!isFeedLoading && displayPosts.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4">
                  <ImageIcon size={48} className="opacity-20" />
-                 <p>
-                   {activeFeedTab === 'FOLLOWING' 
-                     ? '你还没有关注任何人，去“推荐”看看吧' 
-                     : '暂无内容，去发布第一条作品吧'}
-                 </p>
+                 <p>暂无内容</p>
               </div>
           )}
         </div>
 
-        {/* Floating Create Button */}
         <div className="fixed bottom-10 left-[calc(50%+2rem)] md:left-[calc(50%+2.5rem)] -translate-x-1/2 z-40">
            <button onClick={handleCreateClick} className="group relative flex items-center gap-3 px-8 py-3.5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white font-semibold shadow-lg shadow-purple-500/40 hover:shadow-purple-500/60 hover:scale-105 active:scale-95 transition-all duration-300 ring-1 ring-white/20">
               <div className="absolute inset-0 rounded-full bg-white/20 blur-md opacity-0 group-hover:opacity-50 transition-opacity" />
@@ -307,19 +325,21 @@ const CommunityPage = () => {
         </div>
       </main>
 
-      {/* Modals - 传递 onUserClick */}
+      {/* Modals - 关闭时调用 handleCloseModal */}
       {selectedPost && (
         <DetailView 
             post={selectedPost} 
-            onClose={() => setSelectedPost(null)} 
+            onClose={handleCloseModal} 
             onUserClick={handleUserClick} 
+            onPostUpdate={handlePostUpdate} 
         />
       )}
       {viewingImage && (
         <ImageView 
             post={viewingImage} 
-            onClose={() => setViewingImage(null)} 
+            onClose={handleCloseModal} 
             onUserClick={handleUserClick} 
+            onPostUpdate={handlePostUpdate} 
         />
       )}
     </div>

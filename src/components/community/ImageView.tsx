@@ -7,14 +7,14 @@ import { useAuth } from '../../contexts/AuthContext';
 interface ImageViewProps {
   post: Post;
   onClose: () => void;
-  onUserClick: (userId: string) => void; // 新增
+  onUserClick: (userId: string) => void;
+  onPostUpdate?: (updatedPost: Post) => void; // 新增 Props
 }
 
-const ImageView: React.FC<ImageViewProps> = ({ post: initialPost, onClose, onUserClick }) => {
+const ImageView: React.FC<ImageViewProps> = ({ post: initialPost, onClose, onUserClick, onPostUpdate }) => {
   const { isLoggedIn } = useAuth();
   const [post, setPost] = useState(initialPost);
 
-  // 点赞逻辑 (预留接口)
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isLoggedIn) return;
@@ -23,11 +23,20 @@ const ImageView: React.FC<ImageViewProps> = ({ post: initialPost, onClose, onUse
         const isLiked = post.isLiked;
         await api.post(`/community/posts/${post.id}/${isLiked ? 'unlike' : 'like'}`);
         
-        setPost(prev => ({
-            ...prev,
+        const newPost = {
+            ...post,
             isLiked: !isLiked,
-            likesCount: isLiked ? prev.likesCount - 1 : prev.likesCount + 1
-        }));
+            likesCount: isLiked ? post.likesCount - 1 : post.likesCount + 1
+        };
+
+        // 1. 更新本地状态
+        setPost(newPost);
+        
+        // 2. 通知父组件更新全局状态
+        if (onPostUpdate) {
+            onPostUpdate(newPost);
+        }
+
     } catch (error) {
         console.error("Failed to like post", error);
     }
