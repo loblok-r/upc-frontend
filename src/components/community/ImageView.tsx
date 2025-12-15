@@ -1,13 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Post } from '../../types/community';
-import { Heart, MoreHorizontal, Bell, User as UserIcon, X, ArrowLeft } from 'lucide-react';
+import { Heart, MoreHorizontal, Bell, User as UserIcon, ArrowLeft } from 'lucide-react';
+import api from '../../utils/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface ImageViewProps {
   post: Post;
   onClose: () => void;
+  onUserClick: (userId: string) => void; // 新增
 }
 
-const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
+const ImageView: React.FC<ImageViewProps> = ({ post: initialPost, onClose, onUserClick }) => {
+  const { isLoggedIn } = useAuth();
+  const [post, setPost] = useState(initialPost);
+
+  // 点赞逻辑 (预留接口)
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isLoggedIn) return;
+    
+    try {
+        const isLiked = post.isLiked;
+        await api.post(`/community/posts/${post.id}/${isLiked ? 'unlike' : 'like'}`);
+        
+        setPost(prev => ({
+            ...prev,
+            isLiked: !isLiked,
+            likesCount: isLiked ? prev.likesCount - 1 : prev.likesCount + 1
+        }));
+    } catch (error) {
+        console.error("Failed to like post", error);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[60] bg-black flex flex-col animate-in fade-in duration-200">
       {/* Header */}
@@ -24,23 +49,26 @@ const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
            <img 
              src={post.author.avatar} 
              alt="Avatar" 
-             className="w-10 h-10 rounded-full border border-white/10 object-cover" 
+             className="w-10 h-10 rounded-full border border-white/10 object-cover cursor-pointer hover:border-white/50" 
+             onClick={() => onUserClick(post.author.id)}
            />
            
-           <div className="flex flex-col">
-             <div className="flex items-center gap-2 text-sm md:text-base font-bold text-white shadow-black drop-shadow-md">
+           <div className="flex flex-col cursor-pointer" onClick={() => onUserClick(post.author.id)}>
+             <div className="flex items-center gap-2 text-sm md:text-base font-bold text-white shadow-black drop-shadow-md hover:underline">
                <span>{post.author.handle.replace('@', '')}</span>
                <span className="text-white/40">•</span>
                <span>{post.author.name}</span>
              </div>
-             {/* 更新字段: createdAt */}
              <span className="text-xs text-gray-400 font-medium">{post.createdAt || '刚刚'}</span>
            </div>
         </div>
         
         <div className="flex items-center gap-4 md:gap-6 text-white">
-           <button className="hover:text-red-500 hover:scale-110 transition-all">
-             <Heart size={26} />
+           <button 
+             onClick={handleLike}
+             className={`hover:scale-110 transition-all ${post.isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
+           >
+             <Heart size={26} className={post.isLiked ? "fill-red-500" : ""} />
            </button>
            <button className="hover:text-gray-300 transition-colors hidden sm:block">
              <MoreHorizontal size={26} />
@@ -48,7 +76,10 @@ const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
            <button className="hover:text-gray-300 transition-colors hidden sm:block">
              <Bell size={26} />
            </button>
-           <button className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+           <button 
+             onClick={() => onUserClick(post.author.id)}
+             className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+           >
              <UserIcon size={18} />
            </button>
         </div>
@@ -59,7 +90,6 @@ const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
         className="flex-1 flex items-center justify-center p-0 md:p-8 cursor-pointer"
         onClick={onClose} 
       >
-        {/* 更新字段: imageUrl */}
         <img 
           src={post.imageUrl} 
           alt={post.content || "Image"} 
@@ -73,7 +103,6 @@ const ImageView: React.FC<ImageViewProps> = ({ post, onClose }) => {
         <div className="fixed bottom-0 w-full pb-8 pt-12 px-6 text-center bg-gradient-to-t from-black/90 to-transparent pointer-events-none">
            <div className="inline-flex items-center gap-2 text-sm md:text-base pointer-events-auto bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 max-w-[90%]">
               <span className="text-gray-400 font-bold uppercase tracking-wide text-xs md:text-sm shrink-0">Prompt</span>
-              {/* 更新字段: content, 截断显示 */}
               <span className="text-white font-bold truncate">
                 {post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
               </span>

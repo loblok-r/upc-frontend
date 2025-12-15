@@ -18,6 +18,7 @@ export interface User {
   maxcomputingPower?: number;
   isMember?: boolean; // 是否是 PRO 会员
   username?: string; // 兼容部分接口可能返回 username 而不是 name
+  bio?: string; // 用户简介
 }
 
 export interface Comment {
@@ -26,8 +27,10 @@ export interface Comment {
   user: User;
   text: string;
   likes: number;
+  isLiked?: boolean; // 当前用户是否点赞了该评论
   createdAt: string; // ISO String
   replies?: Comment[];
+  timeAgo?: string; // 前端计算的时间
 }
 
 export interface Post {
@@ -38,7 +41,8 @@ export interface Post {
   imageUrl: string;
   likesCount: number;
   commentsCount: number;
-  sharesCount?: number; // 可选
+  sharesCount?: number; 
+  isLiked?: boolean; // 当前用户是否点赞
   author: User;
   createdAt: string;
   comments?: Comment[]; // 详情页使用
@@ -56,7 +60,8 @@ export const SidebarTab = {
   HOME: 'HOME',
   SEARCH: 'SEARCH',
   LEADERBOARD: 'LEADERBOARD',
-  PROFILE: 'PROFILE'
+  PROFILE: 'PROFILE',
+  USER_PROFILE: 'USER_PROFILE' // 新增：查看他人主页
 } as const;
 export type SidebarTab = typeof SidebarTab[keyof typeof SidebarTab];
 

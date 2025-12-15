@@ -1,4 +1,3 @@
-// src/pages/CommunityPage.tsx
 import React, { useState, useEffect } from 'react';
 import type { Post, SidebarTab, ViewState } from '../types/community';
 import api from '../utils/api'; 
@@ -10,6 +9,7 @@ import {
   Home, Search, Trophy, User, MessageSquare, Heart, 
   Play, Sparkles, Loader2, Image as ImageIcon 
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 // 定义 Feed Tab 类型
 type FeedTabType = 'RECOMMEND' | 'FOLLOWING' | 'LATEST';
@@ -26,6 +26,7 @@ const formatNumber = (num: number) => {
 const CommunityPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isLoggedIn, user } = useAuth();
 
   const handleCreateClick = () => {
     navigate('/work');
@@ -40,20 +41,36 @@ const CommunityPage = () => {
   const [activeTab, setActiveTab] = useState<SidebarTab>(
     location.state?.activeTab || 'HOME'
   );
+
+  // 用于查看其他用户主页的状态
+  const [targetUserId, setTargetUserId] = useState<string | null>(null);
   
   // Feed流状态管理
   const [activeFeedTab, setActiveFeedTab] = useState<FeedTabType>('RECOMMEND'); 
   const [displayPosts, setDisplayPosts] = useState<Post[]>([]); 
   const [isFeedLoading, setIsFeedLoading] = useState(false); 
 
-  // 监听 Tab 切换，请求真实后端接口
+   // 点击用户头像的处理函数
+  const handleUserClick = (userId: string) => {
+      // 如果点击的是自己，跳转到我的主页
+      if (isLoggedIn && user?.id === userId) {
+          setActiveTab('PROFILE');
+          setTargetUserId(null);
+      } else {
+          // 否则跳转到 USER_PROFILE 并设置目标ID
+          setActiveTab('USER_PROFILE');
+          setTargetUserId(userId);
+      }
+      
+      // 关闭模态框（如果有）
+      setSelectedPost(null);
+      setViewingImage(null);
+  };
+
   useEffect(() => {
     if (viewState === 'APP') {
       const fetchPosts = async () => {
         setIsFeedLoading(true);
-        // 如果想切换tab时清空列表显示loading骨架屏，可以取消下面注释
-        // setDisplayPosts([]); 
-
         try {
           let endpoint = '';
           switch (activeFeedTab) {
@@ -81,7 +98,6 @@ const CommunityPage = () => {
 
         } catch (error) {
           console.error("Failed to fetch posts:", error);
-          // 这里可以添加 Toast 提示
         } finally {
           setIsFeedLoading(false);
         }
@@ -94,7 +110,6 @@ const CommunityPage = () => {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [viewingImage, setViewingImage] = useState<Post | null>(null);
 
-  // Landing Page Component
   const LandingPage = () => (
     <div className="min-h-screen bg-[#05050a] flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/30 rounded-full blur-[120px]" />
@@ -138,21 +153,30 @@ const CommunityPage = () => {
           <SidebarBtn icon={<Trophy size={24} />} isActive={activeTab === 'LEADERBOARD'} onClick={() => setActiveTab(activeTab === 'LEADERBOARD' ? 'HOME' : 'LEADERBOARD')} label="榜单"/>
         </div>
         <div className="mt-auto">
-          <SidebarBtn icon={<User size={24} />} isActive={activeTab === 'PROFILE'} onClick={() => setActiveTab('PROFILE')} label="我的"/>
+          <SidebarBtn 
+            icon={<User size={24} />} 
+            isActive={activeTab === 'PROFILE'} 
+            onClick={() => {
+                setActiveTab('PROFILE');
+                setTargetUserId(null); // 重置为显示自己
+            }} 
+            label="我的"
+          />
         </div>
       </nav>
 
-      {/* Panels */}
+        {/* Panels */}
       <SidebarPanel 
-      activeTab={activeTab} 
-      onClose={() => setActiveTab('HOME')}
-      onSelectPost={(post) => setSelectedPost(post)} 
-        />
+        activeTab={activeTab} 
+        onClose={() => setActiveTab('HOME')}
+        onSelectPost={(post) => setSelectedPost(post)} 
+        targetUserId={targetUserId} // 传递目标用户ID
+      />
 
       {/* Main Feed Content Area */}
       <main className="flex-1 relative overflow-y-auto scroll-smooth">
         
-        {/* Sticky Header */}
+      {/* Sticky Header */}
         <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-[#05050a]/80 backdrop-blur-md border-b border-white/5">
            <div className="flex gap-2">
              <TabButton 
@@ -225,18 +249,24 @@ const CommunityPage = () => {
                       )}
 
                       <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-2">
-                         <div className="flex items-center gap-2">
+                         <div 
+                           className="flex items-center gap-2 cursor-pointer"
+                           onClick={(e) => {
+                               e.stopPropagation();
+                               handleUserClick(post.author.id);
+                           }}
+                         >
                            <div className="w-6 h-6 rounded-full overflow-hidden border border-white/30 shrink-0">
                               <img src={post.author?.avatar || 'https://github.com/shadcn.png'} alt={post.author?.name} className="w-full h-full object-cover" />
                            </div>
-                           <span className="text-xs text-gray-300 font-medium truncate max-w-[80px]">
+                           <span className="text-xs text-gray-300 font-medium truncate max-w-[80px] hover:text-white">
                              {post.author?.name || 'Unknown'}
                            </span>
                          </div>
 
                          <div className="flex items-center gap-3 text-gray-300">
                             <button className="flex items-center gap-1 hover:text-red-400 transition-colors group/btn">
-                               <Heart size={16} className="group-hover/btn:scale-110 transition-transform"/>
+                               <Heart size={16} className={`group-hover/btn:scale-110 transition-transform ${post.isLiked ? 'fill-red-400 text-red-400' : ''}`}/>
                                <span className="text-xs font-medium">{formatNumber(post.likesCount)}</span>
                             </button>
                             <button 
@@ -277,9 +307,21 @@ const CommunityPage = () => {
         </div>
       </main>
 
-      {/* Modals */}
-      {selectedPost && (<DetailView post={selectedPost} onClose={() => setSelectedPost(null)} />)}
-      {viewingImage && (<ImageView post={viewingImage} onClose={() => setViewingImage(null)} />)}
+      {/* Modals - 传递 onUserClick */}
+      {selectedPost && (
+        <DetailView 
+            post={selectedPost} 
+            onClose={() => setSelectedPost(null)} 
+            onUserClick={handleUserClick} 
+        />
+      )}
+      {viewingImage && (
+        <ImageView 
+            post={viewingImage} 
+            onClose={() => setViewingImage(null)} 
+            onUserClick={handleUserClick} 
+        />
+      )}
     </div>
   );
 
