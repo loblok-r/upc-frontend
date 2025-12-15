@@ -57,8 +57,8 @@ const PayInfoPage: React.FC = () => {
   const handleSubmit = async () => {
 
     // 校验支付方式 - 只允许微信支付
-    if (formData.paymentMethod !== 'wechat') {
-      alert('目前只支持微信支付，请选择微信支付方式');
+    if (formData.paymentMethod !== 'wechat' && formData.paymentMethod !== 'alipay') {
+      alert('目前只支持微信支付和支付宝支付，请选择支付方式');  
       return;
     }
 
@@ -241,7 +241,7 @@ const PayInfoPage: React.FC = () => {
                 <div>
                   <p className="font-medium">重要提示</p>
                   <p className="text-amber-600 text-xs mt-0.5">
-                    目前测试阶段仅支持微信支付。选择其他支付方式将无法完成支付。
+                    目前测试阶段仅支持微信支付/支付宝支付。选择其他支付方式将无法完成支付。
                   </p>
                 </div>
               </div>
