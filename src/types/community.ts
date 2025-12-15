@@ -12,6 +12,7 @@ export interface User {
   stats?: {
     works: number;
     followers: number;
+    following: number;
     likes: number;
   };
   computingPower?: number;

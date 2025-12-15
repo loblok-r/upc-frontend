@@ -196,7 +196,7 @@ const buildFullUser = (rawUserData: any): User => {
     memberExpireAt: memberExpireAtTimestamp,
 
     // 社区 stats
-    stats: rawUserData.stats || { works: 0, followers: 0, likes: 0 },
+    stats: rawUserData.stats || { works: 0, followers: 0, likes: 0, following: 0 },
 
     // 每日额度
     dailyUsage: rawUserData.dailyUsage || {
