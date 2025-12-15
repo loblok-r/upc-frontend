@@ -367,7 +367,7 @@ export const DailyCheckInPage: React.FC = () => {
             {/* 任务 */}
             <div className="p-6 rounded-2xl bg-[#151520] border border-white/5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white">积分任务</h3>
+                <h3 className="text-lg font-bold text-white">积分任务（开发中）</h3>
                 <span className="text-xs text-slate-500">做任务得补签卡</span>
               </div>
               <div className="space-y-3">
