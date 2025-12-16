@@ -72,3 +72,8 @@ export interface LeaderboardItem {
   score: number; // 热度值/分数
   author: User;
 }
+
+export interface LeaderboardData {
+  creators: LeaderboardItem[];
+  remixes: LeaderboardItem[];
+}

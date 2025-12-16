@@ -6,6 +6,9 @@ interface HistoryViewProps {
   historyItems: HistoryItem[];
   onSelectHistory: (item: HistoryItem) => void;
   onDeleteHistory: (id: string) => void;
+  isLoading?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({ 

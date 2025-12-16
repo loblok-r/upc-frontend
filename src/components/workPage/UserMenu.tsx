@@ -17,17 +17,16 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onLogout, user }) => {
    const [isOpen, setIsOpen] = useState(false);
 
    //引入 Ref 来存储定时器 ID
-   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
    const userData = {
       id: user.id,
       name: user.username,
       avatar: user.avatar || '',
       level: user.displayLevel,
       stats: user.stats || {
-        works: 0,
-        comments: 0,
-        likes: 0,
+         works: 0,
+         comments: 0,
+         likes: 0,
       },
       exp: user.exp,
       computingPower: user.computingPower,

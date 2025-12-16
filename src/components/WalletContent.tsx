@@ -64,9 +64,8 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
       console.log('Fetching points with params:', params);
 
       // 使用封装好的api调用后端接口，传递分页参数
-      const response = await api.get('/points/transactions', {
-        params: params
-      });
+     const response = await api.get('/points/transactions', { params: params }) as any;
+      
 
       console.log('API Response:', response); // 调试用
 
@@ -154,7 +153,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   // 获取优惠券数据
   const fetchCouponsFromBackend = async (params: PaginationParams) => {
     try {
-      const response = await api.get('/coupons/list', { params });
+      const response = await api.get('/coupons/list', { params }) as any;
       const { data: couponsData, total, page, pageSize, totalPages } = response;
 
       setTotal(total);
@@ -187,7 +186,8 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   // 获取实物订单数据（带分页）
   const fetchOrdersFromBackend = async (params: PaginationParams) => {
     try {
-      // const response = await api.get('/orders', { params });
+        // 取消注释，并添加 as any 绕过类型检查
+      const response = await api.get('/orders', { params }) as any; 
       const { data: ordersData, total, page, pageSize, totalPages } = response;
 
       setTotal(total || ordersData.length);
@@ -218,7 +218,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   // 获取权益数据（带分页）
   const fetchBenefitsFromBackend = async (params: PaginationParams) => {
     try {
-      // const response = await api.get('/benefits', { params });
+      const response = await api.get('/benefits', { params }) as any;
       const { data: benefitsData, total, page, pageSize, totalPages } = response;
 
       setTotal(total || benefitsData.length);

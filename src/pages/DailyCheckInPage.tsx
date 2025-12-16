@@ -32,7 +32,7 @@ export const DailyCheckInPage: React.FC = () => {
     const fetchHistory = async () => {
       try {
         // api.get() 直接返回数据，不是完整的响应对象
-        const data = await api.get('/checkin/history');
+        const data = await api.get('/checkin/history') as any;
       
 
         // data 是 {checkInHistory: [...]}
@@ -75,7 +75,7 @@ export const DailyCheckInPage: React.FC = () => {
     try {
       await api.post('/checkin/checkin', {});
        // api.get() 直接返回数据，不是完整的响应对象
-        const data = await api.get('/checkin/history');
+        const data = await api.get('/checkin/history') as any;
     
         // data 是 {checkInHistory: [...]}
         if (data && data.checkInHistory) {
@@ -140,7 +140,7 @@ export const DailyCheckInPage: React.FC = () => {
 
       // 2. 刷新签到历史
       // api.get() 直接返回数据，不是完整的响应对象
-        const data = await api.get('/checkin/history');
+        const data = await api.get('/checkin/history') as any;
       
 
         // data 是 {checkInHistory: [...]}

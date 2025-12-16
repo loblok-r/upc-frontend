@@ -328,6 +328,7 @@ export interface PointTransaction {
   amount: number;
   source: string;
   date: string;
+  type?: string;
 }
 /**
  * wallet

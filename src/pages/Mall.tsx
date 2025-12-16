@@ -224,7 +224,7 @@ const Mall: React.FC = () => {
                 }
             }
 
-            const response = await api.get('/mall/flash/list', { params });
+            const response :any = await api.get('/mall/flash/list', { params })
 
             let flashSalesData: FlashSaleItem[] = [];
 
@@ -278,7 +278,7 @@ const Mall: React.FC = () => {
         setLoadingPoints(true);
         try {
             // 直接获取UserPointsResponse
-            const response = await api.get<UserPointsResponse>('/mall/user/points');
+            const response: any = await api.get<UserPointsResponse>('/mall/user/points');
 
             const data = response as unknown as UserPointsResponse;
             setUserPoints(data);
@@ -393,7 +393,7 @@ const Mall: React.FC = () => {
 
 
             // 6. 发送请求
-            const response = await api.post<GrabFlashResponse>(
+            const response: any = await api.post<GrabFlashResponse>(
                 '/mall/flash/grab',
                 requestData,
                 {
