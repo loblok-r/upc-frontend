@@ -39,6 +39,7 @@ export interface User {
     works: number;
     followers: number;
     likes: number;
+    following: number; 
   };
 
   //每日额度

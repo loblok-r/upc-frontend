@@ -6,7 +6,7 @@ import type { Post, User, LeaderboardItem } from '../../types/community';
 import {
    Search, X, ChevronRight, Music, Film,
    ArrowLeft, Loader2, Check, User as UserIcon,
-   Image as ImageIcon, Heart, Zap, Trash2, LogOut
+   Image as ImageIcon, Heart, Zap, Trash2, LogOut, Users
 } from 'lucide-react';
 import api from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -33,7 +33,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId, initialIsFollowed =
 
    const handleFollowClick = async (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!isLoggedIn) return; 
+      if (!isLoggedIn) return;
       if (isLoading) return;
       setIsLoading(true);
 
@@ -84,8 +84,10 @@ interface SidebarPanelProps {
    activeTab: SidebarTab;
    onClose: () => void;
    onSelectPost?: (post: Post) => void;
-   targetUserId?: string | null; 
+   targetUserId?: string | null;
 }
+// 修改：增加了 FOLLOWERS 和 FOLLOWING 状态
+type ProfileView = 'MENU' | 'MY_WORKS' | 'FOLLOWERS' | 'FOLLOWING' | 'SETTINGS';
 
 type LeaderboardView = 'SUMMARY' | 'ALL_CREATORS' | 'ALL_NEWCREATORS';
 
@@ -93,6 +95,9 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
    const navigate = useNavigate();
    const location = useLocation();
    const { isLoggedIn, user: currentUser, logout } = useAuth();
+
+   // 控制个人中心内部视图切换
+   const [profileView, setProfileView] = useState<ProfileView>('MENU');
 
    // --- Works State ---
    const [works, setWorks] = useState<Post[]>([]);
@@ -102,6 +107,10 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
    // --- User Profile State (For targetUser) ---
    const [userProfile, setUserProfile] = useState<User | null>(null);
    const [isProfileLoading, setIsProfileLoading] = useState(false);
+
+   // --- Users List State (Followers/Following) ---
+   const [userList, setUserList] = useState<User[]>([]);
+   const [isUserListLoading, setIsUserListLoading] = useState(false);
 
    // --- Leaderboard & Search State ---
    const [lbView, setLbView] = useState<LeaderboardView>('SUMMARY');
@@ -123,47 +132,79 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
 
    // 获取作品 (统一逻辑)
    const fetchWorks = useCallback(async () => {
-       const userId = targetUserId || (isLoggedIn ? currentUser?.id : null);
-       if (!userId) return;
+      const userId = targetUserId || (isLoggedIn ? currentUser?.id : null);
+      if (!userId) return;
 
-       setIsWorksLoading(true);
-       try {
-           const endpoint = targetUserId 
-               ? `/community/users/${targetUserId}/works` 
-               : '/community/posts/mine';
-           
-           const data = await api.get<any, Post[]>(endpoint);
-           setWorks(data || []);
-       } catch (error) {
-           console.error("Failed to fetch works", error);
-       } finally {
-           setIsWorksLoading(false);
-       }
+      setIsWorksLoading(true);
+      try {
+         const endpoint = targetUserId
+            ? `/community/users/${targetUserId}/works`
+            : '/community/posts/mine';
+
+         const data = await api.get<any, Post[]>(endpoint);
+         setWorks(data || []);
+      } catch (error) {
+         console.error("Failed to fetch works", error);
+      } finally {
+         setIsWorksLoading(false);
+      }
    }, [isLoggedIn, currentUser?.id, targetUserId]);
 
-   // 初始化：当打开 Profile Tab 时，直接加载用户信息和作品
-   useEffect(() => {
-       const initProfile = async () => {
-           if (activeTab === SidebarTab.USER_PROFILE && targetUserId) {
-               // 1. 加载他人信息
-               setIsProfileLoading(true);
-               try {
-                   const data = await api.get<any, User>(`/community/users/${targetUserId}/profile`);
-                   setUserProfile(data);
-               } catch (error) {
-                   console.error("Failed to fetch user profile", error);
-               } finally {
-                   setIsProfileLoading(false);
-               }
-           }
-           
-           // 2. 加载作品 (无论是自己还是他人，只要是 Profile 页都加载)
-           if (activeTab === SidebarTab.PROFILE || activeTab === SidebarTab.USER_PROFILE) {
-               fetchWorks();
-           }
-       };
+   // 新增：获取关注/粉丝列表
+   const fetchUserList = useCallback(async (type: 'followers' | 'following') => {
+      const userId = targetUserId || (isLoggedIn ? currentUser?.id : null);
+      if (!userId) return;
 
-       initProfile();
+      setIsUserListLoading(true);
+      try {
+         // 接口预留：
+         // GET /community/users/{id}/followers
+         // GET /community/users/{id}/following
+         const endpoint = `/community/users/${userId}/${type}`;
+
+         const data = await api.get<any, User[]>(endpoint);
+         setUserList(data || []);
+      } catch (error) {
+         console.error(`Failed to fetch ${type}`, error);
+         setUserList([]);
+      } finally {
+         setIsUserListLoading(false);
+      }
+   }, [targetUserId, isLoggedIn, currentUser?.id]);
+
+   // 监听视图切换，加载对应列表
+   useEffect(() => {
+      if (profileView === 'FOLLOWERS') {
+         fetchUserList('followers');
+      } else if (profileView === 'FOLLOWING') {
+         fetchUserList('following');
+      }
+   }, [profileView, fetchUserList]);
+
+   // 初始化 Profile
+   useEffect(() => {
+      const initProfile = async () => {
+         if (activeTab === SidebarTab.USER_PROFILE && targetUserId) {
+            setIsProfileLoading(true);
+            // 重置视图回主菜单，防止查看别人时停留在上一个人的粉丝页
+            setProfileView('MENU');
+            try {
+               const data = await api.get<any, User>(`/community/users/${targetUserId}/profile`);
+               setUserProfile(data);
+            } catch (error) {
+               console.error("Failed to fetch user profile", error);
+            } finally {
+               setIsProfileLoading(false);
+            }
+         } else if (activeTab === SidebarTab.PROFILE) {
+            setProfileView('MENU');
+         }
+
+         if (activeTab === SidebarTab.PROFILE || activeTab === SidebarTab.USER_PROFILE) {
+            fetchWorks();
+         }
+      };
+      initProfile();
    }, [activeTab, targetUserId, fetchWorks]);
 
    const handleDeleteWork = async (postId: string) => {
@@ -181,9 +222,9 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
       setDisplayUsers(prev => prev.map(u => u.id === userId ? { ...u, isFollowed: newStatus } : u));
       setCreatorsRanking(prev => prev.map(item => item.author.id === userId ? { ...item, author: { ...item.author, isFollowed: newStatus } } : item));
       setNewcreatorsRanking(prev => prev.map(item => item.author.id === userId ? { ...item, author: { ...item.author, isFollowed: newStatus } } : item));
-      
+
       if (userProfile && userProfile.id === userId) {
-          setUserProfile({ ...userProfile, isFollowed: newStatus });
+         setUserProfile({ ...userProfile, isFollowed: newStatus });
       }
    };
 
@@ -375,24 +416,25 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
             </>
          )}
 
-         {/* 3. 个人/他人主页面板 (重构版：扁平化) */}
+         {/* 3. 个人/他人主页面板 */}
          {(activeTab === SidebarTab.PROFILE || activeTab === SidebarTab.USER_PROFILE) && (
             <>
                <div className="p-5 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#05050a]/50 backdrop-blur-sm z-10">
                   <div className="flex items-center gap-2">
-                      {isViewingOther && (
-                          <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full mr-1">
-                              <ArrowLeft size={16} />
-                          </button>
-                      )}
-                      <h2 className="text-xl font-bold">{isViewingOther ? '用户主页' : '我的主页'}</h2>
+                     {isViewingOther && (
+                        <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full mr-1">
+                           <ArrowLeft size={16} />
+                        </button>
+                     )}
+                     <h2 className="text-xl font-bold">{isViewingOther ? '用户主页' : '我的主页'}</h2>
                   </div>
                   <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors">
                      <X size={16} />
                   </button>
                </div>
 
-               <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+               <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 relative">
+
                   {/* 未登录且查看自己的时候显示登录提示 */}
                   {!isViewingOther && !isLoggedIn ? (
                      <div className="flex flex-col items-center justify-center p-8 text-center h-full animate-in fade-in duration-500">
@@ -406,164 +448,233 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
                   ) : isViewingOther && isProfileLoading ? (
                      <div className="flex justify-center items-center h-40"><Loader2 className="animate-spin text-purple-500" /></div>
                   ) : (
-                     <div className="pb-10 animate-in slide-in-from-right duration-300">
-                        {/* 顶部：用户信息区域 */}
-                        <div className="p-5 space-y-6">
-                           {/* 头像与名字 */}
-                           <div className="flex flex-col gap-4 pb-2">
-                              <div className="flex items-center gap-4">
-                                  <div className="relative">
-                                     <img src={displayedUser?.avatar || 'https://picsum.photos/seed/default/200/200'} className="w-16 h-16 rounded-full border-2 border-white/10 object-cover" />
-                                     {displayedUser?.isMember && (
-                                        <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full border border-black">PRO</div>
-                                     )}
-                                  </div>
-                                  <div className="flex-1">
-                                     <div className="text-lg font-bold">{displayedUser?.name || displayedUser?.username}</div>
-                                     <div className="text-sm text-gray-400">{displayedUser?.handle || `@${displayedUser?.username}`}</div>
-                                     {isViewingOther && displayedUser && (
-                                         <div className="mt-2">
-                                             <FollowButton 
-                                                 userId={displayedUser.id} 
-                                                 initialIsFollowed={displayedUser.isFollowed}
-                                                 onToggle={(val) => handleFollowChange(displayedUser.id, val)} 
-                                             />
-                                         </div>
-                                     )}
-                                  </div>
-                              </div>
-                           </div>
-
-                           {/* 统计数据 */}
-                           <div className="flex items-center justify-between bg-white/5 rounded-xl p-4 border border-white/5">
-                              <div className="text-center">
-                                 <div className="text-lg font-bold">{displayedUser?.stats?.works || 0}</div>
-                                 <div className="text-xs text-gray-500">作品</div>
-                              </div>
-                              <div className="w-px h-8 bg-white/10"></div>
-                              <div className="text-center">
-                                 <div className="text-lg font-bold">{displayedUser?.stats?.followers || 0}</div>
-                                 <div className="text-xs text-gray-500">粉丝</div>
-                              </div>
-                              <div className="w-px h-8 bg-white/10"></div>
-                              <div className="text-center">
-                                 <div className="text-lg font-bold">{displayedUser?.stats?.likes || 0}</div>
-                                 <div className="text-xs text-gray-500">获赞</div>
-                              </div>
-                           </div>
-
-                           {/* 算力卡片 (仅自己可见) */}
-                           {!isViewingOther && (
-                               <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl p-4 border border-purple-500/20 relative overflow-hidden group">
-                                  <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
-                                     <Zap size={48} />
-                                  </div>
-                                  <div className="relative z-10">
-                                     <div className="flex items-center gap-2 text-purple-300 text-sm font-medium mb-2">
-                                        <Zap size={14} fill="currentColor" /> 剩余算力
-                                     </div>
-                                     <div className="text-2xl font-bold mb-2">
-                                        {displayedUser?.computingPower || 0} <span className="text-sm text-gray-400 font-normal">/ {displayedUser?.maxcomputingPower || 1000}</span>
-                                     </div>
-                                     <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
-                                        <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 w-[85%]"></div>
-                                     </div>
-                                  </div>
-                               </div>
-                           )}
-                        </div>
-
-                        {/* 下方：作品展示区域 (直接展示，无菜单) */}
-                        <div className="border-t border-white/10 mt-2">
-                            <div className="px-5 py-4">
-                                <h3 className="text-sm font-bold text-gray-300 flex items-center gap-2">
-                                    <ImageIcon size={16} />
-                                    {isViewingOther ? 'TA的作品' : '我的作品'}
-                                </h3>
-                            </div>
-
-                            {/* 作品列表内容 */}
-                            {isWorksLoading ? (
-                                <div className="flex items-center justify-center h-40">
-                                   <Loader2 size={24} className="animate-spin text-purple-500" />
-                                </div>
-                            ) : works.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-10 text-gray-500 gap-3">
-                                   <ImageIcon size={32} className="opacity-20" />
-                                   <p className="text-sm">暂无发布作品</p>
-                                </div>
-                            ) : (
-                                <div className="px-2 space-y-2">
-                                   {works.map((post) => (
-                                      <div
-                                         key={post.id}
-                                         className="group relative flex gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
-                                      >
-                                         {/* 缩略图 */}
-                                         <div
-                                            className="w-20 h-20 rounded-lg overflow-hidden shrink-0 cursor-pointer bg-gray-900"
-                                            onClick={() => onSelectPost?.(post)}
-                                         >
-                                            <img src={post.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-                                         </div>
-
-                                         {/* 信息区域 */}
-                                         <div className="flex-1 flex flex-col min-w-0 py-1">
-                                            <div
-                                               className="font-medium text-sm truncate text-gray-200 cursor-pointer hover:text-white"
-                                               onClick={() => onSelectPost?.(post)}
-                                            >
-                                               {post.title || '无标题作品'}
-                                            </div>
-                                            <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-                                               {post.content || '暂无描述'}
-                                            </div>
-
-                                            <div className="mt-auto flex items-center gap-3 text-xs text-gray-500">
-                                               <span className="flex items-center gap-1">
-                                                  <Heart size={12} /> {post.likesCount}
-                                               </span>
-                                               <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                                            </div>
-                                         </div>
-
-                                         {/* 删除按钮 - 仅限自己 */}
-                                         {!isViewingOther && (
-                                             <div className="flex flex-col items-end gap-2">
-                                                {deleteConfirmId === post.id ? (
-                                                   <div className="flex items-center gap-1 animate-in fade-in bg-red-500/10 p-1 rounded-lg border border-red-500/20">
-                                                      <button onClick={() => handleDeleteWork(post.id)} className="p-1.5 bg-red-600 text-white rounded hover:bg-red-500"><Check size={14} /></button>
-                                                      <button onClick={() => setDeleteConfirmId(null)} className="p-1.5 bg-gray-700 text-white rounded hover:bg-gray-600"><X size={14} /></button>
-                                                   </div>
-                                                ) : (
-                                                   <button
-                                                      onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(post.id); }}
-                                                      className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                                   >
-                                                      <Trash2 size={16} />
-                                                   </button>
-                                                )}
+                     <>
+                        {/* ==================== 视图 A: 主菜单 (个人信息 + 作品) ==================== */}
+                        {profileView === 'MENU' && (
+                           <div className="pb-10 animate-in slide-in-from-right duration-300">
+                              {/* 用户信息区域 */}
+                              <div className="p-5 space-y-6">
+                                 {/* 头像与名字 */}
+                                 <div className="flex flex-col gap-4 pb-2">
+                                    <div className="flex items-center gap-4">
+                                       <div className="relative">
+                                          <img src={displayedUser?.avatar || 'https://picsum.photos/seed/default/200/200'} className="w-16 h-16 rounded-full border-2 border-white/10 object-cover" />
+                                          {displayedUser?.isMember && (
+                                             <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full border border-black">PRO</div>
+                                          )}
+                                       </div>
+                                       <div className="flex-1">
+                                          <div className="text-lg font-bold">{displayedUser?.name || displayedUser?.username}</div>
+                                          <div className="text-sm text-gray-400">{displayedUser?.handle || `@${displayedUser?.username}`}</div>
+                                          {isViewingOther && displayedUser && (
+                                             <div className="mt-2">
+                                                <FollowButton
+                                                   userId={displayedUser.id}
+                                                   initialIsFollowed={displayedUser.isFollowed}
+                                                   onToggle={(val) => handleFollowChange(displayedUser.id, val)}
+                                                />
                                              </div>
-                                         )}
-                                      </div>
-                                   ))}
-                                </div>
-                            )}
-                        </div>
-                        
-                        {/* 退出登录按钮 (仅自己的主页且位于底部) */}
-                        {!isViewingOther && (
-                           <div className="p-5 mt-4 border-t border-white/5">
-                              <button 
-                                 onClick={logout} 
-                                 className="w-full flex items-center justify-center gap-2 p-3 text-sm text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
-                              >
-                                 <LogOut size={16} />
-                                 退出登录
-                              </button>
+                                          )}
+                                       </div>
+                                    </div>
+                                 </div>
+
+                                 {/* 统计数据 (点击可跳转) */}
+                                 <div className="grid grid-cols-4 gap-2 bg-white/5 rounded-xl p-3 border border-white/5">
+
+                                    {/* 1. 作品 */}
+                                    <div className="text-center">
+                                       <div className="text-lg font-bold">{displayedUser?.stats?.works || 0}</div>
+                                       <div className="text-xs text-gray-500">作品</div>
+                                    </div>
+
+                                    {/* 2. 关注 (新增) - 可点击 */}
+                                    <button
+                                       onClick={() => setProfileView('FOLLOWING')}
+                                       className="text-center hover:bg-white/5 rounded-lg transition-colors py-1 -my-1"
+                                    >
+                                       {/* 这里的 stats?.following 需要后端返回，如果没有暂显示 0 */}
+                                       <div className="text-lg font-bold">{displayedUser?.stats?.following || 0}</div>
+                                       <div className="text-xs text-gray-500">关注</div>
+                                    </button>
+
+                                    {/* 3. 粉丝 - 可点击 */}
+                                    <button
+                                       onClick={() => setProfileView('FOLLOWERS')}
+                                       className="text-center hover:bg-white/5 rounded-lg transition-colors py-1 -my-1"
+                                    >
+                                       <div className="text-lg font-bold">{displayedUser?.stats?.followers || 0}</div>
+                                       <div className="text-xs text-gray-500">粉丝</div>
+                                    </button>
+
+                                    {/* 4. 获赞 */}
+                                    <div className="text-center">
+                                       <div className="text-lg font-bold">{displayedUser?.stats?.likes || 0}</div>
+                                       <div className="text-xs text-gray-500">获赞</div>
+                                    </div>
+                                 </div>
+
+                                 {/* 算力卡片 (仅自己可见) */}
+                                 {!isViewingOther && (
+                                    <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl p-4 border border-purple-500/20 relative overflow-hidden group">
+                                       <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
+                                          <Zap size={48} />
+                                       </div>
+                                       <div className="relative z-10">
+                                          <div className="flex items-center gap-2 text-purple-300 text-sm font-medium mb-2">
+                                             <Zap size={14} fill="currentColor" /> 剩余算力
+                                          </div>
+                                          <div className="text-2xl font-bold mb-2">
+                                             {displayedUser?.computingPower || 0} <span className="text-sm text-gray-400 font-normal">/ {displayedUser?.maxcomputingPower || 1000}</span>
+                                          </div>
+                                          <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
+                                             <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 w-[85%]"></div>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 )}
+                              </div>
+
+                              {/* 作品列表 */}
+                              <div className="border-t border-white/10 mt-2">
+                                 <div className="px-5 py-4">
+                                    <h3 className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                                       <ImageIcon size={16} />
+                                       {isViewingOther ? 'TA的作品' : '我的作品'}
+                                    </h3>
+                                 </div>
+
+                                 {isWorksLoading ? (
+                                    <div className="flex items-center justify-center h-40">
+                                       <Loader2 size={24} className="animate-spin text-purple-500" />
+                                    </div>
+                                 ) : works.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-10 text-gray-500 gap-3">
+                                       <ImageIcon size={32} className="opacity-20" />
+                                       <p className="text-sm">暂无发布作品</p>
+                                    </div>
+                                 ) : (
+                                    <div className="px-2 space-y-2">
+                                       {works.map((post) => (
+                                          <div
+                                             key={post.id}
+                                             className="group relative flex gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
+                                          >
+                                             <div
+                                                className="w-20 h-20 rounded-lg overflow-hidden shrink-0 cursor-pointer bg-gray-900"
+                                                onClick={() => onSelectPost?.(post)}
+                                             >
+                                                <img src={post.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                                             </div>
+                                             <div className="flex-1 flex flex-col min-w-0 py-1">
+                                                <div
+                                                   className="font-medium text-sm truncate text-gray-200 cursor-pointer hover:text-white"
+                                                   onClick={() => onSelectPost?.(post)}
+                                                >
+                                                   {post.title || '无标题作品'}
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                                   {post.content || '暂无描述'}
+                                                </div>
+                                                <div className="mt-auto flex items-center gap-3 text-xs text-gray-500">
+                                                   <span className="flex items-center gap-1">
+                                                      <Heart size={12} /> {post.likesCount}
+                                                   </span>
+                                                   <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                             </div>
+                                             {!isViewingOther && (
+                                                <div className="flex flex-col items-end gap-2">
+                                                   {deleteConfirmId === post.id ? (
+                                                      <div className="flex items-center gap-1 animate-in fade-in bg-red-500/10 p-1 rounded-lg border border-red-500/20">
+                                                         <button onClick={() => handleDeleteWork(post.id)} className="p-1.5 bg-red-600 text-white rounded hover:bg-red-500"><Check size={14} /></button>
+                                                         <button onClick={() => setDeleteConfirmId(null)} className="p-1.5 bg-gray-700 text-white rounded hover:bg-gray-600"><X size={14} /></button>
+                                                      </div>
+                                                   ) : (
+                                                      <button
+                                                         onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(post.id); }}
+                                                         className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                      >
+                                                         <Trash2 size={16} />
+                                                      </button>
+                                                   )}
+                                                </div>
+                                             )}
+                                          </div>
+                                       ))}
+                                    </div>
+                                 )}
+                              </div>
+
+                              {!isViewingOther && (
+                                 <div className="p-5 mt-4 border-t border-white/5">
+                                    <button
+                                       onClick={logout}
+                                       className="w-full flex items-center justify-center gap-2 p-3 text-sm text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                                    >
+                                       <LogOut size={16} />
+                                       退出登录
+                                    </button>
+                                 </div>
+                              )}
                            </div>
                         )}
-                     </div>
+
+                        {/* ==================== 视图 B: 粉丝列表 / 关注列表 ==================== */}
+                        {(profileView === 'FOLLOWERS' || profileView === 'FOLLOWING') && (
+                           <div className="h-full flex flex-col animate-in slide-in-from-right duration-300 absolute inset-0 bg-[#0c0c0c]">
+                              {/* 头部：返回按钮 */}
+                              <div className="p-5 border-b border-white/10 flex items-center gap-3 shrink-0">
+                                 <button
+                                    onClick={() => setProfileView('MENU')}
+                                    className="p-2 -ml-2 hover:bg-white/10 rounded-full text-white transition-colors"
+                                 >
+                                    <ArrowLeft size={18} />
+                                 </button>
+                                 <h2 className="text-lg font-bold">
+                                    {profileView === 'FOLLOWERS' ? '粉丝' : '关注'}
+                                 </h2>
+                              </div>
+
+                              {/* 列表内容 */}
+                              <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-white/10">
+                                 {isUserListLoading ? (
+                                    <div className="flex justify-center py-10">
+                                       <Loader2 size={24} className="animate-spin text-purple-500" />
+                                    </div>
+                                 ) : userList.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-3">
+                                       <Users size={40} className="opacity-20" />
+                                       <p className="text-sm">暂无{profileView === 'FOLLOWERS' ? '粉丝' : '关注'}</p>
+                                    </div>
+                                 ) : (
+                                    <div className="space-y-1">
+                                       {userList.map(user => (
+                                          <div key={user.id} className="flex items-center justify-between p-3 hover:bg-white/5 rounded-xl transition-colors cursor-pointer group">
+                                             <div className="flex items-center gap-3">
+                                                <img src={user.avatar || 'https://github.com/shadcn.png'} className="w-10 h-10 rounded-full object-cover" alt={user.name} />
+                                                <div>
+                                                   <div className="text-sm font-semibold flex items-center gap-1">
+                                                      {user.name}
+                                                      {user.isVerified && <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center text-[8px] text-white">✓</div>}
+                                                   </div>
+                                                   <div className="text-xs text-gray-400 truncate max-w-[120px]">{user.handle}</div>
+                                                </div>
+                                             </div>
+                                             {/* 复用 FollowButton，不传 initialIsFollowed，让其从 user 对象读取 */}
+                                             <FollowButton
+                                                userId={user.id}
+                                                initialIsFollowed={user.isFollowed}
+                                                onToggle={(val) => handleFollowChange(user.id, val)}
+                                             />
+                                          </div>
+                                       ))}
+                                    </div>
+                                 )}
+                              </div>
+                           </div>
+                        )}
+                     </>
                   )}
                </div>
             </>
