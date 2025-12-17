@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check, Loader2, AlertCircle, KeyRound } from 'lucide-react';
+import api from '../../utils/api'; 
 
 interface ForgotPasswordData {
     email: string;
@@ -18,8 +19,6 @@ interface FormErrors {
 interface ForgotPasswordFormProps {
     onSwitchToLogin: () => void;
 }
-
-const API_BASE_URL = 'http://localhost:8069/api';
 
 export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin }) => {
     const [formData, setFormData] = useState<ForgotPasswordData>({
@@ -64,20 +63,11 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
         setApiError('');
 
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/sendCode`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: formData.email, type: 'forgot' }),
-            });
-
-            const result = await response.json();
-            if (response.ok && result.code === 200) {
-                setCountdown(60);
-            } else {
-                setApiError(result.msg || '验证码发送失败');
-            }
-        } catch (error) {
-            setApiError('网络错误');
+            await api.post('/auth/sendCode', { email: formData.email, type: 'forgot' });
+            setCountdown(60);
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || '验证码发送失败';
+            setApiError(errorMsg);
         } finally {
             setIsSendingCode(false);
         }
@@ -106,25 +96,17 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
         setIsLoading(true);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/user/resetPassword`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: formData.email,
-                    newPassword: formData.newPassword,
-                    confirmNewPassword: formData.confirmNewPassword,
-                    code: formData.code
-                }),
+            await api.post('/user/resetPassword', {
+                email: formData.email,
+                newPassword: formData.newPassword,
+                confirmNewPassword: formData.confirmNewPassword,
+                code: formData.code
             });
-            const result = await response.json();
-            if (response.ok && result.code === 200) {
-                setIsSuccess(true);
-                setTimeout(() => onSwitchToLogin(), 3000);
-            } else {
-                setApiError(result.msg || '重置密码失败');
-            }
-        } catch (error) {
-            setApiError('网络连接异常');
+            setIsSuccess(true);
+            setTimeout(() => onSwitchToLogin(), 3000);
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || error.message || '重置密码失败';
+            setApiError(errorMsg);
         } finally {
             setIsLoading(false);
         }

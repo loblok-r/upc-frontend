@@ -3,6 +3,7 @@ import { Check, Loader2, AlertCircle } from 'lucide-react'; // 新增图标
 import type { LoginFormData, FormErrors } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import api from '../../utils/api'; 
 
 interface LoginLocationState {
   from?: string;
@@ -17,9 +18,11 @@ interface LoginFormProps {
   initialEmail?: string;
 }
 
-const API_BASE_URL = 'http://localhost:8069/api';
-
-export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwitchToForgot, initialEmail }) => {
+export const LoginForm: React.FC<LoginFormProps> = ({ 
+  onSwitchToForgot,
+  onSwitchToRegister,
+  initialEmail = ''
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
@@ -92,24 +95,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwit
     setApiError(''); // 清除旧错误
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/sendCode`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.username,
-          type: 'login'
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.code === 200) {
+        // api.post 自动处理 JSON stringify 和 header
+          const result = await api.post('/auth/sendCode', {
+            email: formData.username as string,
+            type: 'register'
+          }) as any;
+          
         setCountdown(60);
         setSuccessMessage('验证码已发送，请查收');
         setTimeout(() => setSuccessMessage(''), 5000);
-      } else {
-        setApiError(result.msg || '发送验证码失败');
-      }
+      
     } catch (error) {
       setApiError('网络连接失败，无法发送验证码');
     } finally {
@@ -159,33 +154,24 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onSwit
         code: formData.captcha,
       };
 
-      // 修复：使用常量 URL
-      const response = await fetch(`${API_BASE_URL}/user/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
-
-      const result = await response.json();
+      // 使用 api.ts 进行登录请求
+      const result = await api.post('/user/login', requestBody) as any;
       console.log(result);
-      if (response.ok && result.code === 200) {
-        console.log('登录成功');
-        login(result.data.token, result.data);
-        const state = location.state as LoginLocationState | null;
-        const from = state?.from || '/';
-        const returnTab = state?.returnTab;
+      
+      console.log('登录成功');
+      login(result.token, result);
+      const state = location.state as LoginLocationState | null;
+      const from = state?.from || '/';
+      const returnTab = state?.returnTab;
 
-        navigate(from, {
-          replace: true,
-          state: returnTab ? { activeTab: returnTab } : undefined
-        });
-      } else {
-        // 修复：使用 setApiError 而不是 alert
-        setApiError(result.msg || `登录失败 (${result.code})`);
-      }
-    } catch (error) {
+      navigate(from, {
+        replace: true,
+        state: returnTab ? { activeTab: returnTab } : undefined
+      });
+    } catch (error: any) {
       console.error('登录请求失败:', error);
-      setApiError('网络连接异常，请稍后重试');
+      const errorMsg = error.response?.data?.message || error.message || '网络连接异常，请稍后重试';
+      setApiError(errorMsg);
     } finally {
       setIsLoading(false);
     }

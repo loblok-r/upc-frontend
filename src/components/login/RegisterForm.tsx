@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import type { RegisterFormData, FormErrors } from '../../types';
+import api from '../../utils/api'; 
 
 interface RegisterFormProps {
   onSwitchToLogin: (registeredEmail?: string) => void;
 }
-
-// 接口配置
-const API_BASE_URL = 'http://localhost:8069/api'; 
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const [formData, setFormData] = useState<RegisterFormData>({
@@ -80,31 +78,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
     try {
       // 发送验证码请求
-      const response = await fetch(`${API_BASE_URL}/auth/sendCode`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: formData.email,
-          type: 'register' 
-        }),
+      const result = await api.post('/auth/sendCode', {
+        email: formData.email,
+        type: 'register'
       });
 
-      console.log('发送验证码响应状态:', response.status);
-      const result = await response.json();
-      console.log('发送验证码响应结果:', result);
-
-      if (response.ok && result.code === 200) {
-        setCountdown(60);
-        setSuccessMessage('验证码已发送到您的邮箱，请注意查收');
-        setTimeout(() => setSuccessMessage(''), 3000);
-      } else {
-        setApiError(result.msg || '发送验证码失败，请稍后重试');
-      }
-    } catch (error) {
+      setCountdown(60);
+      setSuccessMessage('验证码已发送到您的邮箱，请注意查收');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error: any) {
       console.error('发送验证码失败:', error);
-      setApiError('网络错误，请检查您的连接');
+      const errorMsg = error.response?.data?.message || error.message || '发送验证码失败，请稍后重试';
+      setApiError(errorMsg);
     } finally {
       setIsSendingCode(false);
     }
@@ -189,22 +174,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       };
 
       console.log('注册请求数据:', JSON.stringify(requestData));
-      console.log('发送到:', `${API_BASE_URL}/user/register`);
 
       // 发送注册请求
-      const response = await fetch(`${API_BASE_URL}/user/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
+      const result = await api.post('/user/register', requestData) as any;
 
-      console.log('注册响应状态:', response.status);
-      const result = await response.json();
-      console.log('注册响应结果:', result);
-
-      if (response.ok && result.code === 200) {
+      if (result) {
         // 注册成功
         const successMsg = result.msg || '注册成功！即将跳转到登录页面...';
         setSuccessMessage(successMsg);
