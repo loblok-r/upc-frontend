@@ -41,69 +41,58 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
           script: |
+            # 开启调试模式，打印执行的每一行命令，方便排错
+            set -x
             set -e
             
-            # 定义变量
-            PROJECT_DIR="/opt/projects/upc-frontend"
-            GITEE_URL="https://gitee.com/barondd/upc-frontend.git"
+            # === 配置变量 ===
+            PROJECT_PATH="/opt/projects/upc-frontend"
+            GIT_REPO="https://gitee.com/barondd/upc-frontend.git"
+            CONTAINER_NAME="upc-frontend"
+            IMAGE_NAME="upc-frontend:latest"
             
-            echo "Starting deployment..."
+            echo "🚀 Starting deployment..."
             
-            # 1. 智能检查目录状态
-            if [ -d "$PROJECT_DIR" ]; then
-              cd "$PROJECT_DIR"
-              # 尝试执行 git 命令检查是否为有效仓库
-              if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-                echo " Folder exists but is NOT a git repo. Deleting..."
-                cd ..
-                rm -rf "$PROJECT_DIR"
-              else
-                echo " Valid git repo found."
-              fi
+            # === 1. 暴力清理旧代码 (确保环境干净) ===
+            # 如果目录存在，直接删掉。不要纠结它是 Git 仓库还是空文件夹
+            if [ -d "$PROJECT_PATH" ]; then
+              echo "🗑️  Removing existing directory to ensure clean slate..."
+              rm -rf "$PROJECT_PATH"
             fi
             
-            # 2. 如果目录不存在（或是刚被删除），则重新克隆
-            if [ ! -d "$PROJECT_DIR" ]; then
-              echo "Cloning fresh repository..."
-              git clone "$GITEE_URL" "$PROJECT_DIR"
-              cd "$PROJECT_DIR"
-            else
-              # 3. 如果目录存在，则拉取更新
-              cd "$PROJECT_DIR"
-              echo "Fetching latest changes..."
-              
-              # 强制更新远程地址，防止 url 变更
-              git remote set-url origin "$GITEE_URL"
-              
-              # 丢弃本地修改并拉取
-              git fetch origin
-              git reset --hard origin/main
-              git clean -fd
+            # === 2. 重新拉取代码 ===
+            echo "⬇️  Cloning repository..."
+            git clone "$GIT_REPO" "$PROJECT_PATH"
+            
+            # 进入目录
+            cd "$PROJECT_PATH"
+            
+            # 确认当前提交 (可选调试信息)
+            echo "🔍  Current commit:"
+            git rev-parse --short HEAD
+            
+            # === 3. 构建 Docker 镜像 ===
+            echo "🐳  Building Docker image..."
+            # 确保 Dockerfile 已经升级到了 node:22-alpine (根据上一步的修复)
+            docker build -t "$IMAGE_NAME" .
+            
+            # === 4. 停止并删除旧容器 ===
+            if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
+                echo "YZ  Stopping old container..."
+                docker stop $CONTAINER_NAME
+                docker rm $CONTAINER_NAME
             fi
             
-            # 4. 再次确认 commit hash (用于调试)
-            COMMIT_SHA="${{ github.sha }}"
-            echo "🔍  Deploying commit: $COMMIT_SHA"
-            
-            # 5. 构建 Docker 镜像
-            echo "Building Frontend Docker image..."
-            # 注意：前端构建通常不需要 mvn，而是利用 Dockerfile 里的多阶段构建
-            docker build -t upc-frontend:latest .
-            
-            # 6. 重新启动容器
-            echo "Restarting container..."
-            if [ "$(docker ps -aq -f name=upc-frontend)" ]; then
-                docker rm -f upc-frontend
-            fi
-            
+            # === 5. 启动新容器 ===
+            echo "🚀  Starting container..."
             docker run -d \
-              --name upc-frontend \
+              --name "$CONTAINER_NAME" \
               --restart always \
               -p 80:80 \
-              upc-frontend:latest
+              "$IMAGE_NAME"
             
-            # 7. 清理垃圾镜像
-            echo "Cleaning up..."
+            # === 6. 清理垃圾 ===
+            echo "🧹  Pruning unused images..."
             docker image prune -f
             
-            echo "Deployment success!"
+            echo "✅  Deployment Successfully Completed!"
