@@ -10,7 +10,7 @@ interface Result<T = any> {
 
 // 创建 axios 实例
 const api = axios.create({
-  baseURL: 'http://localhost:8069/api',
+  baseURL: import.meta.env.PROD ? '/api' : 'http://localhost:8069/api', 
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

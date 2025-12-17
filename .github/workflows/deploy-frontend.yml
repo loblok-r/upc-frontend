@@ -1,0 +1,89 @@
+name: Deploy Frontend (Sync & Docker)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  SERVER_IP: ${{ secrets.SERVER_IP }}
+  SERVER_USER: root
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 同步代码到 Gitee (保持你的配置)
+      - name: Sync to Gitee (SSH)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H gitee.com >> ~/.ssh/known_hosts
+          # 修改为前端 Gitee 仓库地址
+          git remote add gitee git@gitee.com:barondd/upc-frontend.git
+          echo "🚀 Pushing to Gitee..."
+          git push gitee HEAD:main -f
+
+      # SSH 连接服务器进行部署
+      - name: Execute Server Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SERVER_IP }}
+          username: ${{ env.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script_stop: true
+          script: |
+            set -e
+            
+            # 前端项目路径
+            PROJECT_DIR="/opt/projects/upc-frontend"
+            # !!! 注意：修改为你的前端 Gitee 仓库地址 (HTTPS) !!!
+            GITEE_URL="https://gitee.com/barondd/upc-frontend.git"
+            
+            # 1. 拉取代码
+            if [ ! -d "$PROJECT_DIR" ]; then
+              git clone "$GITEE_URL" "$PROJECT_DIR"
+            fi
+            
+            cd "$PROJECT_DIR"
+            
+            echo "Discarding local changes..."
+            git reset --hard HEAD
+            git clean -fd
+            
+            echo "Pulling latest code..."
+            git remote set-url origin "$GITEE_URL" || git remote add origin "$GITEE_URL"
+            git fetch origin
+            git checkout -q "${{ github.sha }}"
+            
+            # 2. 构建 Docker 镜像
+            echo "🐳 Building Frontend Docker image..."
+            docker build -t upc-frontend:latest .
+            
+            # 3. 运行容器
+            # 停止并删除旧容器
+            if [ "$(docker ps -aq -f name=upc-frontend)" ]; then
+                docker rm -f upc-frontend
+            fi
+            
+            # 启动新容器
+            # 将容器的 80 端口映射到宿主机的 80 端口 (直接访问)
+            # 或者映射到 8080/其他端口，如果你服务器上还有别的网站
+            echo "🚀 Starting container..."
+            docker run -d \
+              --name upc-frontend \
+              --restart always \
+              -p 80:80 \
+              upc-frontend:latest
+            
+            # 清理虚悬镜像
+            docker image prune -f
