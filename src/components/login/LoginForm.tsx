@@ -98,7 +98,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         // api.post 自动处理 JSON stringify 和 header
           const result = await api.post('/auth/sendCode', {
             email: formData.username as string,
-            type: 'register'
+            type: 'login'
           }) as any;
           
         setCountdown(60);
