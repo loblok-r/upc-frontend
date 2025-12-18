@@ -9,7 +9,6 @@ function LoginPage() {
   const [email, setEmail] = useState('');
 
   return (
-    // 修改点：min-h-screen -> min-h-[100dvh] 以适配移动端浏览器地址栏
     <div className="relative min-h-[100dvh] w-full flex items-center justify-center p-4">
       <TechBackground />
       

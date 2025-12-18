@@ -199,7 +199,7 @@ const HeroCarousel: React.FC = () => {
 
       <div className="container-fluid w-full relative">
         <div className="relative w-full overflow-hidden group">
-          {/* 遮罩层 - 仅在 PC 端显示，或手机端两侧留白 */}
+          {/* 遮罩层 */}
           <div className="absolute left-0 top-0 bottom-0 w-4 md:w-40 bg-gradient-to-r from-[#0f0c29] to-transparent z-20 pointer-events-none"></div>
           <div className="absolute right-0 top-0 bottom-0 w-4 md:w-40 bg-gradient-to-l from-[#0f0c29] to-transparent z-20 pointer-events-none"></div>
 
@@ -209,9 +209,9 @@ const HeroCarousel: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* 1. Mobile View: 原生横向滚动，带 Snap 效果 */}
+              {/* Mobile View: 原生横向滚动，带 Snap 效果 */}
               <div className="flex md:hidden overflow-x-auto snap-x snap-mandatory px-8 gap-4 scrollbar-hide pb-4">
-                 {/* 手机端只渲染一份奖品列表即可，无需无限循环 */}
+                 {/* 手机端只渲染一份奖品列表 */}
                  {prizes.map((product, idx) => (
                     <div key={`m-${idx}`} className="snap-center shrink-0">
                        <ProductCard product={product} />
@@ -225,14 +225,13 @@ const HeroCarousel: React.FC = () => {
                  ))}
               </div>
 
-              {/* 2. Desktop View: 自动无限跑马灯 */}
+              {/* Desktop View: 自动无限跑马灯 */}
               <div className="hidden md:flex">
                 <div
                   className="flex animate-marquee-slow min-w-full shrink-0 items-center justify-around"
                   style={{ animationDuration: marqueeSpeed }}
                 >
                   {displayProducts.map((product, idx) => (
-                    // 这里添加 mx-4 增加间距
                     <div key={`p1-${idx}`} className="mx-4">
                         <ProductCard product={product} />
                     </div>

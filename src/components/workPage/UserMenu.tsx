@@ -53,7 +53,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onLogout, user }) => {
    const handleMouseLeave = () => {
       timeoutRef.current = setTimeout(() => {
          setIsOpen(false);
-      }, 200); // 200ms 的缓冲期，足够从头像移动到菜单
+      }, 200); 
    };
 
    // 组件卸载时清理定时器，防止内存泄漏
@@ -101,7 +101,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onLogout, user }) => {
             </div>
          </button>
 
-         {/* 2. 下拉菜单 */}
+         {/* 下拉菜单 */}
          {isOpen && (
             // 这里保留 mt-2 是为了视觉美观，
             // 但因为有了上面的 handleMouseLeave 延迟逻辑，鼠标跨越这个 2px-8px 的间隙时不会导致菜单关闭
@@ -110,7 +110,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onLogout, user }) => {
                {/* 背景装饰 */}
                <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-indigo-900/40 to-transparent pointer-events-none" />
 
-               {/* A. 头部信息 */}
+               {/*  头部信息 */}
                <div className="p-5 relative">
                   <div className="flex items-center justify-between mb-4">
                      <div className="flex items-center gap-3">
@@ -131,7 +131,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onLogout, user }) => {
                      </div>
                   </div>
 
-                  {/* B. 进度条区域 */}
+                  {/* 进度条区域 */}
                   <div className="space-y-4">
                      {/* 经验条 */}
                      <div className="space-y-1.5">
@@ -159,7 +159,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onLogout, user }) => {
 
                <div className="h-px bg-white/5 mx-4"></div>
 
-               {/* C. 菜单选项 */}
+               {/* 菜单选项 */}
                <div className="p-2 space-y-1">
                   {menuItems.map((item, idx) => (
                      <button
@@ -178,7 +178,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onLogout, user }) => {
 
                <div className="h-px bg-white/5 mx-4"></div>
 
-               {/* D. 底部操作 */}
+               {/* 底部操作 */}
                <div className="p-2">
                   <button
                      onClick={onLogout}

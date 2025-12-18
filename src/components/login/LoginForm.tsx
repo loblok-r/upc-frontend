@@ -156,11 +156,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    // 修改点：容器 p-6 md:p-10，移动端更紧凑
     <div className="relative w-full max-w-[420px] bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 md:p-10 border border-white/50 animate-float">
-      {/* Logo Section */}
       <div className="text-center mb-6 md:mb-8">
-        {/* 修改点：字体 text-4xl md:text-5xl */}
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent select-none drop-shadow-sm">
           UPC
         </h1>
@@ -184,7 +181,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
-        {/* Username Input */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-gray-700 ml-1">
             邮箱账号
@@ -229,7 +225,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           {errors.password && <p className="text-xs text-red-500 ml-1">{errors.password}</p>}
         </div>
 
-        {/* Verification Code */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-gray-700 ml-1">验证码</label>
           <div className="flex gap-3">
@@ -263,7 +258,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           {errors.captcha && <p className="text-xs text-red-500 ml-1">{errors.captcha}</p>}
         </div>
 
-        {/* Footer Actions */}
         <div className="flex items-center justify-between pt-1">
           <label className="flex items-center space-x-2 cursor-pointer group">
             <div className="relative flex items-center">

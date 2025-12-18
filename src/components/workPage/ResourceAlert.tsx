@@ -1,4 +1,4 @@
-// 新增一个资源提示组件
+
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 

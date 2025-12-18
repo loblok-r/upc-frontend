@@ -20,14 +20,13 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
   const [error, setError] = useState<string | null>(null);
   const [activeFeature, setActiveFeature] = useState<string | null>(null); // 当前激活的功能
 
-  // 新增：参考图（本地上传）
+  // 参考图
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [referenceImagePreview, setReferenceImagePreview] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -214,10 +213,8 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
 
 
 
-      {/* Content Container */}
       <div className="max-w-5xl mx-auto px-6 pt-10 pb-20 flex flex-col items-center">
 
-        {/* Hero Section */}
         <div className="text-center mb-10 animate-fade-in-up">
           <h1 className="text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-200 to-blue-200">
             Hi, I am <span className="text-orange-500">UPC</span><span className="text-purple-400 text-2xl align-top">+</span>
@@ -227,10 +224,8 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
           </p>
         </div>
 
-        {/* Input Area with Return Button */}
         <div className="w-full max-w-3xl relative mb-12 group">
 
-          {/* Return Button - appears when a feature is selected */}
           {activeFeature && (
             <button
               onClick={() => {
@@ -278,7 +273,6 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
               </div>
             )}
 
-            {/* Hidden file input */}
             <input
               type="file"
               accept="image/*"
@@ -327,7 +321,6 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
           </div>
         </div>
 
-        {/* Feature Icons */}
         <div className="flex flex-wrap justify-center gap-6 mb-16">
           {features.map((feature) => (
             <div
@@ -349,14 +342,12 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
             </div>
           ))}
         </div>
-        {/* Result Display Area */}
         {error && (
           <div className="w-full max-w-3xl mb-12 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-center">
             {error}
           </div>
         )}
 
-        {/* Generated Image */}
         {generatedImage && (
           <div className="w-full max-w-3xl mb-12 animate-fade-in">
             <div className="bg-slate-800/50 rounded-2xl p-2 border border-white/10 shadow-2xl">

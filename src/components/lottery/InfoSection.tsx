@@ -12,15 +12,12 @@ const InfoSection: React.FC = () => {
     <section className="relative w-full py-10 md:py-16 bg-brand-dark">
       <div className="container mx-auto px-4 max-w-6xl">
         
-        {/* Section Title - Mobile: Center/Smaller, Desktop: Left/Larger */}
         <h2 className="text-3xl md:text-5xl font-bold mb-8 md:mb-12 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-600 drop-shadow-sm text-center md:text-left">
           抽奖活动说明。
         </h2>
 
-        {/* Grid Layout - Mobile: 1 col, Desktop: 2 cols */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           
-          {/* Card 1: Full Width Top */}
           <div className="md:col-span-2 bg-brand-card rounded-xl border border-white/5 p-6 md:p-8 relative overflow-hidden hover:border-white/10 transition-colors group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-red-500/10 transition-colors"></div>
             
@@ -33,7 +30,6 @@ const InfoSection: React.FC = () => {
             </p>
           </div>
 
-          {/* Card 2: Process */}
           <div className="bg-brand-card rounded-xl border border-white/5 p-6 md:p-8 relative overflow-hidden hover:border-white/10 transition-colors">
             <h3 className="text-xl md:text-2xl font-bold text-red-500 mb-4 md:mb-6">抽奖过程</h3>
             <ul className="space-y-3 text-slate-300 text-sm md:text-base">
@@ -56,7 +52,6 @@ const InfoSection: React.FC = () => {
             </ul>
           </div>
 
-          {/* Card 3: Claim Prize */}
           <div className="bg-brand-card rounded-xl border border-white/5 p-6 md:p-8 relative overflow-hidden hover:border-white/10 transition-colors">
             <h3 className="text-xl md:text-2xl font-bold text-red-500 mb-4 md:mb-6">领取奖品</h3>
             <ul className="space-y-3 text-slate-300 text-sm md:text-base">
@@ -81,7 +76,6 @@ const InfoSection: React.FC = () => {
 
         </div>
 
-        {/* Footer Text */}
         <div className="mt-12 md:mt-20 text-center relative z-10">
             <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent"></div>
             <p className="text-red-500 font-medium py-4 text-sm md:text-lg px-4">

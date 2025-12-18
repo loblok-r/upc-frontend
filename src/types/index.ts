@@ -260,8 +260,8 @@ export interface Document {
   type: 'slides' | 'doc' | 'sheet' | 'video' | 'image';
   thumbnailColor?: string;
   isPlaceholder?: boolean;
-  coverImage?: string; // For dashboard cards
-  badge?: string;      // e.g. "AI Video"
+  coverImage?: string; 
+  badge?: string;      
 }
 
 export interface HistoryItem {
@@ -279,7 +279,7 @@ export interface DocumentItem {
   title: string;
   type: 'SLIDES' | 'SHEET' | 'DOC';
   updatedAt: string;
-  thumbnailColor: string; // Tailwind class for the placeholder gradient
+  thumbnailColor: string; 
 }
 
 export interface MallProduct {
@@ -331,9 +331,7 @@ export interface PointTransaction {
   date: string;
   type?: string;
 }
-/**
- * wallet
- */
+
 export interface Coupon {
   id: string;
   title: string;
@@ -359,7 +357,6 @@ export interface BenefitItem {
   isUnlocked: boolean;
 }
 
-// 添加以下接口到您的 types.ts 文件
 export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
@@ -368,7 +365,6 @@ export interface ApiResponse<T = any> {
   timestamp?: number;
 }
 
-// 或者在现有的 FormErrors 中添加更多字段（如果还没有）
 export interface FormErrors {
   username?: string;
   email?: string;
@@ -378,7 +374,6 @@ export interface FormErrors {
   agreeToTerms?: string;
 }
 
-// AI 生成响应接口
 export interface AiGenerationResponse {
   // 通用字段
   success: boolean;
@@ -391,8 +386,8 @@ export interface AiGenerationResponse {
   
   // 图像生成字段
   imageUrl?: string;
-  image?: string; // base64 图像
-  url?: string;   // 图像 URL
+  image?: string; 
+  url?: string;   
   
   // 资源相关字段
   userResources?: {
@@ -403,7 +398,7 @@ export interface AiGenerationResponse {
     };
   };
   
-  // 其他可能字段
+  
   data?: any;
   result?: any;
 }

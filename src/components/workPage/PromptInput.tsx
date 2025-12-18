@@ -17,7 +17,6 @@ export const PromptInput: React.FC<PromptInputProps> = ({
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -46,7 +45,6 @@ export const PromptInput: React.FC<PromptInputProps> = ({
           : 'bg-[#0f0f20]/60 border border-purple-500/20 rounded-2xl shadow-[0_0_20px_rgba(100,50,255,0.05)] backdrop-blur-sm'
       }`}>
       
-      {/* Glow effect on focus/hover for large input */}
       {!compact && (
         <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-2xl blur opacity-50 group-hover:opacity-100 transition duration-1000"></div>
       )}
@@ -65,14 +63,12 @@ export const PromptInput: React.FC<PromptInputProps> = ({
         />
         
         <div className="flex items-center justify-between mt-3">
-          {/* Left Actions */}
           <div className="flex items-center gap-2">
             <button className="text-slate-500 hover:text-slate-300 transition-colors p-1">
               <Paperclip size={20} />
             </button>
           </div>
 
-          {/* Right Actions */}
           <div className="flex items-center gap-3">
             <span className="text-xs text-slate-600 font-mono select-none hidden sm:block">{text.length} / 5000</span>
             

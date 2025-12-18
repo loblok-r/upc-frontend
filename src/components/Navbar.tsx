@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import type { NavItem } from '../types';
 import { Logo } from './home/Logo';
 import { useNavigate, useLocation } from 'react-router-dom';
-// 1. 引入 Menu 和 X 图标
 import { Menu, X } from 'lucide-react';
 
 const navItems: NavItem[] = [
@@ -18,7 +17,6 @@ export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  // 2. 新增状态来控制移动菜单的显示/隐藏
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isLightPage = location.pathname === '/upc';
@@ -58,7 +56,7 @@ export const Navbar: React.FC = () => {
   // 监听窗口大小变化，如果从手机放大到桌面，自动关闭菜单
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) { // 768px 是 Tailwind 'md' 断点
+      if (window.innerWidth >= 768) { 
         setIsMobileMenuOpen(false);
       }
     };
@@ -98,7 +96,7 @@ export const Navbar: React.FC = () => {
           <Logo isDark={isLightPage} />
         </div>
 
-        {/* 3. 桌面端导航链接: md:flex (中等屏幕以上显示) */}
+        {/* 桌面端导航链接: md:flex (中等屏幕以上显示) */}
         <div className="hidden md:flex items-center space-x-1">
           {navItems.map((item) => (
             <button
@@ -112,7 +110,7 @@ export const Navbar: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4 md:gap-6">
-          {/* 4. 免费体验按钮: 桌面端显示 */}
+          {/* 免费体验按钮: 桌面端显示 */}
           <button
             onClick={handleCreateClick}
             className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-500/30 hover:shadow-blue-400/50 transition-all duration-300 transform hover:-translate-y-0.5"
@@ -120,7 +118,7 @@ export const Navbar: React.FC = () => {
             免费体验
           </button>
           
-          {/* 5. 汉堡菜单按钮: md:hidden (只在手机端显示) */}
+          {/* 汉堡菜单按钮: md:hidden (只在手机端显示) */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={`md:hidden p-2 rounded-lg transition-colors ${textColorClass}`}
@@ -131,10 +129,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
       
-      {/* 6. 移动端菜单 (展开时显示) */}
+      {/* 移动端菜单 (展开时显示) */}
       {isMobileMenuOpen && (
         <div className="md:hidden w-full absolute top-full left-0 animate-in fade-in slide-in-from-top-2 duration-300">
-           {/* 使用与导航栏一致的背景，确保无缝衔接 */}
            <div className={`pt-2 pb-6 px-4 space-y-2 border-t ${isLightPage ? 'border-gray-200' : 'border-white/10'}`}>
               {navItems.map((item) => (
                 <button

@@ -27,7 +27,6 @@ export const CountdownTimer: React.FC = () => {
           hours -= 1;
         }
         if (hours < 0) {
-          // Reset for demo purposes
           hours = 1;
           minutes = 11;
           seconds = 48;
@@ -35,7 +34,7 @@ export const CountdownTimer: React.FC = () => {
 
         return { hours, minutes, seconds, milliseconds };
       });
-    }, 10); // Update every 10ms for smooth ms counter
+    }, 10); 
 
     return () => clearInterval(timer);
   }, []);

@@ -122,11 +122,11 @@ export const ExchangeRecordPage: React.FC = () => {
     );
   }
 
-  // 未登录状态 - 仿照 WalletPage 的设计
+  // 未登录状态
   return (
     <div className="min-h-screen w-full bg-[#0B0F19] overflow-hidden flex flex-col">
       
-      {/* 顶部导航栏（与登录状态一致） */}
+      {/* 顶部导航栏 */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 p-4 md:p-8 px-2">
         
         <div className="flex items-center gap-2 text-sm">
@@ -162,7 +162,7 @@ export const ExchangeRecordPage: React.FC = () => {
         </div>
       </header>
 
-      {/* 主要内容区域 - 仿照 WalletPage 的未登录状态设计 */}
+      {/* 主要内容区域 */}
       <main className="flex-1 bg-[#111827] md:rounded-t-3xl border-t border-white/5 relative flex flex-col h-full overflow-hidden">
         
         {/* 背景网格 */}
@@ -178,7 +178,7 @@ export const ExchangeRecordPage: React.FC = () => {
           {/* 未登录状态内容 */}
           <div className="h-full flex flex-col items-center justify-center animate-fade-in min-h-[400px]">
             
-            {/* 卡包图标（仿照 WalletPage 设计） */}
+            {/* 卡包图标 */}
             <div className="w-32 h-32 bg-gradient-to-br from-gray-800 to-gray-900 border border-white/5 rounded-2xl mb-8 flex items-center justify-center shadow-lg shadow-black/20">
               <div className="w-16 h-10 border-2 border-amber-500/50 rounded-lg relative flex justify-center">
                 <div className="w-8 h-8 bg-amber-500 rounded-full border-2 border-[#111827] -mt-4 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>

@@ -11,10 +11,8 @@ const TopTicker: React.FC = () => {
           <span>中奖用户播报</span>
         </div>
         
-        {/* Infinite Scrolling Area */}
         <div className="flex-1 overflow-hidden relative h-full flex items-center mask-image-linear-gradient">
            <div className="flex w-full overflow-hidden group">
-              {/* First Copy */}
               <div className="flex items-center space-x-8 animate-marquee whitespace-nowrap px-4 min-w-full shrink-0">
                 {WINNERS.map((winner, idx) => (
                   <div key={`w1-${idx}`} className="flex items-center space-x-2 text-xs text-slate-300">
@@ -25,7 +23,6 @@ const TopTicker: React.FC = () => {
                   </div>
                 ))}
               </div>
-              {/* Second Copy for Seamless Loop */}
               <div className="flex items-center space-x-8 animate-marquee whitespace-nowrap px-4 min-w-full shrink-0">
                 {WINNERS.map((winner, idx) => (
                   <div key={`w2-${idx}`} className="flex items-center space-x-2 text-xs text-slate-300">

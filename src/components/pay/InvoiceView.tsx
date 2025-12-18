@@ -140,7 +140,8 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
       } catch (error) {
         console.error('检查支付状态失败:', error);
       }
-    }, 3000); // 每3秒检查一次
+      // 每3秒检查一次
+    }, 3000); 
 
     // 组件卸载时清理定时器
     return () => clearInterval(intervalId);
@@ -270,7 +271,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
   dueDate.setDate(dueDate.getDate() + 1);
   const dueDateStr = dueDate.toISOString().split('T')[0];
 
-  // Calculate end date for subscription
   const subEndDate = new Date(today);
   subEndDate.setMonth(subEndDate.getMonth() + 1);
   const subEndDateStr = subEndDate.toISOString().split('T')[0];
@@ -283,20 +283,16 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
 
       {/* 支付模态框 */}
       {showPaymentModal && <PaymentModal />}
-      {/* Background Ambience */}
       <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none fixed"></div>
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none fixed"></div>
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none fixed"></div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
 
-        {/* Left Column: Invoice Details (Approx 70%) */}
         <div className="lg:col-span-8 space-y-6">
           <div className="bg-slate-800/40 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 shadow-2xl relative overflow-hidden group">
-            {/* Top Glow */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50"></div>
 
-            {/* Header */}
             // 修改 Header 部分的代码
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-white/5 pb-8">
               <div>
@@ -328,7 +324,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
               </div>
             </div>
 
-            {/* Addresses */}
             <div className="grid md:grid-cols-2 gap-12 mb-12">
               <div>
                 <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">支付给</h3>
@@ -357,7 +352,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
               </div>
             </div>
 
-            {/* Line Items */}
             <div className="mb-8">
               <div className="flex justify-between text-sm font-semibold text-slate-500 uppercase tracking-wider pb-4 border-b border-white/10">
                 <span>描述</span>
@@ -381,7 +375,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
               </div>
             </div>
 
-            {/* Totals */}
             <div className="space-y-3 pb-8 border-b border-white/5">
               <div className="flex justify-between text-slate-300">
                 <span>小计</span>
@@ -398,7 +391,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
               <span className="font-bold text-xl text-white">{orderDetails.currency}{total} CNY</span>
             </div>
 
-            {/* Transaction Grid */}
             <div className="grid grid-cols-4 gap-4 py-8 text-center text-sm border-b border-white/5 text-slate-400">
               <div>
                 <p className="font-semibold text-slate-300 mb-1">交易日期</p>
@@ -428,7 +420,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
                 : '找不到任何与此账单有关的交易'}
             </div>
 
-            {/* Final Balance */}
             <div className="flex justify-between items-center pt-6 border-t border-white/10">
               <span className="font-bold text-slate-200">
                 {invoiceStatus === 'paid' ? '已支付金额' : '未缴金额'}
@@ -438,7 +429,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
               </span>
             </div>
 
-            {/* Footer Buttons */}
             <div className="flex justify-end gap-3 mt-8">
               <button className="flex items-center gap-2 px-4 py-2 rounded border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors text-sm">
                 <Printer size={16} /> 列印
@@ -450,9 +440,7 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
           </div>
         </div>
 
-        {/* Right Column: Actions (Approx 30%) */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Payment Card */}
           <div className="bg-white rounded-xl p-6 shadow-xl border border-slate-200">
             {invoiceStatus === 'paid' ? (
               <>
@@ -488,7 +476,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
             </p>
           </div>
 
-          {/* Cancel Order Card */}
           <div className="bg-white rounded-xl p-6 shadow-xl border border-slate-200">
             <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
               <Ban size={18} className="text-slate-400" />
@@ -502,7 +489,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
             </button>
           </div>
 
-          {/* Security Note */}
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-start gap-3">
             <ShieldCheck className="text-emerald-500 shrink-0 mt-0.5" size={20} />
             <div>
@@ -516,7 +502,6 @@ export const InvoiceView: React.FC<InvoiceViewProps> = ({ formData, orderDetails
         </div>
       </div>
 
-      {/* Floating Chat Widget */}
       <div className="fixed bottom-8 right-8 z-50">
         <button className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-600/40 hover:scale-110 transition-transform duration-300 text-white">
           <MessageCircle size={28} />

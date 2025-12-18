@@ -133,7 +133,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       <div className={`flex w-full py-8 ${isAi ? '' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
         <div className="max-w-4xl mx-auto w-full flex gap-4 md:gap-6 px-4">
           
-          {/* Avatar */}
           <div className="shrink-0 mt-1">
             {isAi ? (
               <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-purple-900/50">
@@ -146,7 +145,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             )}
           </div>
 
-          {/* Content Area */}
           <div className="flex-1 min-w-0 space-y-3">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-slate-200 text-sm md:text-base">
@@ -159,14 +157,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               )}
             </div>
 
-            {/* Text Content */}
             {message.content && message.type !== 'image' && (
                <div className="text-slate-300 leading-relaxed whitespace-pre-wrap">
                  {message.content}
                </div>
             )}
 
-            {/* Loading State */}
             {message.type === 'loading' && (
               <div className="flex items-center gap-3 text-purple-400 py-2">
                  <Loader2 size={20} className="animate-spin" />
@@ -174,7 +170,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               </div>
             )}
 
-            {/* Image Content */}
             {message.type === 'image' && message.imageUrl && (
               <div className="mt-2 space-y-4">
                 <div className="relative group rounded-xl overflow-hidden border border-white/10 bg-black/20 shadow-2xl max-w-2xl">
@@ -184,10 +179,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                     className="w-full h-auto object-cover max-h-[500px]"
                     loading="lazy"
                   />
-                  {/* ...Hover Overlay... */}
                 </div>
                 
-                {/* 外部的发布成功提示 (弹窗关闭后显示在消息体里) */}
+                {/* 外部的发布成功提示*/}
                 {publishSuccess && (
                   <div className="flex items-center gap-2 text-green-400 text-sm bg-green-900/20 px-3 py-2 rounded-lg border border-green-500/20 animate-in fade-in slide-in-from-top-2">
                     <Check size={16} />
@@ -195,7 +189,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                   </div>
                 )}
                 
-                {/* Action Toolbar */}
                 <div className="flex items-center gap-2 text-slate-500">
                   <ActionButton 
                     icon={<RotateCw size={16} />} 
@@ -208,7 +201,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                     onClick={handleDownloadImage}
                   />
                   
-                  {/* 发布按钮 - 点击不再直接发布，而是打开弹窗 */}
+                  {/* 发布按钮 */}
                   {showPublishButton && (
                     <>
                       <div className="w-px h-4 bg-white/10 mx-1" />
@@ -252,12 +245,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         </div>
       </div>
 
-      {/* --- 分享弹窗 Modal --- */}
+      {/*分享弹窗 */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-slate-800/50">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Share2 size={18} className="text-blue-400" />
@@ -271,11 +263,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               </button>
             </div>
 
-            {/* Body */}
             <div className="flex-1 overflow-y-auto p-6">
               <div className="flex flex-col md:flex-row gap-6">
                 
-                {/* 左侧：图片预览 */}
+                {/* 图片预览 */}
                 <div className="w-full md:w-1/3 shrink-0">
                   <div className="aspect-square w-full rounded-xl overflow-hidden border border-white/10 bg-black relative group">
                     <img 
@@ -293,7 +284,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
                 {/* 右侧：表单输入 */}
                 <div className="flex-1 space-y-4">
-                  {/* 标题输入 */}
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-slate-300">
                       作品标题 <span className="text-red-400">*</span>
@@ -332,7 +322,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="p-4 border-t border-white/10 bg-slate-800/30 flex justify-end gap-3">
               <button
                 onClick={() => setShowShareModal(false)}
@@ -366,7 +355,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   );
 };
 
-// 辅助按钮组件 (保持不变，如果需要)
 const ActionButton: React.FC<{ 
   icon: React.ReactNode; 
   label?: string;

@@ -4,77 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { FILTERS } from '../data/constants';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
+import type { Product, FlashSaleItem, ProductsResponse,
+    ExchangeRequest, ExchangeResponse, GrabFlashRequest, GrabFlashResponse,
+     UserPointsResponse } from '../types/mall';
 
-// --- Type Definitions ---
-interface Product {
-    id: string;
-    name: string;
-    description?: string;
-    category: string; 
-    pointsRequired: number;
-    originalPrice?: number;
-    stock: number;
-    limitPerUser?: number;
-    tag?: string;
-    imageUrl: string;
-    status: string; 
-    sortOrder: number;
-    createdAt: string;
-}
 
-interface FlashSaleItem {
-    id: string;
-    productId: string;
-    productName: string;
-    description: string;
-    salePrice: number;
-    originalPrice: number;
-    totalStock: number;
-    remainingStock: number;
-    startTime: string;
-    endTime: string;
-    dailyLimit: number;
-    image: string;
-    status: 'upcoming' | 'active' | 'ended';
-}
-
-interface ProductsResponse {
-    products: Product[];
-    total: number;
-    page: number;
-    limit: number;
-}
-
-interface ExchangeRequest {
-    productId: string;
-    quantity?: number;
-}
-
-interface ExchangeResponse {
-    orderId: string;
-    success: boolean;
-    message: string;
-    virtualContent?: string;
-}
-
-interface GrabFlashRequest {
-    flashSaleId: string;
-    quantity?: number;
-}
-
-interface GrabFlashResponse {
-    orderId: string;
-    success: boolean;
-    message: string;
-    reserveExpiresAt?: string;
-    virtualContent?: string;
-}
-
-interface UserPointsResponse {
-    balance: number;
-    totalEarned: number;
-    totalSpent: number;
-}
 
 // 日期格式化工具函数
 const formatDate = (date: Date): string => {
@@ -97,7 +31,6 @@ const Mall: React.FC = () => {
     const navigate = useNavigate();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // --- State Management ---
     const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
     const [products, setProducts] = useState<Product[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
@@ -125,10 +58,9 @@ const Mall: React.FC = () => {
         return true;
     };
 
-    // --- 数据加载函数 ---
+  
     // 加载商品列表
     const loadProducts = async () => {
-        // 修改点：移除未登录直接返回的逻辑，让 loading 状态能正确流转
         setLoadingProducts(true);
         try {
             const response = await api.get<ProductsResponse>('/mall/products', {
@@ -152,7 +84,6 @@ const Mall: React.FC = () => {
             console.error('加载商品失败:', error);
             setProducts([]);
         } finally {
-            // 关键修复：无论是否登录、是否成功，都结束加载状态
             setLoadingProducts(false);
         }
     };
@@ -170,7 +101,6 @@ const Mall: React.FC = () => {
 
     // 加载秒杀活动
     const loadFlashSales = async (date?: string) => {
-        // 修改点：同样允许未登录查看秒杀列表（除非后端严格限制）
         setIsSwitchingDate(true);
         try {
             const params: any = {};

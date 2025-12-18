@@ -43,7 +43,7 @@ export interface Post {
   likesCount: number;
   commentsCount: number;
   sharesCount?: number; 
-  isLiked?: boolean; // 当前用户是否点赞
+  isLiked?: boolean; 
   author: User;
   createdAt: string;
   comments?: Comment[]; // 详情页使用
@@ -62,14 +62,14 @@ export const SidebarTab = {
   SEARCH: 'SEARCH',
   LEADERBOARD: 'LEADERBOARD',
   PROFILE: 'PROFILE',
-  USER_PROFILE: 'USER_PROFILE' // 新增：查看他人主页
+  USER_PROFILE: 'USER_PROFILE' 
 } as const;
 export type SidebarTab = typeof SidebarTab[keyof typeof SidebarTab];
 
 // 排行榜单项
 export interface LeaderboardItem {
   rank: number;
-  score: number; // 热度值/分数
+  score: number; 
   author: User;
 }
 

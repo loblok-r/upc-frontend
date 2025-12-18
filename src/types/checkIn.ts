@@ -4,8 +4,8 @@ export interface CheckInDay {
   date: string;
   dayOfWeek: string;
   status: DayStatus;
-  points: number; // 积分奖励
-  exp: number;    // 经验奖励
+  points: number; 
+  exp: number;    
   isMilestone: boolean;
   specialReward?: string;
 }

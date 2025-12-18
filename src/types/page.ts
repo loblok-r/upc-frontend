@@ -1,7 +1,7 @@
 export interface PaginationParams {
   page: number;
   pageSize: number;
-//   [key: string]: any; // 其他筛选参数
+//   [key: string]: any; 
 }
 
 export interface PaginatedResponse<T> {

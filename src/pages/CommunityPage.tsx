@@ -21,7 +21,7 @@ const formatNumber = (num: number) => {
   return num.toString();
 };
 
-const PAGE_SIZE = 12; // 每页加载的数量
+const PAGE_SIZE = 12; 
 
 const CommunityPage = () => {
   const navigate = useNavigate();
@@ -29,7 +29,6 @@ const CommunityPage = () => {
   const { isLoggedIn, user } = useAuth();
 
   const [showLoginGuide, setShowLoginGuide] = useState(false);
-  // ... (保留 handleCreateClick 等基础逻辑)
   const handleCreateClick = () => {
     navigate('/work');
   };
@@ -46,9 +45,8 @@ const CommunityPage = () => {
 
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   
-  // ==========================================
+
   // 分页状态管理
-  // ==========================================
   const [activeFeedTab, setActiveFeedTab] = useState<FeedTabType>('RECOMMEND'); 
   const [displayPosts, setDisplayPosts] = useState<Post[]>([]); 
   
@@ -73,9 +71,8 @@ const CommunityPage = () => {
     if (node) observer.current.observe(node);
   }, [isInitialLoading, isLoadingMore, hasMore]);
 
-  // ==========================================
-  // 历史记录与模态框逻辑 (保留之前的修复)
-  // ==========================================
+ 
+  // 历史记录与模态框逻辑
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [viewingImage, setViewingImage] = useState<Post | null>(null);
 
@@ -122,24 +119,22 @@ const CommunityPage = () => {
       }
   };
 
-  // ==========================================
-  // 核心数据获取逻辑 (分页版)
-  // ==========================================
+ 
+  // 核心数据获取逻辑
   
-  // 1. 切换 Tab 时重置状态
+  // 切换 Tab 时重置状态
   useEffect(() => {
     if (viewState === 'APP') {
       setDisplayPosts([]);
       setPage(1);
       setHasMore(true);
-      setIsInitialLoading(true); // 标记为初始加载
+      setIsInitialLoading(true); 
       
       // 立即触发第一页加载
       fetchPosts(1, activeFeedTab);
     }
   }, [activeFeedTab, viewState]);
 
-  // 2. 页码变化时加载更多 (page > 1)
   useEffect(() => {
     if (page > 1 && viewState === 'APP') {
       setIsLoadingMore(true);
@@ -158,7 +153,6 @@ const CommunityPage = () => {
         default: endpoint = '/community/posts/recommend';
       }
 
-      // API请求：传递分页参数
       const data = await api.get<any, Post[]>(endpoint, {
         params: {
           page: pageNum,
@@ -187,8 +181,8 @@ const CommunityPage = () => {
     } catch (error: any) {
       console.error("Failed to fetch posts:", error);
       if (error.response && error.response.status === 401) {
-        setShowLoginGuide(true); // 显示登录引导
-        setHasMore(false);       // 停止加载更多
+        setShowLoginGuide(true); 
+        setHasMore(false);       
       }
       // 错误时停止无限加载
       setHasMore(false);
@@ -198,10 +192,8 @@ const CommunityPage = () => {
     }
   };
 
-  // ... (保留 LandingPage)
   const LandingPage = () => (
     <div className="min-h-screen bg-[#05050a] flex flex-col items-center justify-center relative overflow-hidden">
-      {/* ... (LandingPage 内容保持不变) */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/30 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px]" />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
@@ -223,7 +215,6 @@ const CommunityPage = () => {
   const MainApp = () => (
     <div className="flex h-screen w-full bg-[#05050a] text-white overflow-hidden relative">
       
-      {/* ... (Navigation 和 SidebarPanel 保持不变) */}
       <nav className="w-16 md:w-20 bg-black/40 border-r border-white/5 flex flex-col items-center py-8 z-50 backdrop-blur-xl shrink-0">
         <div className="mb-10 text-2xl font-bold tracking-tighter">U.</div>
         <div className="flex flex-col gap-8 w-full">
@@ -238,10 +229,8 @@ const CommunityPage = () => {
 
       <SidebarPanel activeTab={activeTab} onClose={() => setActiveTab('HOME')} onSelectPost={(post) => openPostDetail(post)} targetUserId={targetUserId} />
 
-      {/* Main Feed Content Area */}
       <main className="flex-1 relative overflow-y-auto scroll-smooth">
         
-        {/* Sticky Header */}
         <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 bg-[#05050a]/80 backdrop-blur-md border-b border-white/5">
            <div className="flex gap-2">
              <TabButton label="推荐" isActive={activeFeedTab === 'RECOMMEND'} onClick={() => setActiveFeedTab('RECOMMEND')} />
@@ -274,7 +263,6 @@ const CommunityPage = () => {
               </button>
             </div>
           ) : (
-             /* 这里放原来的正常的列表渲染逻辑 */
              <>
                {isInitialLoading && displayPosts.length === 0 ? (
                   // Loading...
@@ -340,21 +328,18 @@ const CommunityPage = () => {
           )}
         
           
-          {/* Loading More Indicator */}
           {isLoadingMore && (
               <div className="flex items-center justify-center py-8">
                   <Loader2 size={24} className="animate-spin text-purple-500" />
               </div>
           )}
 
-          {/* End of Feed Indicator */}
           {!hasMore && displayPosts.length > 0 && (
               <div className="text-center py-8 text-gray-600 text-xs">
                   - 已经到底啦 -
               </div>
           )}
           
-          {/* Empty State */}
           {!isInitialLoading && !isLoadingMore && displayPosts.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4">
                  <ImageIcon size={48} className="opacity-20" />
@@ -376,7 +361,6 @@ const CommunityPage = () => {
         </div>
       </main>
 
-      {/* Modals */}
       {selectedPost && (
         <DetailView 
             post={selectedPost} 
@@ -399,7 +383,6 @@ const CommunityPage = () => {
   return viewState === 'LANDING' ? <LandingPage /> : <MainApp />;
 };
 
-// ... (TabButton, SidebarBtn 保持不变)
 const TabButton = ({ label, isActive, onClick }: { label: string, isActive: boolean, onClick: () => void }) => (
   <button 
     onClick={onClick}

@@ -2,8 +2,8 @@ import React from 'react';
 
 interface UpgradeCardProps {
   openUpgradeModal: () => void;
-  userStatus?: 'free' | 'member'; // 新增参数
-  memberDaysLeft?: number; // 新增参数
+  userStatus?: 'free' | 'member'; 
+  memberDaysLeft?: number;
 }
 
 const UpgradeCard: React.FC<UpgradeCardProps> = ({  
@@ -51,7 +51,6 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({
         )}
         
         {cardContent.showComparison ? (
-          // 非会员看到的对比卡片
           <>
             <div className="flex justify-between items-center mb-6">
               {/* 免费版卡片 */}

@@ -106,12 +106,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
     }
     if (isMember) {
       console.log('会员用户点击');
-      // 如果添加了会员中心页面
-      // onNavigate('member-center'); 
       return;
     }
     
-    // 非会员用户点击，打开升级弹窗
     openUpgradeModal();
     };
 
@@ -123,7 +120,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
         md transition-all duration-300 ease-in-out z-20
         ${isCollapsed ? 'w-20' : 'w-72'}
       `}>
-        {/* Header */}
         <div className="flex items-center h-20 px-6 border-b border-white/5">
           {!isCollapsed && (
             <div className="flex items-center gap-2 font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 whitespace-nowrap overflow-hidden">
@@ -152,7 +148,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
           </button>
         </div>
 
-        {/* Main Action Button (Create) */}
         <div className="p-4">
           <button className={`
           flex items-center justify-center gap-2 w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:opacity-90 text-white font-medium rounded-xl transition-all shadow-lg shadow-orange-500/20
@@ -163,7 +158,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
           </button>
         </div>
 
-        {/* Nav Items */}
         <nav className="flex-1 px-3 py-2 space-y-1">
           {navItems.slice(1).map((item) => (
             <button
@@ -190,7 +184,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
           ))}
         </nav>
 
-        {/* Footer / Upgrade Area - 修改后 */}
         <div className="p-4 border-t border-white/5 relative group">
         <button 
           onClick={handleUpgradeClick}
@@ -205,7 +198,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
             }
           `}
         >
-          {/* 图标 */}
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs shrink-0 ${upgradeButtonInfo.iconBg}`}>
             <i className={upgradeButtonInfo.icon}></i>
           </div>
@@ -244,7 +236,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
           )}
         </button>
         
-        {/* 算力显示（可选添加） */}
+        {/* 算力显示 */}
         {/* {isLoggedIn && !isCollapsed && (
           <div className="mt-3 text-center">
             <div className="flex items-center justify-between text-xs px-1">
@@ -259,7 +251,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleSidebar, openUpgra
           </div>
         )} */}
 
-        {/* Upgrade Popover Card - 条件显示 */}
+      
         {upgradeButtonInfo.showCard && (
           <UpgradeCard 
             openUpgradeModal={handleUpgradeClick}

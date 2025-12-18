@@ -8,7 +8,6 @@ function HomePage() {
       <Navbar />
       <Hero />
       
-      {/* Placeholder for future sections mentioned in prompt context */}
       <section id="inspiration" className="py-20 bg-[#050a1f] border-t border-white/5">
          <div className="container mx-auto px-6 text-center">
             <h3 className="text-2xl font-bold text-gray-300 mb-8">灵感画廊</h3>

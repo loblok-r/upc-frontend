@@ -63,7 +63,6 @@ const Gallery: React.FC = () => {
           key={index} 
           className="group relative rounded-xl overflow-hidden cursor-pointer border border-white/5 hover:border-orange-500/50 transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-orange-500/10 bg-slate-800"
         >
-          {/* Tag */}
           <div className="absolute top-3 left-3 z-10 px-2.5 py-1 bg-black/40 backdrop-blur-md rounded-md border border-white/10">
             <span className="text-xs font-bold text-white tracking-wide">{item.type}</span>
           </div>
@@ -84,7 +83,6 @@ const Gallery: React.FC = () => {
         </div>
       ))}
       
-      {/* Product Hunt Badge Mockup */}
       <div className="col-span-1 rounded-xl bg-gradient-to-br from-orange-100 to-white p-4 flex flex-col justify-center items-center shadow-lg border border-white/20">
           <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2">P</div>
           <div className="text-xs text-gray-500 font-bold tracking-widest uppercase mb-1">Product Hunt</div>

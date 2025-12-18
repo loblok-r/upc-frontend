@@ -125,10 +125,8 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
     }
 
     return (
-        // 修改点：p-6 md:p-10
         <div className="relative z-50 w-full max-w-[420px] bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 md:p-10 border border-white/50 animate-float">
             <div className="text-center mb-8">
-                {/* 修改点：text-2xl md:text-3xl */}
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800">重置密码</h1>
                 <p className="text-gray-400 text-xs mt-2">Reset Password</p>
             </div>
@@ -146,7 +144,6 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                     <input type="text" name="fake_email" autoComplete="username" />
                     <input type="password" name="fake_password" autoComplete="new-password" />
                 </div>
-                {/* Email */}
                 <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700 ml-1">邮箱地址</label>
                     <input
@@ -164,7 +161,6 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                     {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
                 </div>
 
-                {/* Verification Code */}
                 <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700 ml-1">验证码*</label>
                     <div className="flex gap-3">
@@ -183,7 +179,6 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                             type="button"
                             onClick={handleGetCode}
                             disabled={countdown > 0 || isSendingCode || isLoading}
-                            // 修改点：min-w-[100px] md:min-w-[110px]
                             className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[100px] md:min-w-[110px] transition-all duration-200 ${countdown > 0 || isSendingCode || isLoading
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     : 'bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700'
@@ -202,7 +197,6 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                 </div>
 
 
-                {/* New Password */}
                 <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700 ml-1">密码*</label>
                     <input
@@ -218,7 +212,6 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                     {errors.newPassword && <p className="text-xs text-red-500 ml-1">{errors.newPassword}</p>}
                 </div>
 
-                {/* Confirm Password */}
                 <div className="space-y-1">
                     <label className="block text-sm font-medium text-gray-700 ml-1">确认密码*</label>
                     <input

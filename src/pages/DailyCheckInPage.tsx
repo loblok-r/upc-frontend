@@ -74,10 +74,8 @@ export const DailyCheckInPage: React.FC = () => {
 
     try {
       await api.post('/checkin/checkin', {});
-       // api.get() 直接返回数据，不是完整的响应对象
         const data = await api.get('/checkin/history') as any;
     
-        // data 是 {checkInHistory: [...]}
         if (data && data.checkInHistory) {
           setCheckInHistory(data.checkInHistory);
         } else {
@@ -85,10 +83,8 @@ export const DailyCheckInPage: React.FC = () => {
           setCheckInHistory([]);
         }
 
-      // 刷新用户基础状态（checkedIn, streakDays）
       await refreshUser();
 
-      // 弹窗
       setRewardMessage({
         points: todayData.points,
         exp: todayData.exp,
@@ -101,10 +97,8 @@ export const DailyCheckInPage: React.FC = () => {
     }
   };
 
-  // ====== 补签逻辑 ======
-  // ====== 补签逻辑 ======
+  // 补签逻辑 
   const handleRetroCheckIn = async (index: number) => {
-    // 使用 user 中的 retroCounts
     if (!user || user.retroCounts <= 0) return;
 
     const targetDay = weekData[index];
@@ -113,7 +107,7 @@ export const DailyCheckInPage: React.FC = () => {
     // 提取日期数字
     const extractDayFromDateStr = (dateStr: string | number): number => {
       const str = String(dateStr);
-      // 从 "12.10" 中提取 "10"
+      // 从 12.10 中提取 10
       const match = str.match(/\.(\d+)$/);
       if (match) {
         return parseInt(match[1]);
@@ -135,15 +129,13 @@ export const DailyCheckInPage: React.FC = () => {
     const retroDate = `${yearMonth}-${dayStr}`;
 
     try {
-      // 1. 发送补签请求
+      // 发送补签请求
       const response = await api.post('/checkin/retro', { retroDate: retroDate });
 
-      // 2. 刷新签到历史
-      // api.get() 直接返回数据，不是完整的响应对象
+      // 刷新签到历史
         const data = await api.get('/checkin/history') as any;
       
 
-        // data 是 {checkInHistory: [...]}
         if (data && data.checkInHistory) {
           setCheckInHistory(data.checkInHistory);
         } else {
@@ -153,10 +145,10 @@ export const DailyCheckInPage: React.FC = () => {
 
 
 
-      // 3. 刷新用户数据（包含积分、连续签到天数、补签卡数量）
+      // 刷新用户数据（包含积分、连续签到天数、补签卡数量）
       await refreshUser();
 
-      // 4. 显示成功弹窗
+      // 显示成功弹窗
       setRewardMessage({
         points: targetDay.points,
         exp: targetDay.exp,
@@ -177,11 +169,9 @@ export const DailyCheckInPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0f0c29] text-white font-sans relative overflow-hidden flex flex-col">
-      {/* 背景装饰 */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-900/30 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-[20%] right-[-10%] w-[400px] h-[400px] bg-blue-900/20 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#0f0c29]/80 backdrop-blur-md">
         <button
           onClick={() => navigate(-1)}
@@ -193,10 +183,8 @@ export const DailyCheckInPage: React.FC = () => {
         <div className="w-8" />
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Top Card */}
           <section className="relative rounded-3xl overflow-hidden p-6 md:p-10 border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] shadow-2xl">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -254,7 +242,6 @@ export const DailyCheckInPage: React.FC = () => {
             </div>
           </section>
 
-          {/* Calendar */}
           <section>
             <div className="flex items-center justify-between mb-4 px-1">
               <h3 className="text-lg font-bold flex items-center gap-2">
@@ -325,7 +312,6 @@ export const DailyCheckInPage: React.FC = () => {
             </div>
           </section>
 
-          {/* Bottom Panels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 钱包 */}
             <div className="p-6 rounded-2xl bg-[#151520] border border-white/5 relative overflow-hidden">
@@ -380,7 +366,6 @@ export const DailyCheckInPage: React.FC = () => {
         </div>
       </main>
 
-      {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowSuccessModal(false)}></div>
@@ -426,7 +411,6 @@ export const DailyCheckInPage: React.FC = () => {
   );
 };
 
-// --- Helper Components ---
 const TaskItem = ({ title, reward, status }: { title: string; reward: string; status: 'completed' | 'pending' }) => (
   <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
     <div>

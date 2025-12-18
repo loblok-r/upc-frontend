@@ -9,7 +9,6 @@ interface DocumentsViewProps {
 const DocumentsView: React.FC<DocumentsViewProps> = ({ documents }) => {
   return (
     <div className="animate-fade-in">
-      {/* Header Section */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">我的文档</h1>
@@ -26,7 +25,6 @@ const DocumentsView: React.FC<DocumentsViewProps> = ({ documents }) => {
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className="relative mb-10">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <Search className="h-5 w-5 text-gray-500" />
@@ -38,9 +36,7 @@ const DocumentsView: React.FC<DocumentsViewProps> = ({ documents }) => {
         />
       </div>
 
-      {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* New Document Card */}
         <div className="group cursor-pointer bg-[#151725] hover:bg-[#1A1D2D] border border-white/5 hover:border-indigo-500/30 rounded-2xl h-56 flex flex-col items-center justify-center transition-all duration-300">
           <div className="w-12 h-12 rounded-full bg-[#1E2130] group-hover:bg-[#25283A] flex items-center justify-center mb-3 transition-colors">
             <Plus className="text-gray-400 group-hover:text-white" size={24} />
@@ -48,18 +44,14 @@ const DocumentsView: React.FC<DocumentsViewProps> = ({ documents }) => {
           <span className="text-gray-400 group-hover:text-white font-medium transition-colors">新建文档</span>
         </div>
 
-        {/* Existing Documents */}
         {documents.map((doc) => (
           <div key={doc.id} className="group cursor-pointer bg-[#151725] hover:bg-[#1A1D2D] border border-white/5 hover:border-white/10 rounded-2xl overflow-hidden flex flex-col transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5">
-            {/* Thumbnail Area */}
             <div className={`h-32 w-full relative ${doc.thumbnailColor} opacity-80 group-hover:opacity-100 transition-opacity`}>
-               {/* Badge */}
                <div className="absolute top-3 left-3">
                    <span className={`text-[10px] font-bold px-2 py-1 rounded bg-black/40 text-white backdrop-blur-sm border border-white/10`}>
                        {doc.type}
                    </span>
                </div>
-               {/* Decorative Icon inside Thumbnail */}
                <div className="absolute inset-0 flex items-center justify-center">
                     <svg className="w-12 h-12 text-white/20" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -69,11 +61,9 @@ const DocumentsView: React.FC<DocumentsViewProps> = ({ documents }) => {
                         <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
                </div>
-               {/* Status Dot */}
                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]"></div>
             </div>
 
-            {/* Content Area */}
             <div className="p-4 flex-1 flex flex-col">
               <h3 className="text-gray-200 font-medium truncate mb-1 group-hover:text-white transition-colors">{doc.title}</h3>
               <div className="mt-auto flex items-center justify-between text-xs text-gray-500">

@@ -1,4 +1,3 @@
-// src/components/ImageUploader.tsx
 import React, { useState, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 

@@ -41,7 +41,6 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({
             );
           }
 
-          // 2. 特殊处理：会员/个人中心按钮
           if (item.id === 'profile') {
              return (
               <button
@@ -57,7 +56,7 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({
              );
           }
 
-          // 3. 普通导航按钮
+          // 普通导航按钮
           const isActive = currentView === (item.view === 'landing' ? 'landing' : item.view);
           return (
             <button

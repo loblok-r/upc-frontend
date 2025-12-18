@@ -1,4 +1,3 @@
-// contexts/AuthContext.tsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import type { User } from '../types';
 import {  AppMode } from '../types';
@@ -13,11 +12,11 @@ interface ApiUserResources {
   maxComputingPower?: number;
 }
 
-// 新增：资源相关接口
+// 资源相关接口
 interface DailyUsage {
-  textChat: number;        // 文字对话使用次数
-  aiDrawing: number;       // AI绘图使用次数
-  lastResetDate: string;   // 最后重置日期 (YYYY-MM-DD)
+  textChat: number;        
+  aiDrawing: number;      
+  lastResetDate: string;  
 }
 
 interface UserResources {
@@ -37,11 +36,11 @@ interface AuthContextType {
   isLoading: boolean;
   refreshMemberStatus: () => void;
   
-  // 新增：资源管理字段
+  // 资源管理字段
   userResources: UserResources | null;
   refreshResources: () => Promise<void>;
   
-  // 新增：权限检查方法
+  // 权限检查方法
   checkGenerationPermission: (
     mode: AppMode, 
     options?: { estimatedCost?: number; requireHD?: boolean }
@@ -52,7 +51,7 @@ interface AuthContextType {
     dailyLimitReached?: boolean;
   };
   
-  // 新增：计算消耗
+  // 计算消耗
   calculateCost: (mode: AppMode, options?: { requireHD?: boolean; wordCount?: number }) => number;
 }
 
@@ -145,10 +144,10 @@ export const useAuth = () => {
 };
 
 const buildFullUser = (rawUserData: any): User => {
-  // 1. 处理 level 字段映射
+  // 处理 level 字段映射
   const level = (rawUserData.userLevel || 'LEVEL1').toLowerCase();
 
-  // 2. 处理 memberExpireAt：ISO 字符串 → Unix 时间戳（秒）
+ 
   let memberExpireAtTimestamp: number | undefined;
   if (rawUserData.memberExpireAt) {
     const date = new Date(rawUserData.memberExpireAt);
@@ -157,13 +156,13 @@ const buildFullUser = (rawUserData: any): User => {
     }
   }
 
-  // 3. 计算会员状态
+  // 计算会员状态
   const memberStatus = calculateMemberStatus(
     rawUserData.permanentMember || false,
     memberExpireAtTimestamp
   );
 
-  // 4. 映射等级显示
+  // 映射等级显示
   const displayLevel = mapLevelToDisplay(level);
 
   return {
@@ -184,7 +183,6 @@ const buildFullUser = (rawUserData: any): User => {
     computingPower: rawUserData.computingPower || 0,
     maxcomputingPower: 1000,
 
-    // 关键修正字段
     level,                 
     displayLevel,
     lotteryCounts: rawUserData.lotteryCounts || 0,
@@ -217,7 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userResources, setUserResources] = useState<UserResources | null>(null);
   
 
-  // 初始化：从 token 恢复登录状态，并强制从后端拉取最新用户数据
+  // 从 token 恢复登录状态，并强制从后端拉取最新用户数据
 useEffect(() => {
   const storedToken = localStorage.getItem('auth_token');
 
@@ -263,7 +261,7 @@ useEffect(() => {
   }
 }, []);
 
-  // 检查是否需要重置当日使用（每日0点）
+  // 检查是否需要重置当日使用
   useEffect(() => {
     const checkAndResetDailyUsage = () => {
       if (!userResources) return;
@@ -441,11 +439,6 @@ const refreshResources = async () => {
       
       setUserResources(updatedResources);
       localStorage.setItem('user_resources', JSON.stringify(updatedResources));
-
-      // ✅ 删除下面这段！不要手动更新 user.computingPower
-      // if (user && resourcesData.computingPower !== undefined) {
-      //   setUser({ ...user, computingPower: resourcesData.computingPower });
-      // }
     }
   } catch (error) {
     console.error('刷新资源状态失败:', error);
@@ -536,8 +529,6 @@ const calculateCost = (
       refreshUser,
       isLoading,
       refreshMemberStatus,
-      
-      // 新增
       userResources,
       refreshResources,
       checkGenerationPermission,

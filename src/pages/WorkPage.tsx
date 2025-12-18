@@ -14,6 +14,7 @@ import { Sender, AppMode } from '../types';
 import type { HistoryItem, Message } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
+import { Info } from 'lucide-react';
 
 const PAGE_SIZE = 10;
 
@@ -389,6 +390,25 @@ const WorkPage: React.FC = () => {
           </div>
         </header>
 
+        {/* 开发测试期间限额提示 (仅对非会员显示) */}
+        {!user?.isMember && (
+          <div className="bg-indigo-900/30 border-b border-indigo-500/20 px-4 py-2 flex items-center justify-center gap-2 text-xs text-indigo-200 shrink-0">
+            <Info size={14} className="text-indigo-400" />
+            <span>
+              <span className="font-bold text-indigo-400 mr-1">开发测试期</span>
+              普通用户每日限额：
+              文生文 <span className="text-white font-bold">5</span> 次 /
+              文生图 <span className="text-white font-bold">2</span> 次
+            </span>
+            {/* 可选：添加升级引导 */}
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="ml-2 underline hover:text-white transition-colors"
+            >
+              升级解锁
+            </button>
+          </div>
+        )}
         {/* 主内容区域 - 底部留出空间给 MobileNavbar (pb-20) */}
         <div className="flex-1 overflow-hidden relative pb-20 md:pb-0">
           {viewState === 'landing' && (

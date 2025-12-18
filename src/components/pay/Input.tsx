@@ -1,5 +1,4 @@
 import React from 'react';
-// 修改导入方式，使用不同的类型导入
 import { type LucideIcon } from 'lucide-react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -29,7 +28,6 @@ export const Input: React.FC<InputProps> = ({ label, icon: Icon, containerClassN
           `}
           {...props}
         />
-        {/* Glow effect on focus (handled by ring, but adding an extra subtle gradient border via pseudo-element simulation could go here if needed) */}
       </div>
     </div>
   );

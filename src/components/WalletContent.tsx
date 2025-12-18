@@ -183,10 +183,9 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
     }
   };
 
-  // 获取实物订单数据（带分页）
+  // 获取实物订单数据
   const fetchOrdersFromBackend = async (params: PaginationParams) => {
     try {
-        // 取消注释，并添加 as any 绕过类型检查
       const response = await api.get('/orders', { params }) as any; 
       const { data: ordersData, total, page, pageSize, totalPages } = response;
 
@@ -215,7 +214,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
     }
   };
 
-  // 获取权益数据（带分页）
+  // 获取权益数据
   const fetchBenefitsFromBackend = async (params: PaginationParams) => {
     try {
       const response = await api.get('/benefits', { params }) as any;
@@ -272,7 +271,6 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
             await fetchBenefitsFromBackend(params);
             break;
           default:
-            // 对于其他tab，使用mock数据
             const result = await MockWalletService.fetchTabContent(activeTab);
 
             const startIndex = (currentPage - 1) * pageSize;
@@ -330,7 +328,8 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newSize = parseInt(e.target.value);
     setPageSize(newSize);
-    setCurrentPage(1); // 重置到第一页
+    // 重置到第一页
+    setCurrentPage(1); 
   };
 
   const handleUseClick = () => {
@@ -347,7 +346,8 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
     if (amount >= 0) {
       return `+${amount}`;
     }
-    return `${amount}`; // 负数自带-号
+    // 负数自带-号
+    return `${amount}`; 
   };
 
   // 渲染分页控件
@@ -371,7 +371,6 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
           <span>共 {total} 条记录</span>
         </div>
 
-        {/* 中间：分页按钮 */}
         <div className="flex items-center gap-2">
           {/* 第一页 */}
           <button
@@ -448,11 +447,10 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
     );
   };
 
-  // 积分列表渲染（修改版，移除type字段相关逻辑）
+  // 积分列表渲染
   const renderPoints = (list: PointTransaction[]) => (
     <>
       <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        {/* List Header */}
         <div className="grid grid-cols-12 gap-4 text-xs font-medium text-slate-500 uppercase tracking-wider mb-4 px-4">
           <div className="col-span-4 md:col-span-3">积分 <span className="text-amber-500/80 bg-amber-500/10 px-1 rounded text-[10px] ml-1">流水</span></div>
           <div className="col-span-4 md:col-span-6">来源</div>
@@ -483,7 +481,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
               </div>
 
               <div className="col-span-4 md:col-span-3 text-right text-sm text-slate-500 font-mono">
-                {formatDate(tx.date)} {/* 使用 formatDate 函数 */}
+                {formatDate(tx.date)} 
               </div>
             </div>
           );
@@ -493,18 +491,16 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
     </>
   );
 
-  // 2. 优惠券渲染
+  //优惠券渲染
   const renderCoupons = (list: Coupon[]) => (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
         {list.map(coupon => (
           <div key={coupon.id} className={`relative flex rounded-xl overflow-hidden border ${coupon.status === 'active' ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/5 bg-white/5 opacity-60'}`}>
-            {/* Left Part */}
             <div className={`w-24 flex flex-col items-center justify-center p-4 border-r border-dashed ${coupon.status === 'active' ? 'border-amber-500/30 bg-amber-500/10' : 'border-white/10 bg-white/5'}`}>
               <Ticket className={`w-6 h-6 mb-2 ${coupon.status === 'active' ? 'text-amber-500' : 'text-slate-500'}`} />
               <span className={`text-lg font-bold ${coupon.status === 'active' ? 'text-amber-500' : 'text-slate-500'}`}>{coupon.type === 'discount' ? coupon.discount : '¥' + coupon.discount}</span>
             </div>
-            {/* Right Part */}
             <div className="flex-1 p-4 flex flex-col justify-between">
               <div>
                 <h3 className="text-white font-medium">{coupon.title}</h3>
@@ -518,7 +514,6 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
                 </span>
               </div>
             </div>
-            {/* Decorative Circles */}
             <div className="absolute -top-2 left-[5.75rem] w-4 h-4 bg-[#111827] rounded-full"></div>
             <div className="absolute -bottom-2 left-[5.75rem] w-4 h-4 bg-[#111827] rounded-full"></div>
           </div>
@@ -528,7 +523,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
     </>
   );
 
-  // 3. 实物订单渲染
+  // 实物订单渲染
   const renderOrders = (list: OrderItem[]) => (
     <>
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -555,7 +550,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
     </>
   );
 
-  // 4. 权益列表渲染
+  // 权益列表渲染
   const renderBenefits = (list: BenefitItem[]) => (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -577,7 +572,7 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
     </>
   );
 
-  // --- 主渲染逻辑 ---
+  // 主渲染逻辑 
 
   return (
     <div className="relative z-10 h-full flex flex-col">
@@ -596,7 +591,6 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
         {/* 只有积分 Tab 显示 "去使用" */}
         {activeTab === WalletTabId.POINTS && (
           <div className="flex gap-4">
-            {/* Filter UI (Simplified) */}
             <div className="hidden md:flex items-center gap-2 text-slate-400 text-sm cursor-pointer hover:text-white transition-colors mr-4">
               <Filter className="w-4 h-4" /> <span>筛选</span> <ChevronDown className="w-3 h-3" />
             </div>
@@ -629,7 +623,6 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
             <p className="text-sm">加载数据中...</p>
           </div>
         ) : data.length > 0 ? (
-          // Has Data - Switch Render based on Tab
           <>
             {activeTab === WalletTabId.POINTS && renderPoints(data)}
             {activeTab === WalletTabId.COUPONS && renderCoupons(data)}
@@ -637,7 +630,6 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
             {activeTab === WalletTabId.BENEFITS && renderBenefits(data)}
           </>
         ) : (
-          // Empty State
           <div className="flex-1 flex flex-col items-center justify-center text-center opacity-0 animate-[fadeIn_0.5s_ease-out_forwards]" style={{ animationDelay: '0.1s' }}>
             <div className="w-20 h-20 bg-slate-800/50 rounded-2xl flex items-center justify-center mb-6 relative overflow-hidden">
               <Archive className="w-8 h-8 text-slate-600" />

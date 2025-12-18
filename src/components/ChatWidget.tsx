@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send,  Minus, Bot } from 'lucide-react';
 import type { ChatMessage } from '../types';
-import api from '../utils/api'; // 引入封装好的API
+import api from '../utils/api'; 
 
-// 定义后端返回的接口类型
 interface ChatResponse {
-  reply: string; // AI回复的内容
-  references?: string[]; // (可选) AI参考了哪些文档
+  reply: string; 
+  references?: string[]; 
 }
 
 const ChatWidget: React.FC = () => {
@@ -31,7 +30,7 @@ const ChatWidget: React.FC = () => {
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
-    // 1. 构建用户消息
+    // 构建用户消息
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -44,21 +43,16 @@ const ChatWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // 2. 发送请求给后端 API (这里假设后端路径为 /chat/completions)
-      // 注意：我们将历史消息的最后几条发给后端，以便保持对话上下文
       const historyPayload = messages.slice(-5).map(m => ({
         role: m.role === 'model' ? 'assistant' : 'user',
         content: m.text
       }));
 
-      // 使用项目中封装的 api，它会自动处理 Token 和拦截器
       const response = await api.post<ChatResponse>('/chat/completions', {
         message: userMsg.text,
         history: historyPayload
       });
 
-      // 3. 处理后端返回 (api.ts 的拦截器返回的是 data 部分)
-      // 假设后端返回结构是 { reply: "..." }
       const responseText = (response as any).reply || (response as any).text || "抱歉，我没有理解您的意思。";
 
       const aiMsg: ChatMessage = {
@@ -98,11 +92,9 @@ const ChatWidget: React.FC = () => {
         <MessageSquare className="w-8 h-8" />
       </button>
 
-      {/* Chat Window */}
       <div 
         className={`fixed bottom-6 right-6 w-[380px] h-[600px] max-w-[calc(100vw-48px)] max-h-[calc(100vh-100px)] bg-[#f5f7f9] rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}
       >
-        {/* Header */}
         <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
            <div className="flex items-center space-x-3">
              <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -118,7 +110,6 @@ const ChatWidget: React.FC = () => {
            </div>
         </div>
 
-        {/* System Alert/Notice - 保持原样，这对于减少AI压力很有用 */}
         <div className="bg-gray-100 p-4">
              <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex items-start space-x-3">
                 <div className="bg-blue-500 p-1.5 rounded-full mt-1 shrink-0">
@@ -131,7 +122,6 @@ const ChatWidget: React.FC = () => {
              </div>
         </div>
 
-        {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f5f7f9]">
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -164,7 +154,6 @@ const ChatWidget: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
         <div className="bg-white p-4 border-t border-gray-200">
            <div className="relative flex items-center bg-gray-50 rounded-full px-4 py-2 border border-gray-200 focus-within:border-blue-400 transition-colors">
               <input

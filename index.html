@@ -13,21 +13,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100;300;400;500;700;900&display=swap"
     rel="stylesheet">
-  <!-- Font Awesome 图标 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <script>
-    // 合并所有Tailwind配置
     tailwind.config = {
       theme: {
         extend: {
-          // 字体配置
           fontFamily: {
             sans: ['Inter', 'Noto Sans SC', 'sans-serif'],
           },
-          // 颜色配置 - 合并所有颜色系统
           colors: {
-            // 旧版UPC颜色
             upc: {
               dark: '#0f0c29',
               purple: '#302b63',
@@ -35,14 +30,12 @@
               accent: '#7b2ff7',
               glow: '#00d4ff',
             },
-            // 新版brand颜色
             brand: {
               dark: '#0B0C15',
               card: '#161821',
               accent: '#6366f1',
               glow: '#8b5cf6',
             },
-            // 新版增强brand颜色
             'brand-new': {
               50: '#f0f9ff',
               100: '#e0f2fe',
@@ -51,12 +44,10 @@
               700: '#4338ca',
               900: '#312e81',
             },
-            // accent橙色系统
             accent: {
               DEFAULT: '#f97316',
               glow: '#fb923c',
             },
-            // 新增AI颜色系统（来自新HTML）
             ai: {
               dark: '#0f0c29',
               mid: '#302b63',
@@ -64,14 +55,13 @@
               accent: '#6366f1',
               orange: '#f97316'
             },
-            // 新增 SoraCommunity 颜色系统
             sora: {
               dark: '#0f172a',
               panel: '#141423',
               border: 'rgba(255, 255, 255, 0.08)'
             }
           },
-          // 动画配置 - 合并所有
+          // 动画配置
           animation: {
             'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             'pulse-slower': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -81,7 +71,7 @@
             'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
             'shine': 'shine 2s linear infinite',
           },
-          // 关键帧 - 合并
+          // 关键帧
           keyframes: {
             float: {
               '0%, 100%': { transform: 'translateY(0)' },
@@ -113,12 +103,9 @@
     body {
       font-family: 'Noto Sans SC', 'Inter', sans-serif;
       background-color: #020617;
-      /* 使用 slate-950 背景色 */
       color: #ffffff;
-      /* overflow: hidden; 从新HTML添加：App handles scrolling */
     }
 
-    /* 登录表单区域可以用 Inter 字体 */
     .login-font {
       font-family: 'Inter', sans-serif;
     }
@@ -143,7 +130,7 @@
       background-size: 30px 30px;
     }
 
-    /* 微网格3 - 更明显的网格（来自新HTML） */
+    /* 微网格3 - 更明显的网格 */
     .bg-grid-pattern {
       background-size: 40px 40px;
       background-image:
@@ -164,26 +151,25 @@
     }
 
     ::-webkit-scrollbar-track {
-      background: #0f172a; /* 使用新HTML的颜色 */
+      background: #0f172a;
     }
 
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2); /* 使用新HTML的颜色 */
+      background: rgba(255, 255, 255, 0.2);
       border-radius: 4px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3); /* 使用新HTML的颜色 */
+      background: rgba(255, 255, 255, 0.3);
     }
 
-    /* 新增：SoraCommunity 风格的滚动条 */
     .scrollbar-sora::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     
     .scrollbar-sora::-webkit-scrollbar-track {
-      background: transparent; /* 透明背景 */
+      background: transparent; 
     }
     
     .scrollbar-sora::-webkit-scrollbar-thumb {
@@ -195,7 +181,6 @@
       background: rgba(255, 255, 255, 0.3);
     }
 
-    /* 兼容选项：旧版滚动条样式 */
     .scrollbar-legacy ::-webkit-scrollbar-track {
       background: #0B0C15;
     }
@@ -204,7 +189,6 @@
       background: #334155;
     }
 
-    /* 隐藏滚动条 */
     .scrollbar-hide::-webkit-scrollbar {
       display: none;
     }
@@ -214,7 +198,6 @@
       scrollbar-width: none;
     }
     
-    /* 新增：从新HTML的 hide-scrollbar 类 */
     .hide-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -224,7 +207,7 @@
       scrollbar-width: none;
     }
 
-    /* ========== 动画效果 ========== */
+    /* 动画效果*/
 
     /* 打字光标 */
     .typing-cursor::after {
@@ -232,7 +215,6 @@
       animation: blink 1s step-start infinite;
     }
 
-    /* 动画类 - 确保所有动画都可用 */
     .animate-float {
       animation: float 6s ease-in-out infinite;
     }
@@ -261,7 +243,7 @@
       animation: shine 2s linear infinite;
     }
 
-    /* ========== 特殊效果类 ========== */
+    /* 特殊效果类  */
 
     .text-gradient {
       background: linear-gradient(90deg, #6366f1, #8b5cf6, #f97316);
@@ -309,7 +291,6 @@
         linear-gradient(135deg, #6366f1, #f97316) border-box;
     }
 
-    /* ========== 新增：SoraCommunity 特殊类 ========== */
     
     /* 毛玻璃面板效果 */
     .glass-panel {

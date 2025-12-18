@@ -16,9 +16,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
   onSelectHistory, 
   onDeleteHistory 
 }) => {
-  // ✅ 状态管理：控制哪个菜单被打开
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  // ✅ 新增：搜索状态
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const formatDate = (timestamp: number | string) => {
@@ -32,14 +30,14 @@ const HistoryView: React.FC<HistoryViewProps> = ({
     });
   };
 
-  // ✅ 点击外部关闭菜单
+  //点击外部关闭菜单
   useEffect(() => {
     const handleClickOutside = () => setActiveMenuId(null);
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // ✅ 新增：过滤函数
+  // 过滤函数
   const filteredItems = historyItems.filter(item => {
     if (!searchQuery.trim()) return true;
     
@@ -65,7 +63,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
         </div>
       </div>
 
-      {/* 搜索栏 - 已修改：添加搜索功能和清除按钮 */}
+      {/* 搜索栏 */}
       <div className="relative mb-10">
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <Search className="h-5 w-5 text-gray-500" />
@@ -91,7 +89,6 @@ const HistoryView: React.FC<HistoryViewProps> = ({
       </div>
 
       <div className="space-y-4 pb-20">
-        {/* ✅ 修改：使用 filteredItems 代替 historyItems */}
         {filteredItems.map((item) => (
           <div 
             key={item.id} 
@@ -124,11 +121,12 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                         {formatDate(item.timestamp)}
                     </div>
 
-                    {/* ✅ 右侧菜单按钮 */}
+                    {/* 右侧菜单按钮 */}
                     <div className="ml-auto relative">
                         <button 
                           onClick={(e) => {
-                            e.stopPropagation(); // 阻止冒泡，防止触发 onSelectHistory
+                            // 阻止冒泡，防止触发 onSelectHistory
+                            e.stopPropagation(); 
                             // 切换菜单显示
                             setActiveMenuId(activeMenuId === item.id ? null : item.id);
                           }}
@@ -141,14 +139,15 @@ const HistoryView: React.FC<HistoryViewProps> = ({
                             <MoreHorizontal size={16} />
                         </button>
 
-                        {/* ✅ 弹出删除菜单 */}
+                        {/* 弹出删除菜单 */}
                         {activeMenuId === item.id && (
                           <div className="absolute right-0 bottom-full mb-2 w-32 bg-[#1E2130] border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                             <button
                               onClick={(e) => {
-                                e.stopPropagation(); // 阻止冒泡
-                                onDeleteHistory(item.id); // 执行删除
-                                setActiveMenuId(null);    // 关闭菜单
+                                // 阻止冒泡
+                                e.stopPropagation(); 
+                                onDeleteHistory(item.id); 
+                                setActiveMenuId(null);    
                               }}
                               className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 hover:text-red-300 transition-colors text-left"
                             >
@@ -163,7 +162,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
           </div>
         ))}
 
-        {/* ✅ 修改：优化空状态显示 */}
+        {/* 优化空状态显示 */}
         {filteredItems.length === 0 && (
             <div className="h-[40vh] flex flex-col items-center justify-center text-center">
                 {searchQuery ? (
@@ -185,7 +184,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({
             </div>
         )}
         
-        {/* ✅ 修改：添加搜索结果统计信息 */}
+        {/* 添加搜索结果统计信息 */}
         {filteredItems.length > 0 && filteredItems.length < historyItems.length && (
           <div className="text-center mt-8">
             <p className="text-gray-600 text-sm">

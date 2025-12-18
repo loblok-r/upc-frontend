@@ -40,10 +40,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const [selectedPlanId, setSelectedPlanId] = useState<string>('month');
 
   const handleLoginClick = () => {
-    // Find the selected plan
     const selectedPlan = PLANS.find(plan => plan.id === selectedPlanId);
     
-    // Navigate to pay-info page with the selected plan data
     if (selectedPlan) {
       navigate('/pay-info', { 
         state: { 
@@ -57,48 +55,41 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           period: getPeriodFromBillingText(selectedPlan.billingText), // 提取周期
           badge: selectedPlan.badge,
           isPopular: selectedPlan.isPopular,
-          id: selectedPlan.id// Extract period from billing text
+          id: selectedPlan.id
           }
         } 
       });
     } else {
-      // Fallback to default plan if somehow none is selected
       navigate('/pay-info');
     }
   };
 
-  // 添加辅助函数来从 billingText 中提取周期
 function getPeriodFromBillingText(billingText: string): string {
   if (billingText.includes('年')) return '年';
   if (billingText.includes('月')) return '月';
   if (billingText.includes('天')) return '天';
-  return '月'; // 默认
+  return '月'; 
 }
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
-      {/* Modal Container */}
       <div className="relative w-full max-w-5xl bg-[#0B0F19] rounded-2xl shadow-[0_0_50px_-12px_rgba(79,70,229,0.5)] border border-slate-700/50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
         
-        {/* Decorative Background Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
           <div className="absolute -top-[200px] -left-[200px] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]" />
           <div className="absolute top-[20%] right-[10%] w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[80px]" />
           <div className="absolute bottom-0 left-[30%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[90px]" />
           
-          {/* Subtle Grid overlay inside modal */}
           <div className="absolute inset-0 micro-grid opacity-30 mix-blend-overlay" />
         </div>
 
-        {/* Header Bar - Gradient */}
         <div className="relative z-10 w-full bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 dark:from-orange-900/40 dark:via-amber-900/20 dark:to-orange-900/40 border-b border-orange-500/20 py-3 px-6 flex flex-col sm:flex-row items-center justify-center sm:space-x-4 text-center">
             <span className="flex items-center text-orange-400 font-semibold mb-2 sm:mb-0">
                <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
@@ -106,7 +97,6 @@ function getPeriodFromBillingText(billingText: string): string {
             </span>
             <CountdownTimer />
             
-            {/* Close Button */}
             <button 
               onClick={onClose}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
@@ -115,10 +105,8 @@ function getPeriodFromBillingText(billingText: string): string {
             </button>
         </div>
 
-        {/* Main Content */}
         <div className="relative z-10 flex flex-col lg:flex-row p-6 lg:p-10 gap-8 lg:gap-12">
           
-          {/* Left Column: Value Proposition - 修改后 */}
           <div className="flex-1 flex flex-col justify-center space-y-8">
             <div className="space-y-4">
               <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 rounded-full px-3 py-1">
@@ -144,7 +132,6 @@ function getPeriodFromBillingText(billingText: string): string {
             </div>
 
             <div className="space-y-6">
-              {/* Feature 1 - 修改后 */}
               <div className="flex items-start space-x-4 group">
                 <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 group-hover:bg-blue-500/20 group-hover:scale-110 transition-all duration-300">
                   <MessageSquare className="w-5 h-5" />
@@ -157,7 +144,6 @@ function getPeriodFromBillingText(billingText: string): string {
                 </div>
               </div>
 
-              {/* Feature 2 - 修改后 */}
               <div className="flex items-start space-x-4 group">
                 <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 border border-green-500/20 group-hover:bg-green-500/20 group-hover:scale-110 transition-all duration-300">
                   <Image className="w-5 h-5" />
@@ -170,7 +156,6 @@ function getPeriodFromBillingText(billingText: string): string {
                 </div>
               </div>
 
-              {/* Feature 3 - 修改后 */}
               <div className="flex items-start space-x-4 group">
                 <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400 border border-yellow-500/20 group-hover:bg-yellow-500/20 group-hover:scale-110 transition-all duration-300">
                   <BatteryCharging className="w-5 h-5" />
@@ -183,7 +168,6 @@ function getPeriodFromBillingText(billingText: string): string {
                 </div>
               </div>
 
-              {/* Feature 4 - 新增 */}
               <div className="flex items-start space-x-4 group">
                 <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20 group-hover:bg-purple-500/20 group-hover:scale-110 transition-all duration-300">
                   <Crown className="w-5 h-5" />
@@ -198,7 +182,6 @@ function getPeriodFromBillingText(billingText: string): string {
             </div>
           </div>
 
-          {/* Right Column: Pricing Selection - 保持不变 */}
           <div className="flex-1 max-w-md w-full mx-auto lg:mx-0">
              <div className="flex flex-col space-y-4">
                 {PLANS.map((plan) => {
@@ -214,7 +197,6 @@ function getPeriodFromBillingText(billingText: string): string {
                           : 'bg-slate-900/40 border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-600'}
                       `}
                     >
-                      {/* Popular Badge */}
                       {plan.isPopular && (
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
                           最受欢迎
@@ -248,7 +230,6 @@ function getPeriodFromBillingText(billingText: string): string {
                         </div>
                       </div>
 
-                      {/* Selection Circle Indicator */}
                       <div className={`absolute top-1/2 -translate-y-1/2 -left-3 lg:-left-4 w-6 h-6 lg:w-8 lg:h-8 rounded-full border-2 flex items-center justify-center bg-[#0B0F19] transition-colors
                         ${isSelected ? 'border-orange-500 text-orange-500' : 'border-slate-600 text-transparent'}
                       `}>
@@ -259,7 +240,6 @@ function getPeriodFromBillingText(billingText: string): string {
                 })}
              </div>
 
-             {/* Action Button */}
              <div className="mt-8 space-y-4">
                 <button 
                  onClick={handleLoginClick}
@@ -274,7 +254,7 @@ function getPeriodFromBillingText(billingText: string): string {
                   可随时取消订阅。7天无理由退款保证。
                 </p>
                 
-                {/* 添加会员特权概览 */}
+                {/* 会员特权概览 */}
                 <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
                   <h4 className="text-sm font-semibold text-slate-300 mb-2">Pro 会员包含：</h4>
                   <div className="grid grid-cols-2 gap-2 text-xs">

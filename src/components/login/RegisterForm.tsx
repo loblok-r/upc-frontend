@@ -182,11 +182,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   };
 
   return (
-    // 修改点：p-6 md:p-10
     <div className="relative w-full max-w-[420px] bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 md:p-10 border border-white/50 animate-float">
-      {/* Logo Section */}
       <div className="text-center mb-6">
-        {/* 修改点：text-4xl md:text-5xl */}
         <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent select-none drop-shadow-sm">
           UPC
         </h1>
@@ -296,7 +293,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 type="button"
                 onClick={handleGetCode}
                 disabled={countdown > 0 || isSendingCode || isLoading}
-                // 修改点：min-w-[100px] md:min-w-[110px]
                 className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[100px] md:min-w-[110px] transition-all duration-200 ${
                   countdown > 0 || isSendingCode || isLoading
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'

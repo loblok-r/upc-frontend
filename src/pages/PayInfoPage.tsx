@@ -56,9 +56,9 @@ const PayInfoPage: React.FC = () => {
 
   const handleSubmit = async () => {
 
-    // 校验支付方式 - 只允许微信支付
-    if (formData.paymentMethod !== 'wechat' && formData.paymentMethod !== 'alipay') {
-      alert('目前只支持微信支付和支付宝支付，请选择支付方式');  
+    // 校验支付方式
+    if (formData.paymentMethod !== 'wechat' ) {
+      alert('目前只支持微信支付，请选择支付方式');  
       return;
     }
 
@@ -87,7 +87,7 @@ const PayInfoPage: React.FC = () => {
     navigate('/work');
   };
 
-  // 如果显示账单页面 - 这是主要的渲染分支
+  // 如果显示账单页面
   if (showInvoice) {
     return (
       <InvoiceView
@@ -99,20 +99,20 @@ const PayInfoPage: React.FC = () => {
     );
   }
 
-  // 正常支付信息页面渲染（不再有 invoiceResult 的条件渲染）
+  // 正常支付信息页面渲染
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-slate-50 font-sans">
 
-      {/* Left Column: Order Summary (Dark Theme) */}
+   
       <div className="w-full lg:w-[45%] bg-ai-dark text-white relative overflow-hidden flex flex-col p-6 lg:p-12">
-        {/* Background Visuals */}
+ 
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-950 to-slate-950 z-0"></div>
         <div className="absolute inset-0 bg-grid-pattern opacity-20 z-0"></div>
         <div className="absolute -top-24 -left-24 w-64 h-64 bg-indigo-500 rounded-full blur-[100px] opacity-20 z-0"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600 rounded-full blur-[120px] opacity-10 z-0"></div>
 
         <div className="relative z-10 flex flex-col h-full">
-          {/* Header */}
+      
           <div
             onClick={handleBackClick}
             className="flex items-center gap-4 mb-10 text-slate-400 hover:text-white cursor-pointer transition-colors w-fit"
@@ -135,7 +135,7 @@ const PayInfoPage: React.FC = () => {
                 </span>
               )}
 
-              {/* 显示热门标签 */}
+        
               {orderDetails.isPopular && (
                 <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full ml-2">
                   最受欢迎
@@ -149,7 +149,7 @@ const PayInfoPage: React.FC = () => {
                 <span className="text-lg text-slate-400 font-normal">/ {orderDetails.period}</span>
               </h1>
 
-              {/* 显示原价（如果有） */}
+      
               {orderDetails.originalPrice && (
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-sm text-slate-400 line-through decoration-slate-400">
@@ -163,13 +163,13 @@ const PayInfoPage: React.FC = () => {
                 </div>
               )}
 
-              {/* 显示计费说明 */}
+           
               <p className="text-sm text-slate-400 mt-3">
                 {orderDetails.billingText}
               </p>
             </div>
 
-            {/* Line Item */}
+  
             <div className="flex justify-between items-center py-4 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded bg-white text-slate-900 font-bold flex items-center justify-center text-xs">
@@ -183,13 +183,13 @@ const PayInfoPage: React.FC = () => {
               <span className="font-medium">{orderDetails.currency}{orderDetails.price.toFixed(2)}</span>
             </div>
 
-            {/* Subtotal */}
+         
             <div className="flex justify-between items-center py-4 text-slate-300">
               <span>小计</span>
               <span>{orderDetails.currency}{orderDetails.price.toFixed(2)}</span>
             </div>
 
-            {/* Promo Code */}
+        
             <div className="mt-4 flex gap-3">
               <input
                 type="text"
@@ -201,7 +201,7 @@ const PayInfoPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Total */}
+        
             <div className="flex justify-between items-center mt-8 pt-6 border-t border-white/10">
               <span className="text-slate-300">今日应付合计</span>
               <span className="text-2xl font-bold text-white">{orderDetails.currency}{orderDetails.price.toFixed(2)}</span>
@@ -214,12 +214,12 @@ const PayInfoPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Column: Payment Form (Light/Glass Tech Theme) */}
+   
       <div className="w-full lg:w-[55%] p-6 lg:p-16 overflow-y-auto bg-slate-50 flex flex-col">
 
         <div className="max-w-xl mx-auto w-full space-y-10">
 
-          {/* Section: Payment Info */}
+        
           <section>
             <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
               <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
@@ -230,7 +230,7 @@ const PayInfoPage: React.FC = () => {
               onSelect={handlePaymentSelect}
             />
 
-            {/* 添加支付方式提示 */}
+           
             <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
               <div className="flex items-start gap-2 text-amber-700 text-sm">
                 <div className="bg-amber-100 p-1 rounded">
@@ -241,14 +241,14 @@ const PayInfoPage: React.FC = () => {
                 <div>
                   <p className="font-medium">重要提示</p>
                   <p className="text-amber-600 text-xs mt-0.5">
-                    目前测试阶段仅支持微信支付/支付宝支付。选择其他支付方式将无法完成支付。
+                    目前测试阶段仅支持微信支付。选择其他支付方式将无法完成支付。
                   </p>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Section: Personal Info */}
+          
           <section className="space-y-4">
             <h2 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-2">
               <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
@@ -304,7 +304,7 @@ const PayInfoPage: React.FC = () => {
             <span>该订单将在安全的网络环境下进行，以确保资讯安全。</span>
           </div>
 
-          {/* Submit Button */}
+        
           <div className="pt-2">
             <button
               onClick={handleSubmit}
@@ -335,7 +335,7 @@ const PayInfoPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Footer */}
+       
           <div className="flex justify-center items-center gap-6 text-xs text-slate-400 mt-8 pb-8">
             <div className="flex items-center gap-1">
               <ShieldCheck size={12} />
