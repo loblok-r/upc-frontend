@@ -25,11 +25,6 @@ const HeroCarousel: React.FC = () => {
   const [prizes, setPrizes] = useState<LotteryPrize[]>([]);
   const [loadingPrizes, setLoadingPrizes] = useState(true);
 
-  // 用户状态
-  // const [userStatus, setUserStatus] = useState({
-  //   isLoggedIn: false,
-  //   chances: 0,
-  // });
   const chances = authUser?.lotteryCounts || 0;
 
   // 抽奖状态
@@ -71,7 +66,6 @@ const HeroCarousel: React.FC = () => {
     user: {
       lotteryCounts: number;
       id: string;
-      // 可根据后端实际返回补充
     };
   }
 
@@ -83,7 +77,7 @@ const HeroCarousel: React.FC = () => {
     setMarqueeSpeed('0.5s');
 
     try {
-      const result = await api.post<DrawResult>('/lottery/draw');
+      const result : any = await api.post<DrawResult>('/lottery/draw');
       const { prizeId } = result; 
 
       const matchedPrize = prizes.find(p => p.id === prizeId);
@@ -175,15 +169,15 @@ const HeroCarousel: React.FC = () => {
     const colorName = colorParts.length > 1 ? colorParts[1] : 'blue';
 
     return (
-      <div className="w-[280px] md:w-[320px] h-[380px] rounded-2xl relative group/card transition-all duration-300 hover:-translate-y-2 mx-4 flex-shrink-0 cursor-pointer">
+      <div className="w-[260px] md:w-[320px] h-[340px] md:h-[380px] rounded-2xl relative group/card transition-all duration-300 hover:-translate-y-2 flex-shrink-0 cursor-pointer snap-center">
         <div className="absolute inset-0 bg-brand-card rounded-2xl border border-white/5 group-hover/card:border-white/20 transition-all overflow-hidden bg-[#1a1b26]">
           <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-${colorName}-500 to-transparent opacity-50 group-hover/card:opacity-100 transition-opacity`}></div>
           <div className="h-full flex flex-col items-center justify-center p-6 text-center z-10 relative">
-            <div className={`w-24 h-24 rounded-full bg-black/40 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover/card:shadow-[0_0_40px_${colorName === 'white' ? 'rgba(255,255,255,0.2)' : `rgba(var(--color-${colorName}-500),0.3)`}] transition-shadow duration-500`}>
-              <IconComponent className={`w-12 h-12 ${product.color} drop-shadow-lg`} />
+            <div className={`w-20 h-20 md:w-24 md:h-24 rounded-full bg-black/40 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover/card:shadow-[0_0_40px_${colorName === 'white' ? 'rgba(255,255,255,0.2)' : `rgba(var(--color-${colorName}-500),0.3)`}] transition-shadow duration-500`}>
+              <IconComponent className={`w-10 h-10 md:w-12 md:h-12 ${product.color} drop-shadow-lg`} />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-3">{product.title}</h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-6">{product.subtitle}</p>
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-3">{product.title}</h3>
+            <p className="text-xs md:text-sm text-slate-400 leading-relaxed mb-6 line-clamp-2">{product.subtitle}</p>
             {product.badge && (
               <span className="absolute top-4 right-4 bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded border border-red-500/30">
                 {product.badge}
@@ -199,42 +193,67 @@ const HeroCarousel: React.FC = () => {
   const displayProducts = [...prizes, ...prizes];
 
   return (
-    <div className="relative w-full py-12 md:py-20 overflow-hidden min-h-[600px] flex flex-col justify-center">
+    <div className="relative w-full py-12 md:py-20 overflow-hidden min-h-[500px] md:min-h-[600px] flex flex-col justify-center">
       <div className="absolute inset-0 bg-brand-dark opacity-90 -z-10 bg-[#0f0c29]"></div>
-      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-purple-600/20 blur-[100px] rounded-full pointer-events-none transition-all duration-1000 ${isSpinning ? 'scale-125 bg-red-600/30' : 'scale-100'}`} />
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[400px] bg-purple-600/20 blur-[100px] rounded-full pointer-events-none transition-all duration-1000 ${isSpinning ? 'scale-125 bg-red-600/30' : 'scale-100'}`} />
 
       <div className="container-fluid w-full relative">
         <div className="relative w-full overflow-hidden group">
-          <div className="absolute left-0 top-0 bottom-0 w-20 md:w-40 bg-gradient-to-r from-[#0f0c29] to-transparent z-20 pointer-events-none"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-20 md:w-40 bg-gradient-to-l from-[#0f0c29] to-transparent z-20 pointer-events-none"></div>
+          {/* 遮罩层 - 仅在 PC 端显示，或手机端两侧留白 */}
+          <div className="absolute left-0 top-0 bottom-0 w-4 md:w-40 bg-gradient-to-r from-[#0f0c29] to-transparent z-20 pointer-events-none"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-4 md:w-40 bg-gradient-to-l from-[#0f0c29] to-transparent z-20 pointer-events-none"></div>
 
           {loadingPrizes ? (
             <div className="flex justify-center py-12">
               <Loader2 className="animate-spin w-8 h-8 text-white" />
             </div>
           ) : (
-            <div className="flex">
-              <div
-                className="flex animate-marquee-slow min-w-full shrink-0 items-center justify-around"
-                style={{ animationDuration: marqueeSpeed }}
-              >
-                {displayProducts.map((product, idx) => (
-                  <ProductCard key={`p1-${idx}`} product={product} />
-                ))}
+            <>
+              {/* 1. Mobile View: 原生横向滚动，带 Snap 效果 */}
+              <div className="flex md:hidden overflow-x-auto snap-x snap-mandatory px-8 gap-4 scrollbar-hide pb-4">
+                 {/* 手机端只渲染一份奖品列表即可，无需无限循环 */}
+                 {prizes.map((product, idx) => (
+                    <div key={`m-${idx}`} className="snap-center shrink-0">
+                       <ProductCard product={product} />
+                    </div>
+                 ))}
+                 {/* 如果奖品太少，可以重复渲染一次保证视觉效果 */}
+                 {prizes.length < 3 && prizes.map((product, idx) => (
+                    <div key={`m-dup-${idx}`} className="snap-center shrink-0">
+                       <ProductCard product={product} />
+                    </div>
+                 ))}
               </div>
-              <div
-                className="flex animate-marquee-slow min-w-full shrink-0 items-center justify-around"
-                style={{ animationDuration: marqueeSpeed }}
-              >
-                {displayProducts.map((product, idx) => (
-                  <ProductCard key={`p2-${idx}`} product={product} />
-                ))}
+
+              {/* 2. Desktop View: 自动无限跑马灯 */}
+              <div className="hidden md:flex">
+                <div
+                  className="flex animate-marquee-slow min-w-full shrink-0 items-center justify-around"
+                  style={{ animationDuration: marqueeSpeed }}
+                >
+                  {displayProducts.map((product, idx) => (
+                    // 这里添加 mx-4 增加间距
+                    <div key={`p1-${idx}`} className="mx-4">
+                        <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
+                <div
+                  className="flex animate-marquee-slow min-w-full shrink-0 items-center justify-around"
+                  style={{ animationDuration: marqueeSpeed }}
+                >
+                  {displayProducts.map((product, idx) => (
+                    <div key={`p2-${idx}`} className="mx-4">
+                        <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
 
-        <div className="flex justify-center mt-16 relative z-20">{renderButton()}</div>
+        <div className="flex justify-center mt-12 md:mt-16 relative z-20 scale-90 md:scale-100">{renderButton()}</div>
       </div>
 
       {/* 中奖弹窗  */}
