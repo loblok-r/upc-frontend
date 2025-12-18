@@ -13,7 +13,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     email: '',
     password: '',
     confirmPassword: '',
-    captcha: '', // 验证码
+    captcha: '',
     agreeToTerms: false,
   });
 
@@ -23,9 +23,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   const [countdown, setCountdown] = useState(0);
   const [successMessage, setSuccessMessage] = useState('');
   const [apiError, setApiError] = useState('');
-  const [hasRegistered, setHasRegistered] = useState(false); // 新增：标记是否已注册成功
+  const [hasRegistered, setHasRegistered] = useState(false);
 
-  // 倒计时
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -33,16 +32,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     }
   }, [countdown]);
 
-  // 新增：如果注册成功，延迟后自动切换到登录
   useEffect(() => {
     if (hasRegistered) {
-      console.log('检测到注册成功，准备切换表单...');
       const timer = setTimeout(() => {
-        console.log('执行自动切换到登录表单');
         if (onSwitchToLogin) {
           onSwitchToLogin(formData.email);
         }
-      }, 2000); // 2秒后切换
+      }, 2000); 
       
       return () => clearTimeout(timer);
     }
@@ -55,18 +51,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       [name]: type === 'checkbox' ? checked : value,
     }));
     
-    // 清除错误
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
     if (apiError) setApiError('');
   };
 
-  // 获取验证码
   const handleGetCode = async () => {
     if (countdown > 0) return;
     
-    // 验证邮箱格式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email || !emailRegex.test(formData.email)) {
       setErrors((prev) => ({ ...prev, email: '请输入有效的邮箱地址' }));
@@ -77,8 +70,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     setApiError('');
 
     try {
-      // 发送验证码请求
-      const result = await api.post('/auth/sendCode', {
+      await api.post('/auth/sendCode', {
         email: formData.email,
         type: 'register'
       });
@@ -87,7 +79,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       setSuccessMessage('验证码已发送到您的邮箱，请注意查收');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error: any) {
-      console.error('发送验证码失败:', error);
       const errorMsg = error.response?.data?.message || error.message || '发送验证码失败，请稍后重试';
       setApiError(errorMsg);
     } finally {
@@ -95,50 +86,39 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     }
   };
 
-  // 表单验证
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,}$/;
 
-    // 用户名验证
     if (!formData.username.trim()) {
       newErrors.username = '请输入用户名';
     } else if (formData.username.length < 3 || formData.username.length > 20) {
       newErrors.username = '用户名长度应为3-20个字符';
-    } else if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(formData.username)) {
-      newErrors.username = '用户名只能包含中文、英文、数字和下划线';
     }
 
-    // 邮箱验证
     if (!formData.email.trim()) {
       newErrors.email = '请输入邮箱地址';
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = '邮箱格式不正确';
     }
 
-    // 密码验证
     if (!formData.password) {
       newErrors.password = '请输入密码';
     } else if (!passwordRegex.test(formData.password)) {
       newErrors.password = '密码至少6位，需包含字母和数字';
     }
 
-    // 确认密码验证
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = '请确认密码';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = '两次密码输入不一致';
     }
 
-    // 验证码验证
     if (!formData.captcha.trim()) {
       newErrors.captcha = '请输入验证码';
-    } else if (!/^\d{4,6}$/.test(formData.captcha)) {
-      newErrors.captcha = '验证码格式不正确';
     }
 
-    // 用户协议
     if (!formData.agreeToTerms) {
       newErrors.agreeToTerms = '请阅读并同意用户协议';
     }
@@ -147,24 +127,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     return Object.keys(newErrors).length === 0;
   };
 
-  // 提交注册
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // 清除之前的错误和成功信息
     setApiError('');
     setSuccessMessage('');
-    setHasRegistered(false); // 重置注册状态
+    setHasRegistered(false);
     
-    // 表单验证
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
-      // 准备请求数据
       const requestData = {
         username: formData.username.trim(),
         email: formData.email.trim(),
@@ -173,21 +146,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         code: formData.captcha.trim(),
       };
 
-      console.log('注册请求数据:', JSON.stringify(requestData));
-
-      // 发送注册请求
       const result = await api.post('/user/register', requestData) as any;
 
       if (result) {
-        // 注册成功
         const successMsg = result.msg || '注册成功！即将跳转到登录页面...';
         setSuccessMessage(successMsg);
-        console.log('注册成功，设置 hasRegistered 为 true');
-        
-        // 设置注册成功标志
         setHasRegistered(true);
         
-        // 清空表单
         setFormData({
           username: '',
           email: '',
@@ -198,38 +163,31 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         });
         
       } else {
-        // 处理不同的错误类型
-        if (result.code === 400 && result.msg?.includes('邮箱')) {
-          setApiError('该邮箱已被注册');
-        } else if (result.code === 400 && result.msg?.includes('用户名')) {
-          setApiError('用户名已存在');
-        } else if (result.code === 400 && result.msg?.includes('验证码')) {
-          setApiError('验证码无效或已过期');
-        } else {
-          setApiError(result.msg || '注册失败，请稍后重试');
-        }
+         setApiError(result.msg || '注册失败');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('注册失败:', error);
-      setApiError('网络错误，请检查您的连接后重试');
+      let msg = '网络错误';
+      if(error.response?.data?.message) msg = error.response.data.message;
+      setApiError(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 手动切换到登录的辅助函数
   const handleManualSwitchToLogin = () => {
-    console.log('手动切换到登录表单');
     if (onSwitchToLogin) {
       onSwitchToLogin();
     }
   };
 
   return (
-    <div className="relative w-full max-w-[420px] bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 sm:p-10 border border-white/50 animate-float">
+    // 修改点：p-6 md:p-10
+    <div className="relative w-full max-w-[420px] bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 md:p-10 border border-white/50 animate-float">
       {/* Logo Section */}
       <div className="text-center mb-6">
-        <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent select-none drop-shadow-sm">
+        {/* 修改点：text-4xl md:text-5xl */}
+        <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent select-none drop-shadow-sm">
           UPC
         </h1>
         <p className="text-gray-400 text-xs mt-2 tracking-widest uppercase">
@@ -237,7 +195,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         </p>
       </div>
 
-      {/* 成功消息 */}
       {successMessage && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-sm text-green-600 text-center">{successMessage}</p>
@@ -247,7 +204,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         </div>
       )}
 
-      {/* API错误消息 */}
       {apiError && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-600 text-center">{apiError}</p>
@@ -257,7 +213,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       {!hasRegistered ? (
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          {/* Username */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 ml-1">用户名*</label>
             <input
@@ -269,12 +224,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${
                 errors.username ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
               } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm disabled:opacity-50`}
-              placeholder="3-20个字符，支持中文、英文、数字和下划线"
+              placeholder="3-20个字符"
             />
             {errors.username && <p className="text-xs text-red-500 ml-1">{errors.username}</p>}
           </div>
 
-          {/* Email */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 ml-1">邮箱*</label>
             <input
@@ -291,7 +245,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
           </div>
 
-          {/* Password */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 ml-1">密码*</label>
             <input
@@ -303,12 +256,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${
                 errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
               } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm tracking-widest disabled:opacity-50`}
-              placeholder="至少6位，包含字母和数字"
+              placeholder="至少6位"
             />
             {errors.password && <p className="text-xs text-red-500 ml-1">{errors.password}</p>}
           </div>
 
-          {/* Confirm Password */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 ml-1">确认密码*</label>
             <input
@@ -325,7 +277,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             {errors.confirmPassword && <p className="text-xs text-red-500 ml-1">{errors.confirmPassword}</p>}
           </div>
 
-          {/* Verification Code */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 ml-1">验证码*</label>
             <div className="flex gap-3">
@@ -339,13 +290,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 className={`flex-1 px-4 py-3 rounded-lg bg-slate-50 border ${
                   errors.captcha ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
                 } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm disabled:opacity-50`}
-                placeholder="请输入邮箱收到的验证码"
+                placeholder="请输入验证码"
               />
               <button
                 type="button"
                 onClick={handleGetCode}
                 disabled={countdown > 0 || isSendingCode || isLoading}
-                className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[110px] transition-all duration-200 ${
+                // 修改点：min-w-[100px] md:min-w-[110px]
+                className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[100px] md:min-w-[110px] transition-all duration-200 ${
                   countdown > 0 || isSendingCode || isLoading
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700'
@@ -354,19 +306,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 {isSendingCode ? (
                   <Loader2 className="w-4 h-4 animate-spin mx-auto" />
                 ) : countdown > 0 ? (
-                  `${countdown}s 重试`
+                  `${countdown}s`
                 ) : (
                   '获取验证码'
                 )}
               </button>
             </div>
             {errors.captcha && <p className="text-xs text-red-500 ml-1">{errors.captcha}</p>}
-            <p className="text-xs text-gray-500 ml-1 mt-1">
-              验证码将发送到您的邮箱，有效期10分钟
-            </p>
           </div>
 
-          {/* Footer Links */}
           <div className="flex items-center justify-between pt-1">
             <label className="flex items-center space-x-2 cursor-pointer group">
               <div className="relative flex items-center">
@@ -391,7 +339,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 href="#" 
                 onClick={(e) => { 
                   e.preventDefault(); 
-                  console.log('点击了"登录账号"链接');
                   handleManualSwitchToLogin();
                 }}
                 className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
@@ -411,7 +358,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           </button>
         </form>
       ) : (
-        // 注册成功后的显示
         <div className="text-center py-8">
           <div className="mb-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -419,52 +365,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">注册成功！</h3>
             <p className="text-gray-600 mb-4">您的账号已创建成功</p>
-            {/* <p className="text-sm text-gray-500 mb-6">即将自动跳转到登录页面...</p> */}
           </div>
-          
-          {/* <div className="space-y-3">
-            <button
-              onClick={handleManualSwitchToLogin}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-all duration-200"
-            >
-              立即登录
-            </button>
-            
-            <button
-              onClick={() => {
-                setHasRegistered(false);
-                setFormData({
-                  username: '',
-                  email: '',
-                  password: '',
-                  confirmPassword: '',
-                  captcha: '',
-                  agreeToTerms: false,
-                });
-              }}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 rounded-lg transition-all duration-200"
-            >
-              注册另一个账号
-            </button>
-          </div> */}
         </div>
       )}
-
-      {/* 调试信息 - 开发时使用 */}
-      {/* {process.env.NODE_ENV === 'development' && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <div className="text-xs text-gray-500 space-y-1">
-            <div>注册状态: {hasRegistered ? '已成功' : '未注册'}</div>
-            <div>回调函数: {onSwitchToLogin ? '已定义' : '未定义'}</div>
-            <button
-              onClick={() => console.log('调试: onSwitchToLogin', onSwitchToLogin)}
-              className="text-blue-500 hover:text-blue-700 text-xs"
-            >
-              调试信息
-            </button>
-          </div>
-        </div>
-      )} */}
 
       <div className="mt-6 text-center space-y-2">
         <p className="text-[10px] text-gray-400">

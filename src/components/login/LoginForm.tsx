@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Loader2, AlertCircle } from 'lucide-react'; // 新增图标
+import { Check, Loader2, AlertCircle } from 'lucide-react';
 import type { LoginFormData, FormErrors } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -11,10 +11,8 @@ interface LoginLocationState {
 }
 
 interface LoginFormProps {
-
-  onSwitchToForgot: () => void; // 新增
+  onSwitchToForgot: () => void;
   onSwitchToRegister: () => void;
-  // 可选：接收注册页传过来的预填充邮箱
   initialEmail?: string;
 }
 
@@ -28,7 +26,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const { login } = useAuth();
 
   const [formData, setFormData] = useState<LoginFormData>({
-    username: initialEmail || '', // 如果有传参，自动填充
+    username: initialEmail || '',
     password: '',
     captcha: '',
     rememberMe: true,
@@ -38,8 +36,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [isSendingCode, setIsSendingCode] = useState(false);
-
-  // UI 反馈状态
   const [successMessage, setSuccessMessage] = useState('');
   const [apiError, setApiError] = useState('');
 
@@ -50,7 +46,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     }
   }, [countdown]);
 
-  // 当 props 中的 initialEmail 变化时更新表单（可选）
   useEffect(() => {
     if (initialEmail) {
       setFormData(prev => ({ ...prev, username: initialEmail }));
@@ -63,50 +58,38 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-
-    // 输入时清除对应的字段错误
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
-    // 输入时清除全局 API 错误
     if (apiError) setApiError('');
   };
 
-  // 获取验证码
   const handleGetCode = async () => {
     if (countdown > 0) return;
-
-    // 这里假设逻辑是：验证码必须发送到邮箱。
-    // 如果允许用户名登录，你需要判断用户输入的是不是邮箱。
-    // 如果输入的是用户名，通常后端无法发送验证码（除非后端能通过用户名查到邮箱）。
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!formData.username) {
       setErrors(prev => ({ ...prev, username: '请输入邮箱地址' }));
       return;
     }
-    console.log(formData.username);
 
     if (!emailRegex.test(formData.username)) {
       setErrors(prev => ({ ...prev, username: '获取验证码需要输入有效的邮箱地址' }));
       return;
     }
-    console.log(formData.username);
 
     setIsSendingCode(true);
-    setApiError(''); // 清除旧错误
+    setApiError(''); 
 
     try {
-        // api.post 自动处理 JSON stringify 和 header
-          const result = await api.post('/auth/sendCode', {
-            email: formData.username as string,
-            type: 'login'
-          }) as any;
+        const result = await api.post('/auth/sendCode', {
+          email: formData.username as string,
+          type: 'login'
+        }) as any;
           
         setCountdown(60);
         setSuccessMessage('验证码已发送，请查收');
         setTimeout(() => setSuccessMessage(''), 5000);
-      
     } catch (error) {
       setApiError('网络连接失败，无法发送验证码');
     } finally {
@@ -118,13 +101,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     const newErrors: FormErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    // 逻辑调整：如果是"邮箱或用户名"，这里不应该强校验 emailRegex
-    // 但鉴于你的后端接口字段叫 `email`，且有验证码逻辑，暂时保留严格校验
-    // 建议：如果你想支持用户名登录，这里要放宽逻辑，并且后端接口要支持传 username
     if (!formData.username.trim()) {
       newErrors.username = '请输入账号';
     } else if (!emailRegex.test(formData.username)) {
-      // 如果你确定只支持邮箱登录，请把 Label 改成 "邮箱"
       newErrors.username = '请输入有效的邮箱地址';
     }
 
@@ -151,16 +130,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
     try {
       const requestBody = {
-        email: formData.username, // 注意：如果后端支持用户名，这里字段名可能需要改
+        email: formData.username,
         password: formData.password,
         code: formData.captcha,
       };
 
-      // 使用 api.ts 进行登录请求
       const result = await api.post('/user/login', requestBody) as any;
-      console.log(result);
       
-      console.log('登录成功');
       login(result.token, result);
       const state = location.state as LoginLocationState | null;
       const from = state?.from || '/';
@@ -180,10 +156,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <div className="relative w-full max-w-[420px] bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 sm:p-10 border border-white/50 animate-float">
+    // 修改点：容器 p-6 md:p-10，移动端更紧凑
+    <div className="relative w-full max-w-[420px] bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 md:p-10 border border-white/50 animate-float">
       {/* Logo Section */}
-      <div className="text-center mb-8">
-        <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent select-none drop-shadow-sm">
+      <div className="text-center mb-6 md:mb-8">
+        {/* 修改点：字体 text-4xl md:text-5xl */}
+        <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent select-none drop-shadow-sm">
           UPC
         </h1>
         <p className="text-gray-400 text-xs mt-2 tracking-widest uppercase">
@@ -205,7 +183,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
         {/* Username Input */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-gray-700 ml-1">
@@ -222,7 +200,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           />
           {errors.username && <p className="text-xs text-red-500 ml-1">{errors.username}</p>}
         </div>
-
 
         <div className="space-y-1.5">
           <div className="flex justify-between items-center ml-1">
@@ -269,7 +246,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               type="button"
               onClick={handleGetCode}
               disabled={countdown > 0 || isSendingCode || isLoading}
-              className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[110px] transition-all duration-200 ${countdown > 0 || isSendingCode || isLoading
+              className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[100px] md:min-w-[110px] transition-all duration-200 ${countdown > 0 || isSendingCode || isLoading
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700'
                 }`}
@@ -277,7 +254,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               {isSendingCode ? (
                 <Loader2 className="w-4 h-4 animate-spin mx-auto" />
               ) : countdown > 0 ? (
-                `${countdown}s 重试`
+                `${countdown}s`
               ) : (
                 '获取验证码'
               )}
@@ -300,7 +277,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               <Check className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity left-0.5 top-0.5" strokeWidth={3} />
             </div>
             <span className="text-sm text-gray-600 group-hover:text-gray-800 transition-colors">
-              记住登录状态
+              记住登录
             </span>
           </label>
 
@@ -325,7 +302,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </button>
       </form>
 
-      <div className="mt-8 text-center space-y-2">
+      <div className="mt-6 md:mt-8 text-center space-y-2">
         <p className="text-[10px] text-gray-400">
           注册&登录即表示同意本站 <a href="#" className="hover:text-gray-600 underline">用户协议</a>、<a href="#" className="hover:text-gray-600 underline">隐私政策</a>
         </p>

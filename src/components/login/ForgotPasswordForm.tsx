@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Check, Loader2, AlertCircle, KeyRound } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, AlertCircle } from 'lucide-react';
 import api from '../../utils/api'; 
 
 interface ForgotPasswordData {
@@ -125,10 +125,11 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
     }
 
     return (
-        // 🔥 修改1：外层加上 z-50
-        <div className="relative z-50 w-full max-w-[420px] bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 sm:p-10 border border-white/50 animate-float">
+        // 修改点：p-6 md:p-10
+        <div className="relative z-50 w-full max-w-[420px] bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 md:p-10 border border-white/50 animate-float">
             <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">重置密码</h1>
+                {/* 修改点：text-2xl md:text-3xl */}
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">重置密码</h1>
                 <p className="text-gray-400 text-xs mt-2">Reset Password</p>
             </div>
 
@@ -151,14 +152,12 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                     <input
                         type="email"
                         name="email"
-                        // 🔥 修改2：确保 value 永远不为 null
                         value={formData.email || ''}
                         onChange={(e) => {
                             handleInputChange(e);
                             if (countdown > 0) setCountdown(0);
                         }}
                         disabled={isLoading}
-                        // 🔥 修改3：加上 relative z-[100] 确保它浮在最上面
                         className={`relative z-[100] w-full px-4 py-3 rounded-lg bg-slate-50 border ${errors.email ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'} focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm`}
                         placeholder="请输入注册邮箱"
                     />
@@ -178,13 +177,14 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                             maxLength={6}
                             className={`flex-1 px-4 py-3 rounded-lg bg-slate-50 border ${errors.code ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
                                 } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm disabled:opacity-50`}
-                            placeholder="请输入邮箱收到的验证码"
+                            placeholder="邮箱验证码"
                         />
                         <button
                             type="button"
                             onClick={handleGetCode}
                             disabled={countdown > 0 || isSendingCode || isLoading}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[110px] transition-all duration-200 ${countdown > 0 || isSendingCode || isLoading
+                            // 修改点：min-w-[100px] md:min-w-[110px]
+                            className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[100px] md:min-w-[110px] transition-all duration-200 ${countdown > 0 || isSendingCode || isLoading
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     : 'bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700'
                                 }`}
@@ -192,16 +192,13 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                             {isSendingCode ? (
                                 <Loader2 className="w-4 h-4 animate-spin mx-auto" />
                             ) : countdown > 0 ? (
-                                `${countdown}s 重试`
+                                `${countdown}s`
                             ) : (
                                 '获取验证码'
                             )}
                         </button>
                     </div>
                     {errors.code && <p className="text-xs text-red-500 ml-1">{errors.code}</p>}
-                    <p className="text-xs text-gray-500 ml-1 mt-1">
-                        验证码将发送到您的邮箱，有效期10分钟
-                    </p>
                 </div>
 
 
@@ -216,7 +213,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                         disabled={isLoading}
                         className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${errors.newPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
                             } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm tracking-widest disabled:opacity-50`}
-                        placeholder="至少6位，包含字母和数字"
+                        placeholder="新密码"
                     />
                     {errors.newPassword && <p className="text-xs text-red-500 ml-1">{errors.newPassword}</p>}
                 </div>
@@ -232,7 +229,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                         disabled={isLoading}
                         className={`relative z-[100] w-full px-4 py-3 rounded-lg bg-slate-50 border ${errors.confirmNewPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
                             } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm tracking-widest disabled:opacity-50`}
-                        placeholder="再次输入密码"
+                        placeholder="再次输入"
                     />
                     {errors.confirmNewPassword && <p className="text-xs text-red-500 ml-1">{errors.confirmNewPassword}</p>}
                 </div>
@@ -240,7 +237,6 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
                 <button
                     type="submit"
                     disabled={isLoading}
-                    // 🔥 修改8：按钮也加层级
                     className="relative z-[100] w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-lg shadow-lg hover:shadow-blue-500/50 transition-all mt-4 flex items-center justify-center"
                 >
                     {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : '重置并登录'}
