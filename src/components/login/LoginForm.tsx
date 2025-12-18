@@ -90,6 +90,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       setErrors(prev => ({ ...prev, username: '获取验证码需要输入有效的邮箱地址' }));
       return;
     }
+    console.log(formData.username);
 
     setIsSendingCode(true);
     setApiError(''); // 清除旧错误
