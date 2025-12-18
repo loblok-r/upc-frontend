@@ -139,7 +139,7 @@ const WorkPage: React.FC = () => {
     if (messages.length === 0) return;
   };
 
-  const handleSendMessage = async (prompt: string, base64?: string) => {
+  const handleSendMessage = async (prompt: string, base64?: string, config?: { width: number; height: number }) => {
     const permission = checkGenerationPermission(currentMode, {
       requireHD: false,
       estimatedCost: undefined
@@ -188,7 +188,9 @@ const WorkPage: React.FC = () => {
         mode: currentMode,
         prompt,
         referenceImage: base64,
-        sessionId: currentSessionId
+        sessionId: currentSessionId,
+        width: config?.width,
+        height: config?.height
       }, {
         timeout: 120000 // 设置为 120 秒 (2分钟)
       });
@@ -202,7 +204,9 @@ const WorkPage: React.FC = () => {
         timestamp: Date.now(),
         type: currentMode === AppMode.AI_DRAWING ? 'image' : 'text',
         imageUrl: response?.imageUrl,
-        cosPath: response?.cosPath || ""
+        cosPath: response?.cosPath || "",
+        width: response?.width || config?.width,
+        height: response?.height || config?.height
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -247,9 +251,10 @@ const WorkPage: React.FC = () => {
     setCurrentMode(mode);
   };
 
-  const handleMainViewSend = (prompt: string, base64?: string, mode?: AppMode) => {
+  const handleMainViewSend = (prompt: string, base64?: string
+    , mode?: AppMode, config?: { width: number; height: number }) => {
     if (mode) setCurrentMode(mode);
-    handleSendMessage(prompt, base64);
+    handleSendMessage(prompt, base64, config);
   };
 
   const handleNavigate = (viewId: string) => {

@@ -47,6 +47,8 @@ export interface Post {
   author: User;
   createdAt: string;
   comments?: Comment[]; // 详情页使用
+  width?: number;
+  height?: number;
 }
 
 // 视图状态

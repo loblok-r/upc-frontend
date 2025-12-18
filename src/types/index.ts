@@ -246,6 +246,8 @@ export interface Message {
     model?: string;
     latency?: number;
   };
+  width?: number; 
+  height?: number;
 }
 
 export interface ServiceResponse {

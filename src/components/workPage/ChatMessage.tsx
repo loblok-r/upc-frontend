@@ -74,7 +74,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       const postData = {
         title: shareForm.title,
         content: shareForm.content,
-        imageUrl: message.cosPath || ""
+        imageUrl: message.cosPath || "",
+        width: message.width || 512,
+        height: message.height || 512
       };
 
       const response: any = await api.post('/community/posts/create', postData);

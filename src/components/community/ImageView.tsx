@@ -8,7 +8,7 @@ interface ImageViewProps {
   post: Post;
   onClose: () => void;
   onUserClick: (userId: string) => void;
-  onPostUpdate?: (updatedPost: Post) => void; // 新增 Props
+  onPostUpdate?: (updatedPost: Post) => void;
 }
 
 const ImageView: React.FC<ImageViewProps> = ({ post: initialPost, onClose, onUserClick, onPostUpdate }) => {
@@ -29,10 +29,8 @@ const ImageView: React.FC<ImageViewProps> = ({ post: initialPost, onClose, onUse
             likesCount: isLiked ? post.likesCount - 1 : post.likesCount + 1
         };
 
-        // 1. 更新本地状态
         setPost(newPost);
         
-        // 2. 通知父组件更新全局状态
         if (onPostUpdate) {
             onPostUpdate(newPost);
         }
@@ -44,10 +42,8 @@ const ImageView: React.FC<ImageViewProps> = ({ post: initialPost, onClose, onUse
 
   return (
     <div className="fixed inset-0 z-[60] bg-black flex flex-col animate-in fade-in duration-200">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 md:px-6 py-4 fixed top-0 w-full z-10 bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex items-center gap-3 md:gap-4">
-           {/* Back Button */}
            <button 
              onClick={onClose} 
              className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
@@ -94,9 +90,8 @@ const ImageView: React.FC<ImageViewProps> = ({ post: initialPost, onClose, onUse
         </div>
       </div>
 
-      {/* Main Image Area */}
       <div 
-        className="flex-1 flex items-center justify-center p-0 md:p-8 cursor-pointer"
+        className="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-0 md:p-8 cursor-pointer w-full"
         onClick={onClose} 
       >
         <img 
@@ -107,7 +102,6 @@ const ImageView: React.FC<ImageViewProps> = ({ post: initialPost, onClose, onUse
         />
       </div>
 
-      {/* Footer - Prompt/Content */}
       {post.content && (
         <div className="fixed bottom-0 w-full pb-8 pt-12 px-6 text-center bg-gradient-to-t from-black/90 to-transparent pointer-events-none">
            <div className="inline-flex items-center gap-2 text-sm md:text-base pointer-events-auto bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 max-w-[90%]">

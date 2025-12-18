@@ -3,16 +3,36 @@ import { useNavigate } from 'react-router-dom';
 import Gallery from './Gallery';
 import { AppMode } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
+import { Square, Smartphone, Monitor, LayoutTemplate, Crown, Settings2 } from 'lucide-react';
+
+
+
+// 画质配置
+const QUALITIES = [
+  { id: 'SD', label: '标准', multiplier: 512 }, // 基础尺寸 512
+  { id: 'HD', label: '高清', multiplier: 1024, isPro: true }, // 进阶尺寸 1024
+];
 
 interface MainViewProps {
-  onSendMessage: (prompt: string, base64?: string, mode?: AppMode) => void;
+  onSendMessage: (prompt: string, base64?: string, mode?: AppMode, config?: { width: number; height: number }) => void;
   onModeChange: (mode: AppMode) => void;
   currentMode: AppMode;
 }
-
+const ASPECT_RATIOS = [
+  { id: '1:1', label: '1:1', icon: Square, w: 1, h: 1 },
+  { id: '9:16', label: '9:16', icon: Smartphone, w: 9, h: 16 },
+  { id: '16:9', label: '16:9', icon: Monitor, w: 16, h: 9 },
+];
 const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, currentMode }) => {
 
   const { isLoggedIn, user, checkGenerationPermission, calculateCost } = useAuth();
+
+  const [selectedRatio, setSelectedRatio] = useState(ASPECT_RATIOS[0]);
+  const [isHD, setIsHD] = useState(false); // 是否开启高清
+  // 移动端可能需要折叠设置
+  const [showSettings, setShowSettings] = useState(false);
+
+
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -65,18 +85,44 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
       return;
     }
 
+    // 检查高清权限
+    if (isHD && !user?.isMember) {
+      if (confirm('高清模式仅限会员使用，是否去升级？')) {
+        navigate('/pay-info'); // 或者打开升级弹窗
+      }
+      return;
+    }
+    // 计算最终像素尺寸
+    // 以 multiplier 为基准边，计算另一条边
+    const baseSize = isHD ? 1024 : 512;
+    let width, height;
+
+    if (selectedRatio.w > selectedRatio.h) {
+      // 横图：宽=基准，高=按比例缩放
+      width = baseSize;
+      height = Math.round(baseSize * (selectedRatio.h / selectedRatio.w));
+    } else if (selectedRatio.w < selectedRatio.h) {
+      // 竖图：高=基准，宽=按比例缩放
+      height = baseSize;
+      width = Math.round(baseSize * (selectedRatio.w / selectedRatio.h));
+    } else {
+      // 方图
+      width = baseSize;
+      height = baseSize;
+    }
+
+
+    width = Math.floor(width / 8) * 8;
+    height = Math.floor(height / 8) * 8;
+
     // 检查权限
     const permission = checkGenerationPermission(currentMode, {
-      requireHD: false,
+      requireHD: isHD,
       estimatedCost: calculateCost(currentMode, { wordCount: prompt.length })
     });
 
     if (!permission.allowed) {
       alert(permission.reason);
-      // 如果是算力不足，可以跳转到充值页面
-      if (permission.insufficientComputingPower) {
-        console.log("需要充值算力");
-      }
       return;
     }
 
@@ -95,7 +141,7 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
         })
         : null;
 
-      onSendMessage(prompt, base64 ?? undefined, currentMode);
+      onSendMessage(prompt, base64 ?? undefined, currentMode, { width, height });
     } catch (err) {
       setError("生成过程中发生错误，请稍后重试。");
     } finally {
@@ -245,6 +291,50 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
 
           <div className="relative bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-white/10 p-4 shadow-2xl">
 
+            {/* 绘图参数工具栏 (仅在 AI绘图模式显示) */}
+            {currentMode === AppMode.AI_DRAWING && (
+              <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/5">
+                {/* 左侧：比例选择 */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 mr-1">比例</span>
+                  {ASPECT_RATIOS.map(ratio => (
+                    <button
+                      key={ratio.id}
+                      onClick={() => setSelectedRatio(ratio)}
+                      className={`p-1.5 rounded-lg flex items-center gap-1 transition-all ${selectedRatio.id === ratio.id
+                        ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                        }`}
+                      title={ratio.label}
+                    >
+                      <ratio.icon size={14} />
+                      <span className="text-xs font-medium">{ratio.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* 右侧：画质选择 */}
+                <div className="flex items-center gap-2 bg-black/20 p-1 rounded-lg">
+                  <button
+                    onClick={() => setIsHD(false)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${!isHD ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'
+                      }`}
+                  >
+                    标准
+                  </button>
+                  <button
+                    onClick={() => setIsHD(true)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-all ${isHD
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-300'
+                      }`}
+                  >
+                    <span>高清</span>
+                    <Crown size={10} className={isHD ? 'text-white' : 'text-amber-500'} />
+                  </button>
+                </div>
+              </div>
+            )}
             <textarea
               ref={textareaRef}
               value={prompt}
@@ -288,8 +378,8 @@ const MainView: React.FC<MainViewProps> = ({ onSendMessage, onModeChange, curren
                   onClick={handleUploadClick}
                   disabled={activeFeature === 'more-tools'}
                   className={`p-2 rounded-full transition-colors tooltip ${activeFeature === 'more-tools'
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-white/10'
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-white/10'
                     }`}
                   title="上传参考图"
                 >
