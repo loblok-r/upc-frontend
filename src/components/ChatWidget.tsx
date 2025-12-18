@@ -17,7 +17,7 @@ const ChatWidget: React.FC = () => {
     {
       id: 'welcome',
       role: 'model',
-      text: '欢迎回来！我是Mitce智能助手。关于会员订阅、积分规则或功能使用，随时问我。',
+      text: '欢迎回来！我是UPC智能助手。关于会员订阅、积分规则或功能使用，随时问我。',
       timestamp: new Date()
     }
   ]);
@@ -106,7 +106,7 @@ const ChatWidget: React.FC = () => {
         <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
            <div className="flex items-center space-x-3">
              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-             <div className="font-bold text-gray-700">Mitce 智能客服</div>
+             <div className="font-bold text-gray-700">UPC 智能客服</div>
            </div>
            <div className="flex items-center space-x-3">
              <button className="text-gray-400 hover:text-gray-600">
