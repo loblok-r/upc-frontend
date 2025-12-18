@@ -74,10 +74,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       const postData = {
         title: shareForm.title,
         content: shareForm.content,
-        imageUrl: message.imageUrl
+        imageUrl: message.cosPath || ""
       };
 
-      const response = await api.post('/community/posts/create', postData);
+      const response: any = await api.post('/community/posts/create', postData);
       
       if (response && (response.id || response.userId)) {
         setPublishSuccess(true);

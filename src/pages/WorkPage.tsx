@@ -26,7 +26,7 @@ const WorkPage: React.FC = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   const [viewState, setViewState] = useState<'landing' | 'chat' | 'document' | 'history'>('landing');
-  
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentMode, setCurrentMode] = useState<AppMode>(AppMode.TEXT_CHAT);
@@ -94,10 +94,10 @@ const WorkPage: React.FC = () => {
     if (!isRefresh && (!hasMore || isHistoryLoading)) return;
 
     setIsHistoryLoading(true);
-    
+
     try {
       const currentPage = isRefresh ? 1 : page;
-      
+
       const response: any = await api.get('/history/list', {
         params: {
           page: currentPage,
@@ -188,6 +188,8 @@ const WorkPage: React.FC = () => {
         prompt,
         referenceImage: base64,
         sessionId: currentSessionId
+      }, {
+        timeout: 120000 // 设置为 120 秒 (2分钟)
       });
 
       setMessages(prev => prev.filter(msg => msg.id !== loadingId));
@@ -198,15 +200,16 @@ const WorkPage: React.FC = () => {
         content: response?.content || "内容已生成。",
         timestamp: Date.now(),
         type: currentMode === AppMode.AI_DRAWING ? 'image' : 'text',
-        imageUrl: response?.imageUrl
+        imageUrl: response?.imageUrl,
+        cosPath: response?.cosPath || ""
       };
 
       setMessages(prev => [...prev, aiMessage]);
-      
+
       if (response?.sessionId) {
         setCurrentSessionId(response.sessionId);
       }
-      
+
       await refreshResources();
 
     } catch (error: any) {
@@ -254,8 +257,8 @@ const WorkPage: React.FC = () => {
     }
 
     if (viewId === 'upgrade') {
-        setIsModalOpen(true);
-        return;
+      setIsModalOpen(true);
+      return;
     }
 
     if (viewId === 'landing') {
@@ -272,15 +275,15 @@ const WorkPage: React.FC = () => {
     } else if (viewId === 'chat') {
       setViewState('chat');
     } else if (viewId === 'new') {
-        setMessages([]);
-        setCurrentSessionId(null);
-        setViewState('landing');
+      setMessages([]);
+      setCurrentSessionId(null);
+      setViewState('landing');
     }
   };
 
   const handleDeleteHistory = async (id: string) => {
     if (!confirm('确定删除此记录吗？')) return;
-    
+
     try {
       await api.delete(`/history/${id}`);
       setHistoryList(prev => prev.filter(item => item.id !== id));
@@ -294,11 +297,11 @@ const WorkPage: React.FC = () => {
     }
   };
 
- const handleRestoreHistory = (item: HistoryItem) => {
+  const handleRestoreHistory = (item: HistoryItem) => {
     const normalizedMessages: Message[] = (item.messages || []).map((msg: any) => {
       const rawType = msg.type ? msg.type.toUpperCase() : 'TEXT';
       let frontendType = 'text';
-      
+
       if (msg.imageUrl) {
         frontendType = 'image';
       } else if (rawType === 'IMAGE' && !msg.imageUrl) {
@@ -309,7 +312,7 @@ const WorkPage: React.FC = () => {
 
       return {
         ...msg,
-        type: frontendType, 
+        type: frontendType,
         imageUrl: msg.imageUrl || undefined
       };
     });
@@ -336,15 +339,15 @@ const WorkPage: React.FC = () => {
   return (
     // 修改点 1: flex-col md:flex-row (手机上下，电脑左右)
     <div className="flex flex-col md:flex-row h-[100dvh] w-full bg-[#0f0c29] text-white font-sans overflow-hidden">
-      
+
       {/* 桌面端侧边栏 - 在 mobile 隐藏 */}
       <div className="hidden md:flex">
         <Sidebar
-            isCollapsed={isSidebarCollapsed}
-            toggleSidebar={toggleSidebar}
-            openUpgradeModal={() => setIsModalOpen(true)}
-            currentView={viewState}
-            onNavigate={handleNavigate}
+          isCollapsed={isSidebarCollapsed}
+          toggleSidebar={toggleSidebar}
+          openUpgradeModal={() => setIsModalOpen(true)}
+          currentView={viewState}
+          onNavigate={handleNavigate}
         />
       </div>
 
@@ -403,9 +406,9 @@ const WorkPage: React.FC = () => {
             <div className="h-full overflow-y-auto">
               <HistoryView
                 historyItems={historyList}
-                isLoading={isHistoryLoading} 
-                hasMore={hasMore} 
-                onLoadMore={() => fetchHistory(false)} 
+                isLoading={isHistoryLoading}
+                hasMore={hasMore}
+                onLoadMore={() => fetchHistory(false)}
                 onSelectHistory={handleRestoreHistory}
                 onDeleteHistory={handleDeleteHistory}
               />
@@ -432,14 +435,14 @@ const WorkPage: React.FC = () => {
         </div>
 
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-        
+
         {/* 移动端底部导航栏 - 仅在 mobile 显示 */}
         <div className="md:hidden">
-            <MobileNavBar 
-                currentView={viewState} 
-                onNavigate={handleNavigate}
-                onOpenUpgrade={() => setIsModalOpen(true)}
-            />
+          <MobileNavBar
+            currentView={viewState}
+            onNavigate={handleNavigate}
+            onOpenUpgrade={() => setIsModalOpen(true)}
+          />
         </div>
       </main>
     </div>

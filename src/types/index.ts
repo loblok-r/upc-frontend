@@ -241,6 +241,7 @@ export interface Message {
   timestamp: number;
   type: 'text' | 'image' | 'loading';
   imageUrl?: string;
+  cosPath?: string;
   meta?: {
     model?: string;
     latency?: number;
