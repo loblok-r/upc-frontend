@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 同步代码到 Gitee (保持你的配置)
+      # 同步代码到 Gitee
       - name: Sync to Gitee (SSH)
         env:
           SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
@@ -41,58 +41,42 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script_stop: true
           script: |
-            # 开启调试模式，打印执行的每一行命令，方便排错
             set -x
             set -e
             
             # === 配置变量 ===
             PROJECT_PATH="/opt/projects/upc-frontend"
+            COMPOSE_PATH="/opt/projects/upc-backend" # 指向 Compose 文件所在目录
             GIT_REPO="https://gitee.com/barondd/upc-frontend.git"
-            CONTAINER_NAME="upc-frontend"
             IMAGE_NAME="upc-frontend:latest"
             
-            echo "🚀 Starting deployment..."
+            echo "Starting Frontend deployment..."
             
-            # === 1. 暴力清理旧代码 (确保环境干净) ===
-            # 如果目录存在，直接删掉。不要纠结它是 Git 仓库还是空文件夹
+            # === 更新代码 ===
             if [ -d "$PROJECT_PATH" ]; then
-              echo "🗑️  Removing existing directory to ensure clean slate..."
               rm -rf "$PROJECT_PATH"
             fi
-            
-            # === 2. 重新拉取代码 ===
-            echo "⬇️  Cloning repository..."
             git clone "$GIT_REPO" "$PROJECT_PATH"
-            
-            # 进入目录
             cd "$PROJECT_PATH"
             
-            # 确认当前提交 (可选调试信息)
-            echo "🔍  Current commit:"
-            git rev-parse --short HEAD
-            
-            # === 3. 构建 Docker 镜像 ===
-            echo "🐳  Building Docker image..."
-            # 确保 Dockerfile 已经升级到了 node:22-alpine (根据上一步的修复)
+            # === 构建 Docker 镜像 ===
+            echo "Building Frontend image..."
+            # 这里的构建会自动读取你项目里的 Dockerfile 和 nginx.conf
             docker build -t "$IMAGE_NAME" .
             
-            # === 4. 停止并删除旧容器 ===
-            if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
-                echo "YZ  Stopping old container..."
-                docker stop $CONTAINER_NAME
-                docker rm $CONTAINER_NAME
-            fi
+            # === 交给 Compose 统一调度 ===
+            # 不再手动 docker stop/run，因为那样前端会脱离 upc-net 网络
             
-            # === 5. 启动新容器 ===
-            echo "🚀  Starting container..."
-            docker run -d \
-              --name "$CONTAINER_NAME" \
-              --restart always \
-              -p 80:80 \
-              "$IMAGE_NAME"
+            echo "⚓ Moving to Compose directory..."
+            cd "$COMPOSE_PATH"
             
-            # === 6. 清理垃圾 ===
-            echo "🧹  Pruning unused images..."
+            echo "Updating Frontend service via Compose..."
+            # --no-deps: 不重启 mysql/redis/backend
+            # --force-recreate: 强制根据最新构建的镜像重建容器
+            docker compose up -d --no-deps --force-recreate frontend
+            
+            # === 清理旧镜像 ===
+            echo "Pruning unused images..."
             docker image prune -f
             
-            echo "✅  Deployment Successfully Completed!"
+            echo "Frontend Deployment Successfully Completed!"
