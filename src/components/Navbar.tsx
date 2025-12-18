@@ -24,6 +24,28 @@ export const Navbar: React.FC = () => {
     navigate('/work');
   };
 
+  const handleNavClick = (href: string) => {
+    if (href.startsWith('#')) {
+      // 处理锚点跳转（例如 #inspiration）
+      if (location.pathname !== '/') {
+        // 如果不在首页，先跳回首页
+        navigate('/');
+        // 稍微延迟等待页面加载后再滚动（可选优化）
+        setTimeout(() => {
+          const element = document.getElementById(href.substring(1));
+          element?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else {
+        // 如果已在首页，直接滚动
+        const element = document.getElementById(href.substring(1));
+        element?.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // 处理普通路由跳转
+      navigate(href);
+    }
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -72,15 +94,15 @@ export const Navbar: React.FC = () => {
           <Logo isDark={isLightPage} />
         </div>
 
-        <div className="hidden md:flex items-center space-x-1">
+       <div className="hidden md:flex items-center space-x-1">
           {navItems.map((item) => (
-            <a
+            <button
               key={item.label}
-              href={item.href}
+              onClick={() => handleNavClick(item.href)}
               className={`px-5 py-2 text-sm font-medium rounded-full transition-all duration-200 hover:bg-black/5 ${textColorClass}`}
             >
               {item.label}
-            </a>
+            </button>
           ))}
         </div>
 

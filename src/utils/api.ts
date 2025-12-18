@@ -50,13 +50,18 @@ api.interceptors.response.use(
   (error) => {
     // 网络错误、超时等（非业务错误）
     if (error.response) {
+       if (error.response.status === 401) {
+         console.warn('用户未登录或 Token 已过期');
+       } else {
       // 注意：这里可能是 HTTP 500/404 等，不是业务 code ≠ 200
-      const msg = error.response.data?.message || `服务器错误 ${error.response.status}`;
-      alert(msg);
+            const msg = error.response.data?.message || `服务器错误 ${error.response.status}`;
+            alert(msg);
+       }
     } else if (error.request) {
       alert('网络异常，请检查连接');
     } else {
       alert('请求配置错误');
+      console.error('请求配置错误', error.message);
     }
     return Promise.reject(error); // 原样抛出
   }

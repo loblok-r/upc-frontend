@@ -7,7 +7,7 @@ import ImageView from '../components/community/ImageView';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, Search, Trophy, User, MessageSquare, Heart, 
-  Play, Sparkles, Loader2, Image as ImageIcon 
+  Play, Sparkles, Loader2, Image as ImageIcon ,LogIn, Lock 
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -28,6 +28,7 @@ const CommunityPage = () => {
   const location = useLocation();
   const { isLoggedIn, user } = useAuth();
 
+  const [showLoginGuide, setShowLoginGuide] = useState(false);
   // ... (保留 handleCreateClick 等基础逻辑)
   const handleCreateClick = () => {
     navigate('/work');
@@ -148,6 +149,7 @@ const CommunityPage = () => {
 
   const fetchPosts = async (pageNum: number, tabType: FeedTabType) => {
     try {
+      if (pageNum === 1) setShowLoginGuide(false);
       let endpoint = '';
       switch (tabType) {
         case 'RECOMMEND': endpoint = '/community/posts/recommend'; break;
@@ -182,8 +184,12 @@ const CommunityPage = () => {
         setHasMore(false);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch posts:", error);
+      if (error.response && error.response.status === 401) {
+        setShowLoginGuide(true); // 显示登录引导
+        setHasMore(false);       // 停止加载更多
+      }
       // 错误时停止无限加载
       setHasMore(false);
     } finally {
@@ -250,66 +256,89 @@ const CommunityPage = () => {
 
         {/* Feed Grid */}
         <div className="p-4 md:p-6 lg:p-8 pb-32">
-          
-          {/* Initial Loading State */}
-          {isInitialLoading && displayPosts.length === 0 ? (
-             <div className="flex items-center justify-center h-64 w-full">
-                <Loader2 size={40} className="text-purple-500 animate-spin" />
-             </div>
+          {showLoginGuide ? (
+            <div className="flex flex-col items-center justify-center py-20 animate-in fade-in zoom-in-95 duration-500">
+              <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-2xl border border-white/5">
+                <Lock className="w-10 h-10 text-purple-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-3">登录探索更多精彩</h2>
+              <p className="text-slate-400 text-center max-w-md mb-8">
+                加入 UPC 社区，查看更多 AI 创意作品，关注你喜欢的创作者，并分享你的灵感。
+              </p>
+              <button
+                onClick={() => navigate('/login', { state: { from: location.pathname } })}
+                className="group relative flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold rounded-full transition-all shadow-lg hover:shadow-purple-500/25"
+              >
+                <LogIn size={18} />
+                <span>立即登录</span>
+              </button>
+            </div>
           ) : (
-             <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {displayPosts.map((post, index) => {
-                  // 如果是最后一个元素，添加 ref 以进行滚动监听
-                  const isLastElement = index === displayPosts.length - 1;
-                  return (
-                    <div 
-                        key={post.id} 
-                        // 将 ref 赋给最后一个元素
-                        ref={isLastElement ? lastPostElementRef : null}
-                        onClick={() => openImageView(post)}
-                        className="break-inside-avoid relative group rounded-xl overflow-hidden bg-[#1a1a1a] cursor-pointer border border-white/5 hover:border-white/20 transition-all shadow-lg hover:shadow-purple-900/20"
-                    >
-                        {/* Image Area */}
-                        <div className="relative w-full">
-                           <img 
-                            src={post.imageUrl} 
-                            alt={post.title || '用户作品'}
-                            className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
-                            loading="lazy"
-                           />
-                           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-60 group-hover:opacity-85 transition-opacity duration-300" />
+             /* 这里放原来的正常的列表渲染逻辑 */
+             <>
+               {isInitialLoading && displayPosts.length === 0 ? (
+                  // Loading...
+                  <div className="flex items-center justify-center h-64 w-full">
+                      <Loader2 size={40} className="text-purple-500 animate-spin" />
+                  </div>
+               ) : (
+                  // List...
+                  <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {displayPosts.map((post, index) => {
+                      // 如果是最后一个元素，添加 ref 以进行滚动监听
+                      const isLastElement = index === displayPosts.length - 1;
+                      return (
+                        <div 
+                            key={post.id} 
+                            // 将 ref 赋给最后一个元素
+                            ref={isLastElement ? lastPostElementRef : null}
+                            onClick={() => openImageView(post)}
+                            className="break-inside-avoid relative group rounded-xl overflow-hidden bg-[#1a1a1a] cursor-pointer border border-white/5 hover:border-white/20 transition-all shadow-lg hover:shadow-purple-900/20"
+                        >
+                            {/* Image Area */}
+                            <div className="relative w-full">
+                              <img 
+                                src={post.imageUrl} 
+                                alt={post.title || '用户作品'}
+                                className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-60 group-hover:opacity-85 transition-opacity duration-300" />
+                            </div>
+
+                            {/* Content Overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                              {post.title && <h3 className="text-base font-bold text-white mb-1 leading-snug drop-shadow-md line-clamp-1">{post.title}</h3>}
+                              {post.content && <p className={`text-sm text-gray-300 mb-3 drop-shadow-sm line-clamp-2 ${!post.title ? 'text-white font-medium' : ''}`}>{post.content}</p>}
+
+                              <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-2">
+                                <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleUserClick(post.author.id); }}>
+                                  <div className="w-6 h-6 rounded-full overflow-hidden border border-white/30 shrink-0">
+                                      <img src={post.author?.avatar || 'https://github.com/shadcn.png'} alt={post.author?.name} className="w-full h-full object-cover" />
+                                  </div>
+                                  <span className="text-xs text-gray-300 font-medium truncate max-w-[80px] hover:text-white">{post.author?.name || 'Unknown'}</span>
+                                </div>
+
+                                <div className="flex items-center gap-3 text-gray-300">
+                                    <button className="flex items-center gap-1 hover:text-red-400 transition-colors group/btn">
+                                      <Heart size={16} className={`group-hover/btn:scale-110 transition-transform ${post.isLiked ? 'fill-red-400 text-red-400' : ''}`}/>
+                                      <span className="text-xs font-medium">{formatNumber(post.likesCount)}</span>
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); openPostDetail(post); }} className="flex items-center gap-1 hover:text-blue-400 transition-colors group/btn">
+                                      <MessageSquare size={16} className="group-hover/btn:scale-110 transition-transform"/>
+                                      <span className="text-xs font-medium">{formatNumber(post.commentsCount)}</span>
+                                    </button>
+                                </div>
+                              </div>
+                            </div>
                         </div>
-
-                        {/* Content Overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                          {post.title && <h3 className="text-base font-bold text-white mb-1 leading-snug drop-shadow-md line-clamp-1">{post.title}</h3>}
-                          {post.content && <p className={`text-sm text-gray-300 mb-3 drop-shadow-sm line-clamp-2 ${!post.title ? 'text-white font-medium' : ''}`}>{post.content}</p>}
-
-                          <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-2">
-                             <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => { e.stopPropagation(); handleUserClick(post.author.id); }}>
-                               <div className="w-6 h-6 rounded-full overflow-hidden border border-white/30 shrink-0">
-                                  <img src={post.author?.avatar || 'https://github.com/shadcn.png'} alt={post.author?.name} className="w-full h-full object-cover" />
-                               </div>
-                               <span className="text-xs text-gray-300 font-medium truncate max-w-[80px] hover:text-white">{post.author?.name || 'Unknown'}</span>
-                             </div>
-
-                             <div className="flex items-center gap-3 text-gray-300">
-                                <button className="flex items-center gap-1 hover:text-red-400 transition-colors group/btn">
-                                   <Heart size={16} className={`group-hover/btn:scale-110 transition-transform ${post.isLiked ? 'fill-red-400 text-red-400' : ''}`}/>
-                                   <span className="text-xs font-medium">{formatNumber(post.likesCount)}</span>
-                                </button>
-                                <button onClick={(e) => { e.stopPropagation(); openPostDetail(post); }} className="flex items-center gap-1 hover:text-blue-400 transition-colors group/btn">
-                                   <MessageSquare size={16} className="group-hover/btn:scale-110 transition-transform"/>
-                                   <span className="text-xs font-medium">{formatNumber(post.commentsCount)}</span>
-                                </button>
-                             </div>
-                          </div>
-                        </div>
-                    </div>
-                  );
-                })}
-             </div>
+                      );
+                    })}
+                </div>
+               )}
+             </>
           )}
+        
           
           {/* Loading More Indicator */}
           {isLoadingMore && (
