@@ -85,6 +85,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       setErrors(prev => ({ ...prev, username: '请输入邮箱地址' }));
       return;
     }
+    console.log(formData.username);
 
     if (!emailRegex.test(formData.username)) {
       setErrors(prev => ({ ...prev, username: '获取验证码需要输入有效的邮箱地址' }));
