@@ -42,7 +42,7 @@ const HeroCarousel: React.FC = () => {
   useEffect(() => {
     const fetchPrizes = async () => {
       try {
-        const prizeList: LotteryPrize[] = await api.get('/mall/lotteryPrizes');
+        const prizeList: LotteryPrize[] = await api.get('/lottery/list');
         setPrizes(prizeList);
       } catch (err) {
         console.error('加载奖品失败:', err);
