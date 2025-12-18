@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Post, Comment } from '../../types/community';
-import { X, Heart, Share2, Send, MoreHorizontal, CornerDownRight, Loader2 } from 'lucide-react'; // 移除了 MessageCircle
+import { X, Heart, Share2, Send, MoreHorizontal, CornerDownRight, Loader2 } from 'lucide-react';
 import api from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -24,7 +24,7 @@ const DetailView: React.FC<DetailViewProps> = ({ post: initialPost, onClose, onU
   const inputRef = useRef<HTMLInputElement>(null);
 
   // 辅助函数：递归查找父节点并插入新回复
-  const insertReplyIntoTree = useCallback((nodes: Comment[], parentId: string, newComment: Comment): Comment[] => {
+ const insertReplyIntoTree = useCallback((nodes: Comment[], parentId: string, newComment: Comment): Comment[] => {
     return nodes.map(node => {
       if (node.id === parentId) {
         return {
@@ -42,8 +42,8 @@ const DetailView: React.FC<DetailViewProps> = ({ post: initialPost, onClose, onU
     });
   }, []);
 
-  // 1. 获取评论列表
-  useEffect(() => {
+  // 获取评论列表
+   useEffect(() => {
     const fetchComments = async () => {
       setIsLoadingComments(true);
       try {
@@ -66,18 +66,18 @@ const DetailView: React.FC<DetailViewProps> = ({ post: initialPost, onClose, onU
   }, [post.id, initialPost.comments]);
 
   // 回复模式下自动聚焦输入框
-  useEffect(() => {
+   useEffect(() => {
     if (replyingTo && inputRef.current) {
       inputRef.current.focus();
     }
   }, [replyingTo]);
 
-  const handleReplyClick = (comment: Comment) => {
+ const handleReplyClick = (comment: Comment) => {
     setReplyingTo(comment);
   };
 
   // 2. 发送评论
-  const handleSendComment = async () => {
+ const handleSendComment = async () => {
     if (!commentText.trim() || !isLoggedIn) return;
     setIsSending(true);
 
@@ -115,7 +115,7 @@ const DetailView: React.FC<DetailViewProps> = ({ post: initialPost, onClose, onU
     }
   };
 
-  const handleLikePost = async () => {
+    const handleLikePost = async () => {
       if (!isLoggedIn) return;
       try {
           const isLiked = post.isLiked;
@@ -142,15 +142,14 @@ const DetailView: React.FC<DetailViewProps> = ({ post: initialPost, onClose, onU
       if (!isLoggedIn) return;
       try {
           await api.post(`/community/comments/${commentId}/like`);
-          console.log(`Liked comment ${commentId}`);
       } catch (error) {
           console.error("Failed to like comment", error);
       }
   }
 
-  const formatNumber = (num: number) => num ? num.toLocaleString() : '0';
+   const formatNumber = (num: number) => num ? num.toLocaleString() : '0';
 
-  const renderComment = (comment: Comment, isReply = false) => (
+const renderComment = (comment: Comment, isReply = false) => (
     <div key={comment.id} className={`flex gap-3 group ${isReply ? 'mt-3 pl-2' : 'mt-6'}`}>
       <div className="flex flex-col items-center cursor-pointer" onClick={() => onUserClick(comment.userId)}>
          <img 
@@ -215,7 +214,7 @@ const DetailView: React.FC<DetailViewProps> = ({ post: initialPost, onClose, onU
       <div className="flex w-full h-full flex-col md:flex-row">
         
         {/* Left: Media Area */}
-        <div className="flex-1 flex items-center justify-center bg-black relative group overflow-hidden">
+        <div className="h-[35vh] md:h-full md:flex-1 flex items-center justify-center bg-black relative group overflow-hidden shrink-0">
            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50 pointer-events-none" />
            <img 
             src={post.imageUrl} 
@@ -223,23 +222,21 @@ const DetailView: React.FC<DetailViewProps> = ({ post: initialPost, onClose, onU
             className="max-h-full max-w-full object-contain shadow-2xl"
           />
           {/* Overlay controls - 移除了 MessageCircle */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 px-6 py-3 rounded-full backdrop-blur-md text-white translate-y-4 group-hover:translate-y-0">
+          <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 bg-black/40 px-6 py-3 rounded-full backdrop-blur-md text-white translate-y-0">
              <button 
                 onClick={handleLikePost}
                 className={`hover:scale-110 transition-transform ${post.isLiked ? 'text-red-500 fill-red-500' : 'hover:text-red-500'}`}
              >
                  <Heart size={28} className={post.isLiked ? "fill-red-500" : ""} />
              </button>
-             {/* 此处移除了评论按钮 */}
              <button className="hover:scale-110 transition-transform hover:text-green-400"><Share2 size={28} /></button>
           </div>
         </div>
 
         {/* Right: Comments & Info Sidebar */}
-        <div className="w-full md:w-[400px] lg:w-[450px] flex flex-col bg-[#121212] border-l border-white/10 h-full shadow-2xl relative">
-          
+       <div className="flex-1 w-full md:w-[400px] lg:w-[450px] md:h-full flex flex-col bg-[#121212] border-l border-white/10 shadow-2xl relative min-h-0">
           {/* Header */}
-          <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#121212] z-10">
+           <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#121212] z-10">
              <div className="flex items-center gap-3 cursor-pointer" onClick={() => onUserClick(post.author.id)}>
                 <img src={post.author.avatar} alt="Avatar" className="w-10 h-10 rounded-full border border-white/20 object-cover" />
                 <div className="min-w-0">
@@ -261,7 +258,7 @@ const DetailView: React.FC<DetailViewProps> = ({ post: initialPost, onClose, onU
           </div>
           
           {/* Post Content */}
-          {post.content && (
+           {post.content && (
             <div className="px-4 pt-4 pb-2 text-sm text-gray-300 leading-relaxed border-b border-white/5 bg-[#121212]">
               {post.content}
             </div>
@@ -304,7 +301,7 @@ const DetailView: React.FC<DetailViewProps> = ({ post: initialPost, onClose, onU
           </div>
 
           {/* Input Area */}
-          <div className="p-4 border-t border-white/10 shrink-0 bg-[#121212]">
+           <div className="p-4 border-t border-white/10 shrink-0 bg-[#121212] pb-safe">
              {replyingTo && (
                <div className="flex items-center justify-between bg-white/5 px-3 py-2 rounded-t-lg text-xs text-gray-400 border-b border-white/5 animate-in slide-in-from-bottom-2">
                  <div className="flex items-center gap-1">
