@@ -183,7 +183,7 @@ const WorkPage: React.FC = () => {
     }]);
 
     try {
-      const response = await api.post('/ai/generate', {
+      const response: any = await api.post('/ai/generate', {
         mode: currentMode,
         prompt,
         referenceImage: base64,
