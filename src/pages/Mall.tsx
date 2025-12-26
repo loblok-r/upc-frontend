@@ -154,7 +154,7 @@ const Mall: React.FC = () => {
 
         setLoadingPoints(true);
         try {
-            const response: any = await api.get<UserPointsResponse>('/mall/user/points');
+            const response: any = await api.get<UserPointsResponse>('/points');
             setUserPoints(response as unknown as UserPointsResponse);
             if (user) refreshUser();
         } catch (error) {

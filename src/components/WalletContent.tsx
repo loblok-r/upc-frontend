@@ -153,7 +153,8 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   // 获取优惠券数据
   const fetchCouponsFromBackend = async (params: PaginationParams) => {
     try {
-      const response = await api.get('/coupons/list', { params }) as any;
+      // const response = await api.get('/coupons/list', { params }) as any;
+      const response :any = {};
       const { data: couponsData, total, page, pageSize, totalPages } = response;
 
       setTotal(total);
@@ -186,7 +187,8 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   // 获取实物订单数据
   const fetchOrdersFromBackend = async (params: PaginationParams) => {
     try {
-      const response = await api.get('/orders', { params }) as any; 
+      // const response = await api.get('/orders', { params }) as any; 
+      const response :any = {};
       const { data: ordersData, total, page, pageSize, totalPages } = response;
 
       setTotal(total || ordersData.length);
@@ -217,7 +219,8 @@ export const WalletContent: React.FC<WalletContentProps> = ({ activeTab }) => {
   // 获取权益数据
   const fetchBenefitsFromBackend = async (params: PaginationParams) => {
     try {
-      const response = await api.get('/benefits', { params }) as any;
+      // const response = await api.get('/benefits', { params }) as any;
+      const response :any = {};
       const { data: benefitsData, total, page, pageSize, totalPages } = response;
 
       setTotal(total || benefitsData.length);

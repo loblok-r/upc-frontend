@@ -70,7 +70,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     setApiError('');
 
     try {
-      await api.post('/auth/sendCode', {
+      await api.post('/user/sendCode', {
         email: formData.email,
         type: 'register'
       });

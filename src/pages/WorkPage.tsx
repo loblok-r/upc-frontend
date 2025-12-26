@@ -99,7 +99,7 @@ const WorkPage: React.FC = () => {
     try {
       const currentPage = isRefresh ? 1 : page;
 
-      const response: any = await api.get('/history/list', {
+      const response: any = await api.get('/ai-history/list', {
         params: {
           page: currentPage,
           pageSize: PAGE_SIZE

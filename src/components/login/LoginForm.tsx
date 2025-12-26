@@ -82,7 +82,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setApiError(''); 
 
     try {
-        const result = await api.post('/auth/sendCode', {
+        const result = await api.post('/user/sendCode', {
           email: formData.username as string,
           type: 'login'
         }) as any;

@@ -1,4 +1,4 @@
-name: Deploy Frontend (Sync & Docker)
+name: Deploy Frontend to HSY
 
 on:
   push:
@@ -6,21 +6,19 @@ on:
   workflow_dispatch:
 
 env:
-  SERVER_IP: ${{ secrets.SERVER_IP }}
-  SERVER_USER: root
+  GITEE_URL: "git@gitee.com:barondd/upc-frontend.git"
+  FRONTEND_DIR: "/opt/projects/upc-frontend"
+  BACKEND_DIR: "/opt/projects/upc" # HSY 的 docker-compose 文件所在目录
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # 同步代码到 Gitee
-      - name: Sync to Gitee (SSH)
+      # 1. 同步前端代码到 Gitee
+      - name: Sync to Gitee
         env:
           SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
         run: |
@@ -28,55 +26,47 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H gitee.com >> ~/.ssh/known_hosts
-          # 修改为前端 Gitee 仓库地址
-          git remote add gitee git@gitee.com:barondd/upc-frontend.git
-          echo "Pushing to Gitee..."
+          git remote add gitee ${{ env.GITEE_URL }}
           git push gitee HEAD:main -f
 
-      - name: Execute Server Commands
+      # 2. 在 HSY 上拉取并构建镜像
+      - name: Execute HSY Deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.SERVER_IP }}
-          username: ${{ env.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          script_stop: true
+          host: ${{ secrets.HSY_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -x
             set -e
+            # 环境准备：下发临时私钥用于拉取源码
+            mkdir -p ~/.ssh
+            echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa_deploy
+            chmod 600 ~/.ssh/id_rsa_deploy
+
+            # 更新/初始化前端代码
+            mkdir -p ${{ env.FRONTEND_DIR }}
+            cd ${{ env.FRONTEND_DIR }}
             
-            # === 配置变量 ===
-            PROJECT_PATH="/opt/projects/upc-frontend"
-            COMPOSE_PATH="/opt/projects/upc-backend" # 指向 Compose 文件所在目录
-            GIT_REPO="https://gitee.com/barondd/upc-frontend.git"
-            IMAGE_NAME="upc-frontend:latest"
-            
-            echo "Starting Frontend deployment..."
-            
-            # === 更新代码 ===
-            if [ -d "$PROJECT_PATH" ]; then
-              rm -rf "$PROJECT_PATH"
+            if [ ! -d ".git" ]; then
+              git init
+              git remote add origin ${{ env.GITEE_URL }}
             fi
-            git clone "$GIT_REPO" "$PROJECT_PATH"
-            cd "$PROJECT_PATH"
-            
-            # === 构建 Docker 镜像 ===
-            echo "Building Frontend image..."
-            # 这里的构建会自动读取你项目里的 Dockerfile 和 nginx.conf
-            docker build -t "$IMAGE_NAME" .
-            
-            # === 交给 Compose 统一调度 ===
-            # 不再手动 docker stop/run，因为那样前端会脱离 upc-net 网络
-            
-            echo "⚓ Moving to Compose directory..."
-            cd "$COMPOSE_PATH"
-            
-            echo "Updating Frontend service via Compose..."
-            # --no-deps: 不重启 mysql/redis/backend
-            # --force-recreate: 强制根据最新构建的镜像重建容器
-            docker compose up -d --no-deps --force-recreate frontend
-            
-            # === 清理旧镜像 ===
-            echo "Pruning unused images..."
+
+            git remote set-url origin ${{ env.GITEE_URL }}
+            GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa_deploy -o StrictHostKeyChecking=no" git fetch origin main
+            GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa_deploy -o StrictHostKeyChecking=no" git reset --hard FETCH_HEAD
+
+            # 构建前端镜像
+            echo "Building Frontend image on HSY..."
+            docker build -t upc-frontend:latest .
+
+            # 使用 HSY 的 docker-compose 重启前端服务
+            echo "Updating service via Docker Compose..."
+            cd ${{ env.BACKEND_DIR }}
+            # --no-deps 确保只更新前端，不影响已运行的网关和AI
+            docker compose -f docker-compose-hsy.yml up -d --no-deps --force-recreate upc-frontend
+
+            # 清理
+            rm -f ~/.ssh/id_rsa_deploy
             docker image prune -f
-            
-            echo "Frontend Deployment Successfully Completed!"
+            echo "Frontend Deployment Done!"

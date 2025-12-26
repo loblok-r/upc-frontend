@@ -63,7 +63,7 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch
         setApiError('');
 
         try {
-            await api.post('/auth/sendCode', { email: formData.email, type: 'forgot' });
+            await api.post('/user/sendCode', { email: formData.email, type: 'forgot' });
             setCountdown(60);
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.message || '验证码发送失败';

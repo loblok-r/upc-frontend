@@ -13,7 +13,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 // ==========================================
-// 1. Follow Button Component (API Integration)
+// 1. Follow Button Component
 // ==========================================
 interface FollowButtonProps {
    userId: string;
@@ -86,9 +86,8 @@ interface SidebarPanelProps {
    onSelectPost?: (post: Post) => void;
    targetUserId?: string | null;
 }
-// 修改：增加了 FOLLOWERS 和 FOLLOWING 状态
-type ProfileView = 'MENU' | 'MY_WORKS' | 'FOLLOWERS' | 'FOLLOWING' | 'SETTINGS';
 
+type ProfileView = 'MENU' | 'MY_WORKS' | 'FOLLOWERS' | 'FOLLOWING' | 'SETTINGS';
 type LeaderboardView = 'SUMMARY' | 'ALL_CREATORS' | 'ALL_NEWCREATORS';
 
 const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelectPost, targetUserId }) => {
@@ -96,23 +95,24 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
    const location = useLocation();
    const { isLoggedIn, user: currentUser, logout } = useAuth();
 
-   // 控制个人中心内部视图切换
    const [profileView, setProfileView] = useState<ProfileView>('MENU');
 
-   // --- Works State ---
+   // --- Works 分页相关状态 ---
    const [works, setWorks] = useState<Post[]>([]);
    const [isWorksLoading, setIsWorksLoading] = useState(false);
+   const [isLoadingMoreWorks, setIsLoadingMoreWorks] = useState(false);
+   const [worksPage, setWorksPage] = useState(1);
+   const [hasMoreWorks, setHasMoreWorks] = useState(true);
+   const WORKS_LIMIT = 10;
+
    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-   // --- User Profile State (For targetUser) ---
    const [userProfile, setUserProfile] = useState<User | null>(null);
    const [isProfileLoading, setIsProfileLoading] = useState(false);
 
-   // --- Users List State (Followers/Following) ---
    const [userList, setUserList] = useState<User[]>([]);
    const [isUserListLoading, setIsUserListLoading] = useState(false);
 
-   // --- Leaderboard & Search State ---
    const [lbView, setLbView] = useState<LeaderboardView>('SUMMARY');
    const [searchQuery, setSearchQuery] = useState('');
    const [displayUsers, setDisplayUsers] = useState<User[]>([]);
@@ -123,45 +123,59 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
 
    const handleLogin = () => {
       navigate('/login', {
-         state: {
-            from: location.pathname,
-            returnTab: SidebarTab.PROFILE
-         }
+         state: { from: location.pathname, returnTab: SidebarTab.PROFILE }
       });
    };
 
-   // 获取作品 (统一逻辑)
-   const fetchWorks = useCallback(async () => {
+   // 修改后的获取作品逻辑 (支持分页)
+   const fetchWorks = useCallback(async (page: number, isRefresh: boolean = false) => {
       const userId = targetUserId || (isLoggedIn ? currentUser?.id : null);
       if (!userId) return;
 
-      setIsWorksLoading(true);
+      if (isRefresh) {
+         setIsWorksLoading(true);
+      } else {
+         setIsLoadingMoreWorks(true);
+      }
+
       try {
          const endpoint = targetUserId
-            ? `/community/users/${targetUserId}/works`
+            ? `/community/posts/users/${targetUserId}/works`
             : '/community/posts/mine';
 
-         const data = await api.get<any, Post[]>(endpoint);
-         setWorks(data || []);
+         const data = await api.get<any, Post[]>(endpoint, {
+            params: {
+               page: page,
+               limit: WORKS_LIMIT
+            }
+         });
+         
+         const newWorks = data || [];
+         setWorks(prev => isRefresh ? newWorks : [...prev, ...newWorks]);
+         // 如果返回的数据少于 limit，说明没有更多了
+         setHasMoreWorks(newWorks.length === WORKS_LIMIT);
+         setWorksPage(page);
       } catch (error) {
          console.error("Failed to fetch works", error);
       } finally {
          setIsWorksLoading(false);
+         setIsLoadingMoreWorks(false);
       }
    }, [isLoggedIn, currentUser?.id, targetUserId]);
 
-   // 新增：获取关注/粉丝列表
+   const handleLoadMoreWorks = () => {
+      if (isLoadingMoreWorks || !hasMoreWorks) return;
+      fetchWorks(worksPage + 1, false);
+   };
+
+   // 获取关注/粉丝列表
    const fetchUserList = useCallback(async (type: 'followers' | 'following') => {
       const userId = targetUserId || (isLoggedIn ? currentUser?.id : null);
       if (!userId) return;
 
       setIsUserListLoading(true);
       try {
-         // 接口预留：
-         // GET /community/users/{id}/followers
-         // GET /community/users/{id}/following
          const endpoint = `/community/users/${userId}/${type}`;
-
          const data = await api.get<any, User[]>(endpoint);
          setUserList(data || []);
       } catch (error) {
@@ -172,7 +186,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
       }
    }, [targetUserId, isLoggedIn, currentUser?.id]);
 
-   // 监听视图切换，加载对应列表
    useEffect(() => {
       if (profileView === 'FOLLOWERS') {
          fetchUserList('followers');
@@ -181,12 +194,10 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
       }
    }, [profileView, fetchUserList]);
 
-   // 初始化 Profile
    useEffect(() => {
       const initProfile = async () => {
          if (activeTab === SidebarTab.USER_PROFILE && targetUserId) {
             setIsProfileLoading(true);
-            // 重置视图回主菜单，防止查看别人时停留在上一个人的粉丝页
             setProfileView('MENU');
             try {
                const data = await api.get<any, User>(`/community/users/${targetUserId}/profile`);
@@ -201,7 +212,8 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
          }
 
          if (activeTab === SidebarTab.PROFILE || activeTab === SidebarTab.USER_PROFILE) {
-            fetchWorks();
+            // 每次切换标签或切换用户时，重新加载第一页
+            fetchWorks(1, true);
          }
       };
       initProfile();
@@ -217,7 +229,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
       }
    };
 
-   // 本地更新关注状态
    const handleFollowChange = (userId: string, newStatus: boolean) => {
       setDisplayUsers(prev => prev.map(u => u.id === userId ? { ...u, isFollowed: newStatus } : u));
       setCreatorsRanking(prev => prev.map(item => item.author.id === userId ? { ...item, author: { ...item.author, isFollowed: newStatus } } : item));
@@ -228,7 +239,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
       }
    };
 
-   // --- 搜索和榜单逻辑保持不变 (省略部分代码以聚焦核心变更) ---
    const fetchRecommendedUsers = useCallback(async () => {
       setIsSearchLoading(true);
       try {
@@ -286,15 +296,13 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
 
    if (activeTab === SidebarTab.HOME) return null;
 
-   // 判断是否是查看他人
    const isViewingOther = activeTab === SidebarTab.USER_PROFILE && targetUserId;
-   // 确定当前展示的用户数据
    const displayedUser = isViewingOther ? userProfile : currentUser;
 
    return (
       <div className="absolute left-16 top-0 bottom-0 w-[320px] glass-panel z-40 flex flex-col animate-in slide-in-from-left duration-300 border-r border-white/10 bg-black/80 backdrop-blur-xl">
 
-         {/* 1. 搜索面板 (保持不变) */}
+         {/* 1. 搜索面板 */}
          {activeTab === SidebarTab.SEARCH && (
             <>
                <div className="p-5 border-b border-white/10">
@@ -335,7 +343,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
             </>
          )}
 
-         {/* 2. 排行榜面板 (保持不变) */}
+         {/* 2. 排行榜面板 */}
          {activeTab === SidebarTab.LEADERBOARD && (
             <>
                {isLbLoading && lbView === 'SUMMARY' && creatorsRanking.length === 0 ? (
@@ -435,7 +443,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
 
                <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 relative">
 
-                  {/* 未登录且查看自己的时候显示登录提示 */}
                   {!isViewingOther && !isLoggedIn ? (
                      <div className="flex flex-col items-center justify-center p-8 text-center h-full animate-in fade-in duration-500">
                         <div className="w-24 h-24 bg-gradient-to-tr from-white/5 to-white/10 rounded-full flex items-center justify-center mb-6 ring-1 ring-white/10 shadow-2xl relative">
@@ -452,9 +459,7 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
                         {/* ==================== 视图 A: 主菜单 (个人信息 + 作品) ==================== */}
                         {profileView === 'MENU' && (
                            <div className="pb-10 animate-in slide-in-from-right duration-300">
-                              {/* 用户信息区域 */}
                               <div className="p-5 space-y-6">
-                                 {/* 头像与名字 */}
                                  <div className="flex flex-col gap-4 pb-2">
                                     <div className="flex items-center gap-4">
                                        <div className="relative">
@@ -479,42 +484,25 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
                                     </div>
                                  </div>
 
-                                 {/* 统计数据 (点击可跳转) */}
                                  <div className="grid grid-cols-4 gap-2 bg-white/5 rounded-xl p-3 border border-white/5">
-
-                                    {/* 1. 作品 */}
                                     <div className="text-center">
                                        <div className="text-lg font-bold">{displayedUser?.stats?.works || 0}</div>
                                        <div className="text-xs text-gray-500">作品</div>
                                     </div>
-
-                                    {/* 2. 关注 (新增) - 可点击 */}
-                                    <button
-                                       onClick={() => setProfileView('FOLLOWING')}
-                                       className="text-center hover:bg-white/5 rounded-lg transition-colors py-1 -my-1"
-                                    >
-                                       {/* 这里的 stats?.following 需要后端返回，如果没有暂显示 0 */}
+                                    <button onClick={() => setProfileView('FOLLOWING')} className="text-center hover:bg-white/5 rounded-lg transition-colors py-1 -my-1">
                                        <div className="text-lg font-bold">{displayedUser?.stats?.following || 0}</div>
                                        <div className="text-xs text-gray-500">关注</div>
                                     </button>
-
-                                    {/* 3. 粉丝 - 可点击 */}
-                                    <button
-                                       onClick={() => setProfileView('FOLLOWERS')}
-                                       className="text-center hover:bg-white/5 rounded-lg transition-colors py-1 -my-1"
-                                    >
+                                    <button onClick={() => setProfileView('FOLLOWERS')} className="text-center hover:bg-white/5 rounded-lg transition-colors py-1 -my-1">
                                        <div className="text-lg font-bold">{displayedUser?.stats?.followers || 0}</div>
                                        <div className="text-xs text-gray-500">粉丝</div>
                                     </button>
-
-                                    {/* 4. 获赞 */}
                                     <div className="text-center">
                                        <div className="text-lg font-bold">{displayedUser?.stats?.likes || 0}</div>
                                        <div className="text-xs text-gray-500">获赞</div>
                                     </div>
                                  </div>
 
-                                 {/* 算力卡片 (仅自己可见) */}
                                  {!isViewingOther && (
                                     <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 rounded-xl p-4 border border-purple-500/20 relative overflow-hidden group">
                                        <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
@@ -535,7 +523,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
                                  )}
                               </div>
 
-                              {/* 作品列表 */}
                               <div className="border-t border-white/10 mt-2">
                                  <div className="px-5 py-4">
                                     <h3 className="text-sm font-bold text-gray-300 flex items-center gap-2">
@@ -602,6 +589,28 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
                                              )}
                                           </div>
                                        ))}
+
+                                       {/* 加载更多作品控制 */}
+                                       <div className="py-4 flex justify-center">
+                                          {hasMoreWorks ? (
+                                             <button 
+                                                onClick={handleLoadMoreWorks}
+                                                disabled={isLoadingMoreWorks}
+                                                className="text-xs text-gray-500 hover:text-white transition-colors flex items-center gap-2"
+                                             >
+                                                {isLoadingMoreWorks ? (
+                                                   <>
+                                                      <Loader2 size={12} className="animate-spin" />
+                                                      加载中...
+                                                   </>
+                                                ) : (
+                                                   '加载更多作品'
+                                                )}
+                                             </button>
+                                          ) : works.length > 0 && (
+                                             <span className="text-xs text-gray-600">没有更多作品了</span>
+                                          )}
+                                       </div>
                                     </div>
                                  )}
                               </div>
@@ -623,7 +632,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
                         {/* ==================== 视图 B: 粉丝列表 / 关注列表 ==================== */}
                         {(profileView === 'FOLLOWERS' || profileView === 'FOLLOWING') && (
                            <div className="h-full flex flex-col animate-in slide-in-from-right duration-300 absolute inset-0 bg-[#0c0c0c]">
-                              {/* 头部：返回按钮 */}
                               <div className="p-5 border-b border-white/10 flex items-center gap-3 shrink-0">
                                  <button
                                     onClick={() => setProfileView('MENU')}
@@ -636,7 +644,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
                                  </h2>
                               </div>
 
-                              {/* 列表内容 */}
                               <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-white/10">
                                  {isUserListLoading ? (
                                     <div className="flex justify-center py-10">
@@ -661,7 +668,6 @@ const SidebarPanel: React.FC<SidebarPanelProps> = ({ activeTab, onClose, onSelec
                                                    <div className="text-xs text-gray-400 truncate max-w-[120px]">{user.handle}</div>
                                                 </div>
                                              </div>
-                                             {/* 复用 FollowButton，不传 initialIsFollowed，让其从 user 对象读取 */}
                                              <FollowButton
                                                 userId={user.id}
                                                 initialIsFollowed={user.isFollowed}
