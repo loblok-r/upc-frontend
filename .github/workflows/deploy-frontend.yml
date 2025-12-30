@@ -29,7 +29,7 @@ jobs:
           git remote add gitee ${{ env.GITEE_URL }}
           git push gitee HEAD:main -f
 
-      # 2. 在 HSY 上拉取并构建镜像SS
+      # 2. 在 HSY 上拉取并构建镜像
       - name: Execute HSY Deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
