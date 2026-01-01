@@ -99,7 +99,11 @@ const CommunityPage = () => {
     navigate('/work');
   };
 
-  const shouldOpenAppDirectly = location.state?.activeTab !== undefined;
+   const queryParams = new URLSearchParams(location.search);
+  const isViewAppInUrl = queryParams.get('view') === 'app';
+
+  // 如果 URL 有参数，或者从外部跳转带了 state，则直接进入 APP
+  const shouldOpenAppDirectly = isViewAppInUrl || location.state?.activeTab !== undefined;
 
   const [viewState, setViewState] = useState<ViewState>(
     shouldOpenAppDirectly ? 'APP' : 'LANDING'
@@ -270,7 +274,11 @@ const CommunityPage = () => {
         <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500">UPC Nexus</h1>
         <p className="text-gray-400 text-lg md:text-xl font-light">每张AI图片都有一个故事，分享你的。<br />通过AI艺术重新发现社交互动。</p>
         <button
-          onClick={() => { setViewState('APP'); setActiveFeedTab('RECOMMEND'); }}
+          onClick={() => { 
+            setViewState('APP'); 
+            setActiveFeedTab('RECOMMEND');
+            navigate('?view=app', { replace: true }); 
+           }}
           className="group relative inline-flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-semibold transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)]"
         >
           <span>进入社区</span>

@@ -1,15 +1,17 @@
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay } from 'date-fns';
+import { format, eachDayOfInterval, startOfWeek, endOfWeek, isSameDay, startOfDay } from 'date-fns';
 import { zhCN } from 'date-fns/locale/zh-CN';
-import type{ CheckInDay, DayStatus } from '../../types/checkIn'; 
+import type { CheckInDay, DayStatus } from '../../types/checkIn'; 
 
 // Helper: 生成本周签到数据（从周一到周日）
 const generateWeekData = (userCheckInRecords: Set<string>, todayStr: string): CheckInDay[] => {
-  const now = new Date();
-  const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // 周一为第一天
-  const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+  // 建议使用传入的 todayStr 构造参考时间，避免客户端时间不准
+  const referenceDate = todayStr ? new Date(todayStr) : new Date();
+  
+  const weekStart = startOfWeek(referenceDate, { weekStartsOn: 1 }); // 周一为第一天
+  const weekEnd = endOfWeek(referenceDate, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-  // 预定义奖励规则（你可以从配置或 API 获取）
+  // 奖励规则
   const rewardMap: Record<number, { points: number; exp: number; isMilestone: boolean; specialReward?: string }> = {
     0: { points: 10, exp: 5, isMilestone: false }, // 周一
     1: { points: 10, exp: 5, isMilestone: false }, // 周二
@@ -23,12 +25,14 @@ const generateWeekData = (userCheckInRecords: Set<string>, todayStr: string): Ch
   return days.map((date, idx) => {
     const dateStr = format(date, 'MM.dd');
     const dayOfWeek = format(date, 'eee', { locale: zhCN });
-    const isoDate = format(date, 'yyyy-MM-dd');
+    const isoDate = format(date, 'yyyy-MM-dd'); // 2024-12-31 这种格式
 
     let status: DayStatus = 'future';
-    if (isSameDay(date, new Date())) {
+    
+    // 使用 startOfDay 比较日期，避免小时分钟的影响
+    if (isSameDay(date, referenceDate)) {
       status = userCheckInRecords.has(isoDate) ? 'checked' : 'today';
-    } else if (date < now) {
+    } else if (date < startOfDay(referenceDate)) {
       status = userCheckInRecords.has(isoDate) ? 'checked' : 'missed';
     }
 
@@ -36,10 +40,12 @@ const generateWeekData = (userCheckInRecords: Set<string>, todayStr: string): Ch
 
     return {
       date: dateStr,
-      dayOfWeek: dayOfWeek.slice(0, 2), // "周一", "周二"
+      fullDate: isoDate,        // ✅ 新增：保存完整的 ISO 日期，供后端接口直接使用
+      dayOfWeek: dayOfWeek.slice(0, 2), // "周一"
       status,
       ...reward,
-    };
+    } as any; // 如果 CheckInDay 类型还没更新，可以暂时断言为 any，建议去 types/checkIn 增加 fullDate 定义
   });
 };
+
 export default generateWeekData;

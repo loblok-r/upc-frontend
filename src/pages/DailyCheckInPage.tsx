@@ -33,7 +33,7 @@ export const DailyCheckInPage: React.FC = () => {
       try {
         // api.get() 直接返回数据，不是完整的响应对象
         const data = await api.get('/checkin/history') as any;
-      
+
 
         // data 是 {checkInHistory: [...]}
         if (data && data.checkInHistory) {
@@ -74,14 +74,14 @@ export const DailyCheckInPage: React.FC = () => {
 
     try {
       await api.post('/checkin/checkin', {});
-        const data = await api.get('/checkin/history') as any;
-    
-        if (data && data.checkInHistory) {
-          setCheckInHistory(data.checkInHistory);
-        } else {
-          console.error('数据格式错误，期望 checkInHistory 字段:', data);
-          setCheckInHistory([]);
-        }
+      const data = await api.get('/checkin/history') as any;
+
+      if (data && data.checkInHistory) {
+        setCheckInHistory(data.checkInHistory);
+      } else {
+        console.error('数据格式错误，期望 checkInHistory 字段:', data);
+        setCheckInHistory([]);
+      }
 
       await refreshUser();
 
@@ -104,44 +104,29 @@ export const DailyCheckInPage: React.FC = () => {
     const targetDay = weekData[index];
     if (targetDay.status !== 'missed') return;
 
-    // 提取日期数字
-    const extractDayFromDateStr = (dateStr: string | number): number => {
-      const str = String(dateStr);
-      // 从 12.10 中提取 10
-      const match = str.match(/\.(\d+)$/);
-      if (match) {
-        return parseInt(match[1]);
-      }
-      return parseInt(str);
-    };
+    const retroDate = (targetDay as any).fullDate; 
 
-    const dayNumber = extractDayFromDateStr(targetDay.date);
-
-    // 验证日期
-    if (isNaN(dayNumber) || dayNumber < 1 || dayNumber > 31) {
-      alert('日期格式错误');
+    if (!retroDate) {
+      alert('日期数据异常');
       return;
     }
 
-    // 构造补签日期
-    const yearMonth = todayISO.substring(0, 7);
-    const dayStr = dayNumber.toString().padStart(2, '0');
-    const retroDate = `${yearMonth}-${dayStr}`;
+
 
     try {
       // 发送补签请求
       const response = await api.post('/checkin/retro', { retroDate: retroDate });
 
       // 刷新签到历史
-        const data = await api.get('/checkin/history') as any;
-      
+      const data = await api.get('/checkin/history') as any;
 
-        if (data && data.checkInHistory) {
-          setCheckInHistory(data.checkInHistory);
-        } else {
-          console.error('数据格式错误，期望 checkInHistory 字段:', data);
-          setCheckInHistory([]);
-        }
+
+      if (data && data.checkInHistory) {
+        setCheckInHistory(data.checkInHistory);
+      } else {
+        console.error('数据格式错误，期望 checkInHistory 字段:', data);
+        setCheckInHistory([]);
+      }
 
 
 

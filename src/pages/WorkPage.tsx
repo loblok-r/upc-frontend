@@ -18,9 +18,12 @@ import { Info } from 'lucide-react';
 
 const PAGE_SIZE = 10;
 
+
 const WorkPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [lastImageConfig, setLastImageConfig] = useState<{ width: number; height: number } | undefined>();
+
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -149,7 +152,11 @@ const WorkPage: React.FC = () => {
       alert(permission.reason || "您没有权限进行此操作");
       return;
     }
+    const activeConfig = config || lastImageConfig;
 
+    if (config) {
+      setLastImageConfig(config); // 保存本次配置，供后续对话使用
+    }
     const newMessage: Message = {
       id: Date.now().toString(),
       sender: Sender.USER,
@@ -189,8 +196,8 @@ const WorkPage: React.FC = () => {
         prompt,
         referenceImage: base64,
         sessionId: currentSessionId,
-        width: config?.width,
-        height: config?.height
+        width: currentMode === AppMode.AI_DRAWING ? activeConfig?.width : undefined,
+      height: currentMode === AppMode.AI_DRAWING ? activeConfig?.height : undefined
       }, {
         timeout: 120000 // 设置为 120 秒 (2分钟)
       });
@@ -226,6 +233,8 @@ const WorkPage: React.FC = () => {
         errorMsg = "算力不足，请获取后重试。";
       } else if (error.response?.data?.code === 1009) {
         errorMsg = "今日使用次数已达上限。";
+      } else if (error.response?.data?.code === 1010) {
+        errorMsg = "参数错误，请联系管理员。";
       }
 
       setMessages(prev => [...prev, {
@@ -284,6 +293,7 @@ const WorkPage: React.FC = () => {
       setMessages([]);
       setCurrentSessionId(null);
       setViewState('landing');
+      setLastImageConfig(undefined); 
     }
   };
 
@@ -403,7 +413,7 @@ const WorkPage: React.FC = () => {
               <span className="font-bold text-indigo-400 mr-1">开发测试期</span>
               普通用户每日限额：
               文生文 <span className="text-white font-bold">5</span> 次 /
-              文生图 <span className="text-white font-bold">2</span> 次
+              文生图 <span className="text-white font-bold">3</span> 次
             </span>
             {/* 可选：添加升级引导 */}
             <button
