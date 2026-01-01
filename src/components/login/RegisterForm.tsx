@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import type { RegisterFormData, FormErrors } from '../../types';
-import api from '../../utils/api'; 
+import api from '../../utils/api';
 
 interface RegisterFormProps {
   onSwitchToLogin: (registeredEmail?: string) => void;
@@ -38,8 +38,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         if (onSwitchToLogin) {
           onSwitchToLogin(formData.email);
         }
-      }, 2000); 
-      
+      }, 2000);
+
       return () => clearTimeout(timer);
     }
   }, [hasRegistered, onSwitchToLogin]);
@@ -50,7 +50,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    
+
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -59,7 +59,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
   const handleGetCode = async () => {
     if (countdown > 0) return;
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email || !emailRegex.test(formData.email)) {
       setErrors((prev) => ({ ...prev, email: '请输入有效的邮箱地址' }));
@@ -132,7 +132,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     setApiError('');
     setSuccessMessage('');
     setHasRegistered(false);
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -152,7 +152,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         const successMsg = result.msg || '注册成功！即将跳转到登录页面...';
         setSuccessMessage(successMsg);
         setHasRegistered(true);
-        
+
         setFormData({
           username: '',
           email: '',
@@ -161,14 +161,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
           captcha: '',
           agreeToTerms: false,
         });
-        
+
       } else {
-         setApiError(result.msg || '注册失败');
+        setApiError(result.msg || '注册失败');
       }
     } catch (error: any) {
       console.error('注册失败:', error);
       let msg = '网络错误';
-      if(error.response?.data?.message) msg = error.response.data.message;
+      if (error.response?.data?.message) msg = error.response.data.message;
       setApiError(msg);
     } finally {
       setIsLoading(false);
@@ -195,9 +195,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
       {successMessage && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-sm text-green-600 text-center">{successMessage}</p>
-          <p className="text-xs text-green-500 text-center mt-1">
-            自动切换到登录页面...
-          </p>
+          {hasRegistered && (
+            <p className="text-xs text-green-500 text-center mt-1">
+              自动切换到登录页面...
+            </p>
+          )}
         </div>
       )}
 
@@ -209,7 +211,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
       {!hasRegistered ? (
         <form onSubmit={handleSubmit} className="space-y-4">
-          
+
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 ml-1">用户名*</label>
             <input
@@ -218,9 +220,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.username}
               onChange={handleInputChange}
               disabled={isLoading}
-              className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${
-                errors.username ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-              } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm disabled:opacity-50`}
+              className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${errors.username ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+                } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm disabled:opacity-50`}
               placeholder="3-20个字符"
             />
             {errors.username && <p className="text-xs text-red-500 ml-1">{errors.username}</p>}
@@ -234,9 +235,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.email}
               onChange={handleInputChange}
               disabled={isLoading}
-              className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${
-                errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-              } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm disabled:opacity-50`}
+              className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+                } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm disabled:opacity-50`}
               placeholder="example@upc.com"
             />
             {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
@@ -250,9 +250,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.password}
               onChange={handleInputChange}
               disabled={isLoading}
-              className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${
-                errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-              } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm tracking-widest disabled:opacity-50`}
+              className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+                } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm tracking-widest disabled:opacity-50`}
               placeholder="至少6位"
             />
             {errors.password && <p className="text-xs text-red-500 ml-1">{errors.password}</p>}
@@ -266,9 +265,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               value={formData.confirmPassword}
               onChange={handleInputChange}
               disabled={isLoading}
-              className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${
-                errors.confirmPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-              } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm tracking-widest disabled:opacity-50`}
+              className={`w-full px-4 py-3 rounded-lg bg-slate-50 border ${errors.confirmPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+                } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm tracking-widest disabled:opacity-50`}
               placeholder="再次输入密码"
             />
             {errors.confirmPassword && <p className="text-xs text-red-500 ml-1">{errors.confirmPassword}</p>}
@@ -284,20 +282,18 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 onChange={handleInputChange}
                 disabled={isLoading}
                 maxLength={6}
-                className={`flex-1 px-4 py-3 rounded-lg bg-slate-50 border ${
-                  errors.captcha ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-                } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm disabled:opacity-50`}
+                className={`flex-1 px-4 py-3 rounded-lg bg-slate-50 border ${errors.captcha ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+                  } focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 text-sm disabled:opacity-50`}
                 placeholder="请输入验证码"
               />
               <button
                 type="button"
                 onClick={handleGetCode}
                 disabled={countdown > 0 || isSendingCode || isLoading}
-                className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[100px] md:min-w-[110px] transition-all duration-200 ${
-                  countdown > 0 || isSendingCode || isLoading
+                className={`px-4 py-2 rounded-lg text-sm font-medium min-w-[100px] md:min-w-[110px] transition-all duration-200 ${countdown > 0 || isSendingCode || isLoading
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700'
-                }`}
+                  }`}
               >
                 {isSendingCode ? (
                   <Loader2 className="w-4 h-4 animate-spin mx-auto" />
@@ -328,13 +324,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
                 同意用户协议
               </span>
             </label>
-            
+
             <div className="text-sm">
               <span className="text-gray-400">已有账号? </span>
-              <a 
-                href="#" 
-                onClick={(e) => { 
-                  e.preventDefault(); 
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
                   handleManualSwitchToLogin();
                 }}
                 className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
